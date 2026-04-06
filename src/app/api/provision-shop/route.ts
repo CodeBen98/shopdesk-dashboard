@@ -155,6 +155,37 @@ export async function POST() {
         model: 'claude-sonnet-4-6',
         messages: [{ role: 'system', content: systemPrompt }],
         temperature: 0.7,
+        tools: [
+          {
+            type: 'function',
+            server: { url: BOOKING_WEBHOOK_URL },
+            function: {
+              name: 'bookAppointment',
+              strict: true,
+              description: 'Book a confirmed appointment. Call this once you have ALL required fields. Do not call with empty or missing fields.',
+              parameters: {
+                type: 'object',
+                required: ['customer_name', 'customer_phone', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'service', 'appointment_time'],
+                properties: {
+                  customer_name:    { type: 'string', description: 'Customer full name as spoken' },
+                  customer_phone:   { type: 'string', description: 'Customer phone number as spoken' },
+                  vehicle_year:     { type: 'string', description: 'Vehicle year, e.g. 2018' },
+                  vehicle_make:     { type: 'string', description: 'Vehicle make, e.g. Honda' },
+                  vehicle_model:    { type: 'string', description: 'Vehicle model, e.g. Accord' },
+                  service:          { type: 'string', description: 'Service requested or issue description' },
+                  appointment_time: { type: 'string', description: 'Day and time confirmed by customer, e.g. Thursday April 3 at 10am' },
+                },
+              },
+            },
+          },
+          {
+            type: 'endCall',
+            function: {
+              name: 'endCall',
+              description: 'End the call. Only use after booking is confirmed and customer has said goodbye.',
+            },
+          },
+        ],
       },
       voice: {
         provider: voice.provider,
@@ -162,34 +193,7 @@ export async function POST() {
         model: voice.model,
       },
       firstMessage: `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`,
-      tools: [
-        {
-          type: 'function',
-          function: {
-            name: 'bookAppointment',
-            description: 'Book an appointment for the customer. Call this when you have collected all required information.',
-            parameters: {
-              type: 'object',
-              properties: {
-                customerName: { type: 'string', description: 'Full name of the customer' },
-                customerPhone: { type: 'string', description: 'Phone number of the customer' },
-                vehicle: { type: 'string', description: 'Year, make, and model of the vehicle' },
-                service: { type: 'string', description: 'Service requested' },
-                appointmentTime: { type: 'string', description: 'Requested appointment date and time' },
-              },
-              required: ['customerName', 'customerPhone', 'vehicle', 'service', 'appointmentTime'],
-            },
-          },
-          server: { url: BOOKING_WEBHOOK_URL },
-        },
-        {
-          type: 'endCall',
-          function: {
-            name: 'endCall',
-            description: 'End the phone call. Only call this after saying goodbye.',
-          },
-        },
-      ],
+
     }
 
     let agentId: string
