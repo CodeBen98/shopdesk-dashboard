@@ -12,11 +12,11 @@ const voiceNames: Record<string, string> = {
   marcus: 'Marcus',
 }
 
-const voiceMap: Record<string, { provider: string; voiceId: string }> = {
-  patricia: { provider: 'cartesia', voiceId: '79a125e8-cd45-4c13-8a67-188112f4dd22' },
-  james:    { provider: 'cartesia', voiceId: '638efaaa-4d0c-442e-b701-3fae16aad012' },
-  sofia:    { provider: 'cartesia', voiceId: '573e3144-a684-4e72-ac2b-9b2063a50b53' },
-  marcus:   { provider: 'cartesia', voiceId: 'b9de4a89-2257-424b-94c2-db18ba68c81a' },
+const voiceMap: Record<string, { provider: string; voiceId: string; model: string }> = {
+  patricia: { provider: 'cartesia', voiceId: 'e5a6cd18-d552-4192-9533-82a08cac8f23', model: 'sonic-2' },
+  james:    { provider: 'cartesia', voiceId: '42b39f37-515f-4eee-8546-73e841679c1d', model: 'sonic-2' },
+  sofia:    { provider: 'cartesia', voiceId: '90c7d657-9599-4cd0-9ed2-2568359e4d1a', model: 'sonic-2' },
+  marcus:   { provider: 'cartesia', voiceId: '9301949d-b7cd-40d9-a246-5a4430992d6b', model: 'sonic-2' },
 }
 
 function formatHours(hours: Record<string, { open: boolean; from: string; to: string }>): string {
@@ -147,13 +147,14 @@ export async function POST() {
       name: shop.name,
       model: {
         provider: 'anthropic',
-        model: 'claude-sonnet-4-5',
+        model: 'claude-sonnet-4-6',
         messages: [{ role: 'system', content: systemPrompt }],
         temperature: 0.7,
       },
       voice: {
         provider: voice.provider,
         voiceId: voice.voiceId,
+        model: voice.model,
       },
       firstMessage: `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`,
       tools: [
