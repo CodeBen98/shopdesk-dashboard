@@ -12,11 +12,11 @@ create table public.shops (
   phone text not null default '',
   email text,
   hours jsonb not null default '{
-    "monday":    {"open": true,  "from": "08:00", "to": "17:00"},
-    "tuesday":   {"open": true,  "from": "08:00", "to": "17:00"},
-    "wednesday": {"open": true,  "from": "08:00", "to": "17:00"},
-    "thursday":  {"open": true,  "from": "08:00", "to": "17:00"},
-    "friday":    {"open": true,  "from": "08:00", "to": "17:00"},
+    "monday":    {"open": true,  "from": "09:00", "to": "17:00"},
+    "tuesday":   {"open": true,  "from": "09:00", "to": "17:00"},
+    "wednesday": {"open": true,  "from": "09:00", "to": "17:00"},
+    "thursday":  {"open": true,  "from": "09:00", "to": "17:00"},
+    "friday":    {"open": true,  "from": "09:00", "to": "17:00"},
     "saturday":  {"open": false, "from": "09:00", "to": "14:00"},
     "sunday":    {"open": false, "from": "09:00", "to": "14:00"}
   }'::jsonb,

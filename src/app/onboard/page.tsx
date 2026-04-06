@@ -21,7 +21,15 @@ export default async function OnboardPage() {
   if (!shop) {
     const { data: newShop } = await supabase
       .from('shops')
-      .insert({ owner_id: user.id, name: '' })
+      .insert({ owner_id: user.id, name: '', hours: {
+        monday:    { open: true,  from: '09:00', to: '17:00' },
+        tuesday:   { open: true,  from: '09:00', to: '17:00' },
+        wednesday: { open: true,  from: '09:00', to: '17:00' },
+        thursday:  { open: true,  from: '09:00', to: '17:00' },
+        friday:    { open: true,  from: '09:00', to: '17:00' },
+        saturday:  { open: false, from: '09:00', to: '17:00' },
+        sunday:    { open: false, from: '09:00', to: '17:00' },
+      }})
       .select('*')
       .single()
     shop = newShop
