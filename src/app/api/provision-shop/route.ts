@@ -153,8 +153,13 @@ export async function POST(request: Request) {
     const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
     const voice = voiceMap[shop.ai_voice] ?? voiceMap.patricia
 
+    const webhookUrl = process.env.NEXT_PUBLIC_APP_URL
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/api/vapi-webhook`
+      : 'https://app.shopdesk.site/api/vapi-webhook'
+
     const agentPayload = {
       name: shop.name,
+      serverUrl: webhookUrl,
       model: {
         provider: 'anthropic',
         model: 'claude-sonnet-4-6',
