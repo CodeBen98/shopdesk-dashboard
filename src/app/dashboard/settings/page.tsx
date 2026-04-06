@@ -128,7 +128,13 @@ export default function SettingsPage() {
     load()
   }, [])
 
-  async function save(fields: Partial<Shop>) {
+  function reprovisionAgent() {
+    fetch('/api/provision-shop', { method: 'POST' })
+      .then(res => { if (!res.ok) res.text().then(t => console.error('Re-provision failed:', t)) })
+      .catch(e => console.error('Re-provision error:', e))
+  }
+
+  async function save(fields: Partial<Shop>, reprovision = false) {
     if (!shop) return
     setSaving(true)
     const supabase = createClient()
@@ -137,8 +143,9 @@ export default function SettingsPage() {
     if (error) {
       show('Failed to save changes', 'error')
     } else {
-      show('Saved successfully', 'success')
+      show(reprovision ? 'Saved & AI updated' : 'Saved successfully', 'success')
       setShop(prev => prev ? { ...prev, ...fields } : prev)
+      if (reprovision) reprovisionAgent()
     }
   }
 
@@ -236,7 +243,7 @@ export default function SettingsPage() {
               </div>
             ))}
             <div style={{ marginTop: 8 }}>
-              <SaveButton onClick={() => save({ name, address, phone, email })} saving={saving} />
+              <SaveButton onClick={() => save({ name, address, phone, email }, true)} saving={saving} />
             </div>
           </div>
         )}
@@ -312,7 +319,7 @@ export default function SettingsPage() {
               })}
             </div>
             <div style={{ marginTop: 20 }}>
-              <SaveButton onClick={() => save({ hours })} saving={saving} />
+              <SaveButton onClick={() => save({ hours }, true)} saving={saving} />
             </div>
           </div>
         )}
@@ -385,7 +392,7 @@ export default function SettingsPage() {
               </button>
             </div>
             <div style={{ marginTop: 20 }}>
-              <SaveButton onClick={() => save({ services })} saving={saving} />
+              <SaveButton onClick={() => save({ services }, true)} saving={saving} />
             </div>
           </div>
         )}
@@ -463,7 +470,7 @@ export default function SettingsPage() {
                   ai_voice: voice,
                   emergency_contact: emergencyContact,
                   emergency_contact_name: emergencyContactName,
-                })}
+                }, true)}
                 saving={saving}
               />
             </div>
