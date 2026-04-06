@@ -55,6 +55,7 @@ export default async function DashboardPage() {
     .single()
 
   if (!shop) redirect('/auth/login')
+  if (!shop.onboarding_complete) redirect('/onboard')
 
   const [callsResult, bookingsResult, missedResult, recentCallsResult, upcomingResult] = await Promise.all([
     supabase.from('calls').select('id', { count: 'exact' }).eq('shop_id', shop.id),
