@@ -41,14 +41,22 @@ export async function proxy(request: NextRequest) {
       request.nextUrl.pathname.startsWith('/auth/login') ||
       request.nextUrl.pathname.startsWith('/auth/signup')
     )) {
+      // Check onboarding first before sending to dashboard
+      const { data: shop } = await supabase
+        .from('shops')
+        .select('onboarding_complete')
+        .eq('owner_id', user.id)
+        .single()
+      if (shop && !shop.onboarding_complete) {
+        return NextResponse.redirect(new URL('/onboard', request.url))
+      }
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
 
-    // Onboarding redirect: if user has a shop with onboarding_complete = false,
-    // redirect to /onboard unless already there or on an auth route
+    // Onboarding redirect: if user hits dashboard without completing onboarding
     if (
       user &&
-      !request.nextUrl.pathname.startsWith('/onboard') &&
+      request.nextUrl.pathname.startsWith('/dashboard') &&
       !request.nextUrl.pathname.startsWith('/auth/')
     ) {
       const { data: shop } = await supabase
