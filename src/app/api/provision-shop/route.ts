@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
-const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID || 'f8e74d03-2aa9-4ce2-9a95-8dbc83f3493a'
+const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID!
+const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
 
 const voiceNames: Record<string, string> = {
   patricia: 'Sarah',
@@ -173,7 +174,7 @@ export async function POST() {
               required: ['customerName', 'customerPhone', 'vehicle', 'service', 'appointmentTime'],
             },
           },
-          server: { url: 'https://shopdesk-booking-production.up.railway.app/book' },
+          server: { url: BOOKING_WEBHOOK_URL },
         },
         {
           type: 'endCall',
