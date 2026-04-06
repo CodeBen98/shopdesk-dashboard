@@ -214,8 +214,10 @@ export async function POST() {
     })
 
     // Save to DB
+    const twilioNumber = process.env.TWILIO_PHONE_NUMBER || '(407) 555-0123'
     await supabase.from('shops').update({
       vapi_agent_id: agentId,
+      twilio_number: twilioNumber,
       onboarding_step: 'forwarding',
     }).eq('owner_id', user.id)
 
