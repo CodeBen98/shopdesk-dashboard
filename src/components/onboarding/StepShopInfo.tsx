@@ -24,7 +24,7 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
       address: address.trim(),
       phone: phone.trim(),
       email: email.trim() || null,
-      onboarding_step: 'auto_fill_choice',
+      onboarding_step: 'hours',
     }).eq('owner_id', userId)
     onShopUpdate({ name: name.trim(), address: address.trim(), phone: phone.trim(), email: email.trim() || null })
     setLoading(false)
