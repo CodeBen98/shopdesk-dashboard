@@ -38,3 +38,13 @@ export function formatDuration(seconds: number): string {
   const s = seconds % 60
   return `${m}:${s.toString().padStart(2, '0')}`
 }
+
+export const DEFAULT_SHOP_HOURS = {
+  monday:    { open: true,  from: "09:00", to: "17:00" },
+  tuesday:   { open: true,  from: "09:00", to: "17:00" },
+  wednesday: { open: true,  from: "09:00", to: "17:00" },
+  thursday:  { open: true,  from: "09:00", to: "17:00" },
+  friday:    { open: true,  from: "09:00", to: "17:00" },
+  saturday:  { open: false, from: "09:00", to: "17:00" },
+  sunday:    { open: false, from: "09:00", to: "17:00" },
+}
