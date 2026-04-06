@@ -1,21 +1,59 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const VOICES = [
   { id: 'patricia', name: 'Patricia', tagline: 'Warm & Professional', emoji: '👩' },
-  { id: 'james', name: 'James', tagline: 'Calm & Authoritative', emoji: '👨' },
-  { id: 'sofia', name: 'Sofia', tagline: 'Friendly & Energetic', emoji: '👩‍💼' },
-  { id: 'marcus', name: 'Marcus', tagline: 'Direct & Trustworthy', emoji: '🧑‍💼' },
+  { id: 'james',    name: 'James',    tagline: 'Calm & Authoritative', emoji: '👨' },
+  { id: 'sofia',    name: 'Sofia',    tagline: 'Friendly & Energetic', emoji: '👩‍💼' },
+  { id: 'marcus',   name: 'Marcus',   tagline: 'Direct & Trustworthy', emoji: '🧑‍💼' },
 ]
 
-export function StepVoice({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
-  const [selected, setSelected] = useState(shop?.ai_voice ?? 'patricia')
+export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
+  // No default — user MUST pick
+  const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [playingId, setPlayingId] = useState<string | null>(null)
+  const [loadingPreview, setLoadingPreview] = useState<string | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+
+  async function playPreview(voiceId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+
+    // Stop any playing audio
+    if (audioRef.current) {
+      audioRef.current.pause()
+      audioRef.current = null
+    }
+    if (playingId === voiceId) {
+      setPlayingId(null)
+      return
+    }
+
+    setLoadingPreview(voiceId)
+    try {
+      const res = await fetch(`/api/voice-preview?voice=${voiceId}`)
+      if (!res.ok) throw new Error('Preview failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      audioRef.current = audio
+      setPlayingId(voiceId)
+      setLoadingPreview(null)
+      audio.play()
+      audio.onended = () => {
+        setPlayingId(null)
+        URL.revokeObjectURL(url)
+      }
+    } catch {
+      setLoadingPreview(null)
+    }
+  }
 
   async function handleSubmit() {
+    if (!selected) return
     setLoading(true)
     const supabase = createClient()
     await supabase.from('shops').update({
@@ -32,16 +70,20 @@ export function StepVoice({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
       <button onClick={onBack} style={backBtn}>← Back</button>
 
       <h2 style={titleStyle}>Choose your AI voice</h2>
-      <p style={subtitleStyle}>This is the voice your customers will hear when they call.</p>
+      <p style={subtitleStyle}>
+        This is the voice your customers will hear when they call. Preview each one before choosing.
+      </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
         {VOICES.map(voice => {
           const isSelected = selected === voice.id
+          const isPlaying = playingId === voice.id
+          const isLoadingThis = loadingPreview === voice.id
+
           return (
             <div
               key={voice.id}
               onClick={() => setSelected(voice.id)}
-              className="option-card-anim"
               style={{
                 border: isSelected ? '2px solid var(--accent)' : '2px solid var(--border)',
                 borderRadius: 12,
@@ -49,6 +91,7 @@ export function StepVoice({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
                 cursor: 'pointer',
                 background: isSelected ? 'rgba(15,118,149,0.06)' : 'var(--card)',
                 boxShadow: isSelected ? '0 0 0 4px rgba(15,118,149,0.15)' : 'none',
+                transition: 'border-color 0.15s, box-shadow 0.15s, background 0.15s',
               }}
             >
               <div style={{ fontSize: 28, marginBottom: 8 }}>{voice.emoji}</div>
@@ -58,26 +101,46 @@ export function StepVoice({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
               <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
                 {voice.tagline}
               </div>
+
+              {/* Preview button */}
               <button
-                onClick={e => e.stopPropagation()}
-                className="preview-btn"
+                onClick={(e) => playPreview(voice.id, e)}
+                disabled={!!loadingPreview}
                 style={{
-                  background: isSelected ? 'var(--accent)' : 'var(--card-raised)',
-                  color: isSelected ? '#fff' : 'var(--text-mid)',
-                  border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 6,
+                  background: isPlaying ? 'rgba(34,197,94,0.15)' : isSelected ? 'var(--accent)' : 'var(--card-raised)',
+                  color: isPlaying ? 'var(--success)' : isSelected ? '#fff' : 'var(--text-mid)',
+                  border: `1px solid ${isPlaying ? 'var(--success)' : isSelected ? 'var(--accent)' : 'var(--border)'}`,
                   borderRadius: 6,
-                  padding: '5px 10px',
+                  padding: '6px 12px',
                   fontSize: 12,
-                  cursor: 'pointer',
+                  cursor: loadingPreview ? 'wait' : 'pointer',
                   fontWeight: 500,
                   fontFamily: 'inherit',
-                  position: 'relative',
+                  transition: 'all 0.15s',
+                  width: '100%',
+                  justifyContent: 'center',
                 }}
               >
-                ▶ Preview
+                {isLoadingThis ? (
+                  <>
+                    <svg width="12" height="12" viewBox="0 0 12 12" fill="none" style={{ animation: 'spin 0.8s linear infinite' }}>
+                      <circle cx="6" cy="6" r="4" stroke="currentColor" strokeOpacity="0.3" strokeWidth="2"/>
+                      <path d="M6 2A4 4 0 0110 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                    Loading...
+                  </>
+                ) : isPlaying ? (
+                  <>■ Stop</>
+                ) : (
+                  <>▶ Preview</>
+                )}
               </button>
+
               {isSelected && (
-                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)', fontWeight: 600, textAlign: 'center' }}>
                   ✓ Selected
                 </div>
               )}
@@ -86,8 +149,31 @@ export function StepVoice({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
         })}
       </div>
 
-      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
-        {loading ? 'Saving...' : 'Continue →'}
+      {/* Must pick instruction */}
+      {!selected && (
+        <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', marginBottom: 16 }}>
+          Preview and select a voice to continue
+        </p>
+      )}
+
+      <button
+        onClick={handleSubmit}
+        disabled={!selected || loading}
+        style={{
+          background: selected ? 'var(--accent)' : 'var(--card-raised)',
+          color: selected ? '#fff' : 'var(--muted)',
+          padding: '13px 24px',
+          borderRadius: 10,
+          border: 'none',
+          cursor: selected ? 'pointer' : 'not-allowed',
+          fontWeight: 600,
+          fontSize: 15,
+          width: '100%',
+          transition: 'background 0.15s, opacity 0.15s',
+          opacity: loading ? 0.7 : 1,
+        }}
+      >
+        {loading ? 'Saving...' : selected ? `Continue with ${VOICES.find(v => v.id === selected)?.name} →` : 'Select a voice to continue'}
       </button>
     </div>
   )
@@ -104,26 +190,14 @@ const card: React.CSSProperties = {
   animation: 'card-enter 0.35s ease',
 }
 const backBtn: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: 'var(--muted)',
-  fontSize: 14,
-  cursor: 'pointer',
-  padding: 0,
-  marginBottom: 24,
-  display: 'block',
-  fontFamily: 'inherit',
+  background: 'none', border: 'none', color: 'var(--muted)',
+  fontSize: 14, cursor: 'pointer', padding: 0, marginBottom: 24,
+  display: 'block', fontFamily: 'inherit',
 }
 const titleStyle: React.CSSProperties = {
-  fontFamily: 'var(--font-space)',
-  fontSize: 24,
-  fontWeight: 700,
-  color: 'var(--text)',
-  marginBottom: 8,
+  fontFamily: 'var(--font-space)', fontSize: 24, fontWeight: 700,
+  color: 'var(--text)', marginBottom: 8,
 }
 const subtitleStyle: React.CSSProperties = {
-  fontSize: 15,
-  color: 'var(--muted)',
-  lineHeight: 1.6,
-  marginBottom: 32,
+  fontSize: 15, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 32,
 }
