@@ -7,23 +7,30 @@ import { StepProps } from './OnboardingWizard'
 export function StepCalendar({ shop: _shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [loading, setLoading] = useState(false)
   const [skipping, setSkipping] = useState(false)
+  const [comingSoon, setComingSoon] = useState(false)
+  const [saveError, setSaveError] = useState('')
 
   async function handleConnect() {
-    // OAuth wiring comes later — placeholder
     setLoading(true)
     await new Promise(r => setTimeout(r, 800))
     setLoading(false)
-    alert('Google Calendar OAuth will be wired up soon. Skipping for now.')
-    await handleSkip()
+    setComingSoon(true)
+    setTimeout(() => handleSkip(), 2000)
   }
 
   async function handleSkip() {
     setSkipping(true)
+    setSaveError('')
     const supabase = createClient()
-    await supabase.from('shops').update({
+    const { error: saveErr } = await supabase.from('shops').update({
       google_calendar_id: null,
       onboarding_step: 'voice',
     }).eq('owner_id', userId)
+    if (saveErr) {
+      setSaveError('Failed to save. Please try again.')
+      setSkipping(false)
+      return
+    }
     onShopUpdate({ google_calendar_id: null })
     setSkipping(false)
     onNext()
@@ -67,9 +74,23 @@ export function StepCalendar({ shop: _shop, userId, onNext, onBack, onShopUpdate
         </ul>
       </div>
 
-      <button onClick={handleConnect} disabled={loading || skipping} className="step-btn-primary">
+      <button onClick={handleConnect} disabled={loading || skipping || comingSoon} className="step-btn-primary">
         {loading ? 'Connecting...' : 'Connect Google Calendar'}
       </button>
+
+      {comingSoon && (
+        <p style={{
+          fontSize: 14,
+          color: 'var(--text-mid)',
+          marginTop: 12,
+          lineHeight: 1.6,
+          textAlign: 'center',
+        }}>
+          📅 Google Calendar integration is coming soon. We&apos;ll notify you when it&apos;s ready. For now, your AI will take appointment requests and notify you.
+        </p>
+      )}
+
+      {saveError && <p style={{ fontSize: 12, color: 'var(--danger)', marginTop: 8, textAlign: 'center' }}>{saveError}</p>}
 
       <div style={{ textAlign: 'center', marginTop: 16 }}>
         <button

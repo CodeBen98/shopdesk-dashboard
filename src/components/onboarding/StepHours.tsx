@@ -15,31 +15,72 @@ const DAYS: { key: keyof ShopHours; label: string }[] = [
   { key: 'sunday', label: 'Sunday' },
 ]
 
+const WEEKDAYS: (keyof ShopHours)[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
+
 const DEFAULT_HOURS: ShopHours = {
-  monday: { open: true, from: '08:00', to: '17:00' },
-  tuesday: { open: true, from: '08:00', to: '17:00' },
-  wednesday: { open: true, from: '08:00', to: '17:00' },
-  thursday: { open: true, from: '08:00', to: '17:00' },
-  friday: { open: true, from: '08:00', to: '17:00' },
-  saturday: { open: false, from: '08:00', to: '17:00' },
-  sunday: { open: false, from: '08:00', to: '17:00' },
+  monday: { open: true, from: '09:00', to: '17:00' },
+  tuesday: { open: true, from: '09:00', to: '17:00' },
+  wednesday: { open: true, from: '09:00', to: '17:00' },
+  thursday: { open: true, from: '09:00', to: '17:00' },
+  friday: { open: true, from: '09:00', to: '17:00' },
+  saturday: { open: false, from: '09:00', to: '17:00' },
+  sunday: { open: false, from: '09:00', to: '17:00' },
 }
 
 export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [hours, setHours] = useState<ShopHours>(shop?.hours ?? DEFAULT_HOURS)
+  const [timeErrors, setTimeErrors] = useState<Partial<Record<keyof ShopHours, string>>>({})
+  const [saveError, setSaveError] = useState('')
   const [loading, setLoading] = useState(false)
 
   function updateDay(key: keyof ShopHours, patch: Partial<DayHours>) {
     setHours(prev => ({ ...prev, [key]: { ...prev[key], ...patch } }))
+    setTimeErrors(prev => { const next = { ...prev }; delete next[key]; return next })
   }
 
+  function copyWeekdaysFromMonday() {
+    const mon = hours.monday
+    setHours(prev => ({
+      ...prev,
+      tuesday: { ...prev.tuesday, from: mon.from, to: mon.to },
+      wednesday: { ...prev.wednesday, from: mon.from, to: mon.to },
+      thursday: { ...prev.thursday, from: mon.from, to: mon.to },
+      friday: { ...prev.friday, from: mon.from, to: mon.to },
+    }))
+    setTimeErrors(prev => {
+      const next = { ...prev }
+      delete next.tuesday; delete next.wednesday; delete next.thursday; delete next.friday
+      return next
+    })
+  }
+
+  const allWeekdaysOpen = WEEKDAYS.every(k => hours[k].open)
+
   async function handleSubmit() {
+    const newTimeErrors: Partial<Record<keyof ShopHours, string>> = {}
+    DAYS.forEach(({ key }) => {
+      const day = hours[key]
+      if (day.open && day.to <= day.from) {
+        newTimeErrors[key] = 'Closing time must be after opening time'
+      }
+    })
+    if (Object.keys(newTimeErrors).length > 0) {
+      setTimeErrors(newTimeErrors)
+      return
+    }
+
     setLoading(true)
+    setSaveError('')
     const supabase = createClient()
-    await supabase.from('shops').update({
+    const { error: saveErr } = await supabase.from('shops').update({
       hours,
       onboarding_step: 'services',
     }).eq('owner_id', userId)
+    if (saveErr) {
+      setSaveError('Failed to save. Please try again.')
+      setLoading(false)
+      return
+    }
     onShopUpdate({ hours })
     setLoading(false)
     onNext()
@@ -52,64 +93,94 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
       <h2 style={titleStyle}>Set your business hours</h2>
       <p style={subtitleStyle}>Your AI receptionist will use these to greet callers appropriately.</p>
 
+      {allWeekdaysOpen && (
+        <div style={{ marginBottom: 16, textAlign: 'right' }}>
+          <button
+            type="button"
+            onClick={copyWeekdaysFromMonday}
+            style={{
+              background: 'var(--accent-dim)',
+              border: '1px solid rgba(15,118,149,0.3)',
+              borderRadius: 8,
+              color: 'var(--accent)',
+              fontSize: 13,
+              fontWeight: 600,
+              cursor: 'pointer',
+              padding: '6px 14px',
+              fontFamily: 'inherit',
+            }}
+          >
+            Copy Mon hours to Tue–Fri
+          </button>
+        </div>
+      )}
+
       <div style={{ marginBottom: 24 }}>
         {DAYS.map(({ key, label }) => {
           const day = hours[key]
           return (
-            <div
-              key={key}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 12,
-                padding: '12px 0',
-                borderBottom: '1px solid var(--border)',
-              }}
-            >
-              <div style={{ width: 104, fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
-                {label}
-              </div>
-
-              <button
-                onClick={() => updateDay(key, { open: !day.open })}
+            <div key={key}>
+              <div
                 style={{
-                  padding: '4px 12px',
-                  borderRadius: 9999,
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  background: day.open ? 'var(--accent)' : 'var(--card)',
-                  color: day.open ? '#fff' : 'var(--muted)',
-                  minWidth: 64,
-                  transition: 'background 0.15s, color 0.15s',
-                  fontFamily: 'inherit',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '12px 0',
+                  borderBottom: timeErrors[key] ? 'none' : '1px solid var(--border)',
                 }}
               >
-                {day.open ? 'Open' : 'Closed'}
-              </button>
+                <div style={{ width: 104, fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
+                  {label}
+                </div>
 
-              {day.open && (
-                <>
-                  <input
-                    type="time"
-                    value={day.from}
-                    onChange={e => updateDay(key, { from: e.target.value })}
-                    style={timeInput}
-                  />
-                  <span style={{ fontSize: 13, color: 'var(--muted)' }}>to</span>
-                  <input
-                    type="time"
-                    value={day.to}
-                    onChange={e => updateDay(key, { to: e.target.value })}
-                    style={timeInput}
-                  />
-                </>
+                <button
+                  onClick={() => updateDay(key, { open: !day.open })}
+                  style={{
+                    padding: '4px 12px',
+                    borderRadius: 9999,
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    fontWeight: 600,
+                    background: day.open ? 'var(--accent)' : 'var(--card)',
+                    color: day.open ? '#fff' : 'var(--muted)',
+                    minWidth: 64,
+                    transition: 'background 0.15s, color 0.15s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {day.open ? 'Open' : 'Closed'}
+                </button>
+
+                {day.open && (
+                  <>
+                    <input
+                      type="time"
+                      value={day.from}
+                      onChange={e => updateDay(key, { from: e.target.value })}
+                      style={timeErrors[key] ? { ...timeInput, borderColor: 'var(--danger)' } : timeInput}
+                    />
+                    <span style={{ fontSize: 13, color: 'var(--muted)' }}>to</span>
+                    <input
+                      type="time"
+                      value={day.to}
+                      onChange={e => updateDay(key, { to: e.target.value })}
+                      style={timeErrors[key] ? { ...timeInput, borderColor: 'var(--danger)' } : timeInput}
+                    />
+                  </>
+                )}
+              </div>
+              {timeErrors[key] && (
+                <p style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 8px 120px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+                  {timeErrors[key]}
+                </p>
               )}
             </div>
           )
         })}
       </div>
+
+      {saveError && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 12 }}>{saveError}</p>}
 
       <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
         {loading ? 'Saving...' : 'Continue →'}

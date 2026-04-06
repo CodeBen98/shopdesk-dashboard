@@ -20,6 +20,8 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
   )
   const [loading, setLoading] = useState(false)
   const [errors, setErrors] = useState<Record<number, string>>({})
+  const [minServiceError, setMinServiceError] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   function addService(name = '') {
     setServices(prev => [...prev, { ...emptyService(), name }])
@@ -48,6 +50,11 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
   }
 
   async function handleSubmit() {
+    if (services.length === 0) {
+      setMinServiceError('Please add at least one service so your AI knows what you offer')
+      return
+    }
+    setMinServiceError('')
     const newErrors: Record<number, string> = {}
     services.forEach((s, i) => {
       if (!s.name.trim()) newErrors[i] = 'Service name is required'
@@ -57,16 +64,22 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       return
     }
     setLoading(true)
+    setSaveError('')
     const cleaned = services.map(s => ({
       name: s.name.trim(),
       price: s.price?.trim() || null,
       description: s.description?.trim() || null,
     }))
     const supabase = createClient()
-    await supabase.from('shops').update({
+    const { error: saveErr } = await supabase.from('shops').update({
       services: cleaned,
       onboarding_step: 'emergency',
     }).eq('owner_id', userId)
+    if (saveErr) {
+      setSaveError('Failed to save. Please try again.')
+      setLoading(false)
+      return
+    }
     onShopUpdate({ services: cleaned })
     setLoading(false)
     onNext()
@@ -180,6 +193,9 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       >
         + Add Service
       </button>
+
+      {minServiceError && <p style={{ ...errorStyle, marginBottom: 12 }}>{minServiceError}</p>}
+      {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
 
       <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
         {loading ? 'Saving...' : 'Continue →'}

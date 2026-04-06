@@ -31,7 +31,15 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
     // Call real provision API
     const provision = async () => {
       try {
-        const res = await fetch('/api/provision-shop', { method: 'POST' })
+        const extras = JSON.parse(localStorage.getItem('shopdesk_onboarding_extras') || '{}')
+        const res = await fetch('/api/provision-shop', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            vehicleTypes: extras.vehicleTypes || [],
+            ownerName: extras.ownerName || '',
+          }),
+        })
         const data = await res.json()
 
         if (!res.ok) {
@@ -40,6 +48,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         }
 
         if (!cancelled) {
+          localStorage.removeItem('shopdesk_onboarding_extras')
           onShopUpdate({ vapi_agent_id: data.agentId })
           setDone(true)
           // Small delay so user sees the last stage complete

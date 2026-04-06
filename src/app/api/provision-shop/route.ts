@@ -37,18 +37,20 @@ function buildSystemPrompt(shop: {
   emergency_contact: string
   emergency_contact_name: string
   ai_voice: string
-}): string {
+}, extras?: { vehicleTypes?: string[]; ownerName?: string }): string {
   const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
   const serviceList = shop.services.map(s =>
     `  - ${s.name}${s.price ? ` ($${s.price})` : ''}${s.description ? ` — ${s.description}` : ''}`
   ).join('\n')
   const hoursText = formatHours(shop.hours)
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  const ownerName = extras?.ownerName || shop.emergency_contact_name || 'the shop owner'
+  const vehicleTypes = extras?.vehicleTypes && extras.vehicleTypes.length > 0 ? extras.vehicleTypes : null
 
   return `[Identity]
 You are ${receptionistName}, the virtual receptionist at ${shop.name}.
 You know this shop inside and out. You are warm, helpful, and professional.
-
+${extras?.ownerName ? `The owner/manager is ${extras.ownerName}. When customers ask to speak to someone, say you'll have ${extras.ownerName} call them back.` : ''}
 Never say you are an AI. If asked, say you are the virtual receptionist for ${shop.name}.
 
 [Style]
@@ -64,7 +66,7 @@ Never say you are an AI. If asked, say you are the virtual receptionist for ${sh
 ${shop.name} | ${shop.address}${shop.phone ? ` | ${shop.phone}` : ''}
 Hours:
 ${hoursText}
-
+${vehicleTypes ? `Vehicle types serviced: ${vehicleTypes.join(', ')}` : ''}
 Services:
 ${serviceList || '  - General auto repair and maintenance'}
 
@@ -90,7 +92,7 @@ Urgent (warning lights, unusual sounds): acknowledge urgency, try to get them in
 
 [Escalation]
 Wants to speak to someone: take their name and phone number, call bookAppointment as a callback request, then say goodbye and call endCall.
-Emergency contact: ${shop.emergency_contact_name || 'the shop owner'} at ${shop.emergency_contact || 'the shop'}.
+Emergency contact: ${ownerName} at ${shop.emergency_contact || 'the shop'}.
 
 [Error Handling]
 Booking fails: take their number, promise a callback within the hour.
@@ -118,8 +120,11 @@ async function vapiRequest(path: string, method: string, body?: object) {
   return data
 }
 
-export async function POST() {
+export async function POST(request: Request) {
   try {
+    const body = await request.json().catch(() => ({}))
+    const { vehicleTypes, ownerName } = body as { vehicleTypes?: string[]; ownerName?: string }
+
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -143,7 +148,7 @@ export async function POST() {
       emergency_contact: shop.emergency_contact,
       emergency_contact_name: shop.emergency_contact_name,
       ai_voice: shop.ai_voice,
-    })
+    }, { vehicleTypes, ownerName })
 
     const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
     const voice = voiceMap[shop.ai_voice] ?? voiceMap.patricia
