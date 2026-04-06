@@ -43,6 +43,24 @@ export async function middleware(request: NextRequest) {
     )) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
+
+    // Onboarding redirect: if user has a shop with onboarding_complete = false,
+    // redirect to /onboard unless already there or on an auth route
+    if (
+      user &&
+      !request.nextUrl.pathname.startsWith('/onboard') &&
+      !request.nextUrl.pathname.startsWith('/auth/')
+    ) {
+      const { data: shop } = await supabase
+        .from('shops')
+        .select('onboarding_complete')
+        .eq('owner_id', user.id)
+        .single()
+
+      if (shop && !shop.onboarding_complete) {
+        return NextResponse.redirect(new URL('/onboard', request.url))
+      }
+    }
   } catch {
     // Auth error — let the request through, page-level auth will handle it
   }

@@ -16,6 +16,8 @@ export type Shop = {
   status: 'onboarding' | 'live' | 'paused'
   plan: 'trial' | 'starter' | 'professional' | 'growth'
   trial_ends_at: string | null
+  onboarding_complete: boolean
+  onboarding_step: OnboardingStep
   created_at: string
 }
 
