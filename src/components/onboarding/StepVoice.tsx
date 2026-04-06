@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
-
 const VOICES = [
   { id: 'patricia', name: 'Patricia', tagline: 'Warm & Professional', emoji: '👩' },
   { id: 'james', name: 'James', tagline: 'Calm & Authoritative', emoji: '👨' },
@@ -13,7 +11,7 @@ const VOICES = [
   { id: 'marcus', name: 'Marcus', tagline: 'Direct & Trustworthy', emoji: '🧑‍💼' },
 ]
 
-export function StepVoice({ shop, userId, onNext, onShopUpdate }: StepProps) {
+export function StepVoice({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [selected, setSelected] = useState(shop?.ai_voice ?? 'patricia')
   const [loading, setLoading] = useState(false)
 
@@ -31,49 +29,55 @@ export function StepVoice({ shop, userId, onNext, onShopUpdate }: StepProps) {
 
   return (
     <div style={card}>
+      <button onClick={onBack} style={backBtn}>← Back</button>
+
       <h2 style={titleStyle}>Choose your AI voice</h2>
       <p style={subtitleStyle}>This is the voice your customers will hear when they call.</p>
 
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '28px' }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
         {VOICES.map(voice => {
           const isSelected = selected === voice.id
           return (
             <div
               key={voice.id}
               onClick={() => setSelected(voice.id)}
+              className="option-card-anim"
               style={{
-                border: `2px solid ${isSelected ? TEAL : '#e5e7eb'}`,
-                borderRadius: '10px',
-                padding: '16px',
+                border: isSelected ? '2px solid var(--accent)' : '2px solid var(--border)',
+                borderRadius: 12,
+                padding: 16,
                 cursor: 'pointer',
-                background: isSelected ? '#f0f9ff' : '#fff',
-                transition: 'border-color 0.15s, background 0.15s',
+                background: isSelected ? 'rgba(15,118,149,0.06)' : 'var(--card)',
+                boxShadow: isSelected ? '0 0 0 4px rgba(15,118,149,0.15)' : 'none',
               }}
             >
-              <div style={{ fontSize: '28px', marginBottom: '8px' }}>{voice.emoji}</div>
-              <div style={{ fontWeight: 700, fontSize: '15px', color: '#111827', marginBottom: '2px' }}>
+              <div style={{ fontSize: 28, marginBottom: 8 }}>{voice.emoji}</div>
+              <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 2 }}>
                 {voice.name}
               </div>
-              <div style={{ fontSize: '12px', color: '#6b7280', marginBottom: '12px' }}>
+              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
                 {voice.tagline}
               </div>
               <button
-                onClick={e => { e.stopPropagation(); /* placeholder — no audio yet */ }}
+                onClick={e => e.stopPropagation()}
+                className="preview-btn"
                 style={{
-                  background: isSelected ? TEAL : '#f3f4f6',
-                  color: isSelected ? '#fff' : '#374151',
-                  border: 'none',
-                  borderRadius: '6px',
+                  background: isSelected ? 'var(--accent)' : 'var(--card-raised)',
+                  color: isSelected ? '#fff' : 'var(--text-mid)',
+                  border: `1px solid ${isSelected ? 'var(--accent)' : 'var(--border)'}`,
+                  borderRadius: 6,
                   padding: '5px 10px',
-                  fontSize: '12px',
+                  fontSize: 12,
                   cursor: 'pointer',
                   fontWeight: 500,
+                  fontFamily: 'inherit',
+                  position: 'relative',
                 }}
               >
-                ▶ Play
+                ▶ Preview
               </button>
               {isSelected && (
-                <div style={{ marginTop: '8px', fontSize: '12px', color: TEAL, fontWeight: 600 }}>
+                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)', fontWeight: 600 }}>
                   ✓ Selected
                 </div>
               )}
@@ -82,7 +86,7 @@ export function StepVoice({ shop, userId, onNext, onShopUpdate }: StepProps) {
         })}
       </div>
 
-      <button onClick={handleSubmit} disabled={loading} style={primaryBtn}>
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>
@@ -90,13 +94,36 @@ export function StepVoice({ shop, userId, onNext, onShopUpdate }: StepProps) {
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '24px' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '15px', width: '100%' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 32,
+}

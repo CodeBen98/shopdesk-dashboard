@@ -31,6 +31,7 @@ export interface StepProps {
   shop: Shop | null
   userId: string
   onNext: () => void
+  onBack?: () => void
   onSkipTo: (step: OnboardingStep) => void
   onShopUpdate: (updated: Partial<Shop>) => void
 }
@@ -56,6 +57,13 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
     }
   }
 
+  function onBack() {
+    const prevIndex = stepIndex - 1
+    if (prevIndex >= 0) {
+      setCurrentStep(STEPS[prevIndex])
+    }
+  }
+
   function onSkipTo(step: OnboardingStep) {
     setCurrentStep(step)
   }
@@ -64,10 +72,10 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
     setShopData(prev => prev ? { ...prev, ...updated } : (updated as Shop))
   }
 
-  const commonProps: StepProps = { shop: shopData, userId, onNext, onSkipTo, onShopUpdate }
+  const commonProps: StepProps = { shop: shopData, userId, onNext, onBack, onSkipTo, onShopUpdate }
 
   return (
-    <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
+    <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <ProgressBar currentStep={displayStep} totalSteps={10} />
       <div style={{ padding: '40px 16px' }}>
         {currentStep === 'shop_info' && <StepShopInfo {...commonProps} />}

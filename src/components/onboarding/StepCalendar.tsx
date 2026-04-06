@@ -4,9 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
-
-export function StepCalendar({ shop: _shop, userId, onNext, onShopUpdate }: StepProps) {
+export function StepCalendar({ shop: _shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [loading, setLoading] = useState(false)
   const [skipping, setSkipping] = useState(false)
 
@@ -33,16 +31,19 @@ export function StepCalendar({ shop: _shop, userId, onNext, onShopUpdate }: Step
 
   return (
     <div style={card}>
-      <div style={{ marginBottom: '16px', textAlign: 'center' }}>
+      <button onClick={onBack} style={backBtn}>← Back</button>
+
+      <div style={{ marginBottom: 20, textAlign: 'center' }}>
         <div style={{
-          width: '64px',
-          height: '64px',
-          background: '#e0f2fe',
-          borderRadius: '16px',
+          width: 64,
+          height: 64,
+          background: 'var(--accent-dim)',
+          borderRadius: 16,
           display: 'inline-flex',
           alignItems: 'center',
           justifyContent: 'center',
-          fontSize: '32px',
+          fontSize: 32,
+          border: '1px solid rgba(15,118,149,0.2)',
         }}>
           📅
         </div>
@@ -53,28 +54,28 @@ export function StepCalendar({ shop: _shop, userId, onNext, onShopUpdate }: Step
       </p>
 
       <div style={{
-        background: '#f0f9ff',
-        border: '1px solid #bae6fd',
-        borderRadius: '8px',
-        padding: '16px',
-        marginBottom: '24px',
+        background: 'var(--card)',
+        border: '1px solid var(--border)',
+        borderRadius: 8,
+        padding: 16,
+        marginBottom: 24,
       }}>
-        <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '14px', color: '#374151', lineHeight: '1.8' }}>
+        <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: 'var(--text-mid)', lineHeight: 1.8 }}>
           <li>Automatically block off booked slots</li>
           <li>Send calendar invites to customers</li>
           <li>See all appointments in one place</li>
         </ul>
       </div>
 
-      <button onClick={handleConnect} disabled={loading || skipping} style={primaryBtn}>
+      <button onClick={handleConnect} disabled={loading || skipping} className="step-btn-primary">
         {loading ? 'Connecting...' : 'Connect Google Calendar'}
       </button>
 
-      <div style={{ textAlign: 'center', marginTop: '16px' }}>
+      <div style={{ textAlign: 'center', marginTop: 16 }}>
         <button
           onClick={handleSkip}
           disabled={skipping || loading}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '14px' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, fontFamily: 'inherit' }}
         >
           {skipping ? 'Skipping...' : 'Skip for now'}
         </button>
@@ -84,13 +85,36 @@ export function StepCalendar({ shop: _shop, userId, onNext, onShopUpdate }: Step
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '24px' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '15px', width: '100%' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 28,
+}

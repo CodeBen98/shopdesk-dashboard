@@ -4,10 +4,9 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
 const DEMO_NUMBER = '(407) 555-0123'
 
-export function StepForwarding({ shop, userId, onNext }: StepProps) {
+export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
   const displayNumber = shop?.twilio_number ?? DEMO_NUMBER
   const [confirmed, setConfirmed] = useState(false)
   const [copied, setCopied] = useState(false)
@@ -33,60 +32,74 @@ export function StepForwarding({ shop, userId, onNext }: StepProps) {
 
   return (
     <div style={card}>
+      <button onClick={onBack} style={backBtn}>← Back</button>
+
       <h2 style={titleStyle}>Set up call forwarding</h2>
       <p style={subtitleStyle}>
         Forward unanswered calls from your shop number to your dedicated ShopDesk number below.
       </p>
 
+      {/* Phone number display */}
       <div style={{
-        background: '#f0f9ff',
-        border: `2px solid ${TEAL}`,
-        borderRadius: '10px',
-        padding: '20px',
+        background: 'var(--card)',
+        border: '2px solid var(--accent)',
+        borderRadius: 12,
+        padding: '24px',
         textAlign: 'center',
-        marginBottom: '28px',
+        marginBottom: 28,
       }}>
-        <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Your dedicated ShopDesk number</p>
-        <p style={{ fontSize: '28px', fontWeight: 800, color: '#111827', letterSpacing: '0.5px', marginBottom: '12px' }}>
+        <p style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>
+          Your dedicated ShopDesk number
+        </p>
+        <p style={{
+          fontSize: 32,
+          fontWeight: 800,
+          color: 'var(--accent)',
+          letterSpacing: '0.03em',
+          marginBottom: 16,
+          fontFamily: 'monospace',
+        }}>
           {displayNumber}
         </p>
         <button
           onClick={copyNumber}
           style={{
-            background: copied ? '#16a34a' : TEAL,
-            color: '#fff',
-            border: 'none',
-            borderRadius: '6px',
+            background: copied ? 'rgba(34,197,94,0.15)' : 'var(--accent-dim)',
+            color: copied ? 'var(--success)' : 'var(--accent)',
+            border: `1px solid ${copied ? 'rgba(34,197,94,0.3)' : 'rgba(15,118,149,0.3)'}`,
+            borderRadius: 8,
             padding: '8px 20px',
-            fontSize: '14px',
+            fontSize: 14,
             fontWeight: 600,
             cursor: 'pointer',
+            transition: 'background 0.2s, color 0.2s, border-color 0.2s',
+            fontFamily: 'inherit',
           }}
         >
           {copied ? '✓ Copied!' : 'Copy Number'}
         </button>
       </div>
 
-      <div style={{ marginBottom: '24px' }}>
-        <p style={{ fontSize: '14px', fontWeight: 600, color: '#374151', marginBottom: '12px' }}>
+      <div style={{ marginBottom: 24 }}>
+        <p style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 12 }}>
           How to set it up:
         </p>
-        <ol style={{ margin: 0, paddingLeft: '20px', lineHeight: '2', fontSize: '14px', color: '#4b5563' }}>
+        <ol style={{ margin: 0, paddingLeft: 20, lineHeight: 2, fontSize: 14, color: 'var(--text-mid)' }}>
           <li>Go to your phone carrier&apos;s settings (or call them)</li>
-          <li>Enable <strong>&quot;Forward unanswered calls&quot;</strong></li>
+          <li>Enable <strong style={{ color: 'var(--text)' }}>&quot;Forward unanswered calls&quot;</strong></li>
           <li>Enter the number above as the forwarding destination</li>
           <li>Test it by calling your shop number and not answering</li>
         </ol>
       </div>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '24px', cursor: 'pointer' }}>
+      <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, cursor: 'pointer' }}>
         <input
           type="checkbox"
           checked={confirmed}
           onChange={e => setConfirmed(e.target.checked)}
-          style={{ width: '18px', height: '18px', accentColor: TEAL, cursor: 'pointer' }}
+          style={{ width: 18, height: 18, accentColor: 'var(--accent)', cursor: 'pointer' }}
         />
-        <span style={{ fontSize: '14px', color: '#374151', fontWeight: 500 }}>
+        <span style={{ fontSize: 14, color: 'var(--text-mid)', fontWeight: 500 }}>
           I have set up call forwarding
         </span>
       </label>
@@ -94,11 +107,8 @@ export function StepForwarding({ shop, userId, onNext }: StepProps) {
       <button
         onClick={handleNext}
         disabled={!confirmed || loading}
-        style={{
-          ...primaryBtn,
-          opacity: confirmed ? 1 : 0.5,
-          cursor: confirmed ? 'pointer' : 'not-allowed',
-        }}
+        className="step-btn-primary"
+        style={{ opacity: confirmed ? 1 : 0.5, cursor: confirmed ? 'pointer' : 'not-allowed' }}
       >
         {loading ? 'Saving...' : 'Continue →'}
       </button>
@@ -107,13 +117,36 @@ export function StepForwarding({ shop, userId, onNext }: StepProps) {
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '24px' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', fontWeight: 600, fontSize: '15px', width: '100%' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 24,
+}

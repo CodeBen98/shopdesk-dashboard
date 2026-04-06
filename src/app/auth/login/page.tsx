@@ -57,18 +57,29 @@ export default function LoginPage() {
       width: '100%',
       boxSizing: 'border-box',
       background: 'var(--card)',
-      border: `1px solid ${focusedField === field ? 'var(--accent)' : 'var(--border)'}`,
+      border: `1px solid ${focusedField === field ? 'var(--accent)' : 'rgba(255,255,255,0.06)'}`,
       borderRadius: 8,
-      padding: '10px 14px',
+      padding: '12px 14px',
       fontSize: 15,
       color: 'var(--text)',
       outline: 'none',
       transition: 'border-color 0.15s',
+      fontFamily: 'inherit',
     }
   }
 
   return (
     <>
+      <style>{`
+        .auth-split { display: flex; min-height: 100vh; }
+        .auth-left { width: 40%; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 40px; background: linear-gradient(160deg, var(--bg) 0%, #0c1e2d 100%); border-right: 1px solid var(--border); position: relative; overflow: hidden; }
+        .auth-right { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 48px 24px; background: var(--bg); background-image: radial-gradient(circle at 20% 50%, rgba(15,118,149,0.05) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(15,118,149,0.03) 0%, transparent 40%); }
+        @media (max-width: 768px) {
+          .auth-left { display: none; }
+          .auth-right { width: 100%; }
+        }
+      `}</style>
+
       {/* Full-page success overlay */}
       {showOverlay && (
         <div style={{
@@ -102,189 +113,236 @@ export default function LoginPage() {
         </div>
       )}
 
-      <div style={{
-        minHeight: '100vh',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
-        justifyContent: 'center',
-        padding: '24px 16px',
-        background: 'var(--bg)',
-      }}>
-        <div style={{ width: '100%', maxWidth: 400, animation: 'fadeIn 0.3s ease' }}>
-
-          {/* Logo */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 40, justifyContent: 'center' }}>
-            <div style={{ width: 4, height: 24, background: 'var(--accent)', borderRadius: 2 }} />
-            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 22, color: 'var(--text)' }}>
-              ShopDesk
-            </span>
-          </div>
-
-          {/* Card */}
-          <div style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 16,
-            padding: '32px',
-          }}>
-            <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 22, fontWeight: 700, marginBottom: 6, color: 'var(--text)' }}>
-              Welcome back
-            </h1>
-            <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 28 }}>
-              Sign in to your ShopDesk dashboard
-            </p>
-
-            {error && (
-              <div style={{
-                background: 'var(--danger-dim)',
-                border: '1px solid var(--danger)',
-                borderRadius: 8,
-                padding: '10px 14px',
-                marginBottom: 20,
-                fontSize: 14,
-                color: 'var(--danger)',
-              }}>
-                {error}
-              </div>
-            )}
-
-            {/* Google */}
-            <button
-              onClick={handleGoogle}
-              disabled={googleLoading || loading}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 10,
-                background: 'var(--card)',
-                border: '1px solid var(--border)',
-                borderRadius: 8,
-                padding: '11px 16px',
-                fontSize: 15,
-                fontWeight: 500,
-                color: 'var(--text)',
-                cursor: (googleLoading || loading) ? 'not-allowed' : 'pointer',
-                marginBottom: 20,
-                transition: 'border-color 0.15s, opacity 0.15s',
-                opacity: (googleLoading || loading) ? 0.7 : 1,
-              }}
-            >
-              {googleLoading ? (
-                <Spinner />
-              ) : (
-                <GoogleIcon />
-              )}
-              {googleLoading ? 'Loading...' : 'Continue with Google'}
-            </button>
-
-            {/* Divider */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
-              <span style={{ fontSize: 12, color: 'var(--muted)' }}>or</span>
-              <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+      <div className="auth-split">
+        {/* Left brand panel */}
+        <div className="auth-left">
+          <div style={{ maxWidth: 320, width: '100%' }}>
+            {/* Logo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40 }}>
+              <div style={{ width: 5, height: 32, background: 'var(--accent)', borderRadius: 3 }} />
+              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 26, color: 'var(--text)' }}>
+                ShopDesk
+              </span>
             </div>
 
-            <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-mid)', marginBottom: 6 }}>
-                  Email
-                </label>
-                <input
-                  type="email"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  placeholder="you@yourshop.com"
-                  required
-                  onFocus={() => setFocusedField('email')}
-                  onBlur={() => setFocusedField(null)}
-                  style={inputStyle('email')}
-                />
-              </div>
+            {/* Tagline */}
+            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.2, marginBottom: 32 }}>
+              Never miss a call again.
+            </h2>
 
-              <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
-                  <label style={{ fontSize: 13, fontWeight: 500, color: 'var(--text-mid)' }}>Password</label>
-                  <Link href="/auth/forgot-password" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none' }}>
-                    Forgot password?
-                  </Link>
+            {/* Proof points */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 48 }}>
+              {[
+                '24/7 AI receptionist for your shop',
+                'Books appointments while you sleep',
+                'Set up in under 10 minutes',
+              ].map(point => (
+                <div key={point} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div style={{
+                    width: 20, height: 20, borderRadius: '50%',
+                    background: 'var(--accent-dim)',
+                    border: '1px solid var(--accent)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    flexShrink: 0,
+                  }}>
+                    <span style={{ color: 'var(--accent)', fontSize: 11, fontWeight: 700 }}>✓</span>
+                  </div>
+                  <span style={{ fontSize: 15, color: 'var(--text-mid)', lineHeight: 1.4 }}>{point}</span>
                 </div>
-                <div style={{ position: 'relative' }}>
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    onFocus={() => setFocusedField('password')}
-                    onBlur={() => setFocusedField(null)}
-                    style={{ ...inputStyle('password'), paddingRight: 42 }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(p => !p)}
-                    style={{
-                      position: 'absolute', right: 12, top: '50%',
-                      transform: 'translateY(-50%)',
-                      background: 'none', border: 'none',
-                      color: 'var(--muted)', cursor: 'pointer',
-                      padding: 0, display: 'flex',
-                    }}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? <EyeOffIcon /> : <EyeIcon />}
-                  </button>
-                </div>
-              </div>
+              ))}
+            </div>
 
+            {/* Social proof */}
+            <p style={{ fontSize: 13, color: 'var(--muted)' }}>
+              Trusted by auto shops across Florida
+            </p>
+          </div>
+        </div>
+
+        {/* Right form panel */}
+        <div className="auth-right">
+          <div style={{ width: '100%', maxWidth: 420, animation: 'fadeIn 0.3s ease' }}>
+
+            {/* Mobile-only logo */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 40, justifyContent: 'center' }}>
+              <div style={{ width: 4, height: 24, background: 'var(--accent)', borderRadius: 2 }} />
+              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 22, color: 'var(--text)' }}>
+                ShopDesk
+              </span>
+            </div>
+
+            {/* Card */}
+            <div style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--border)',
+              borderRadius: 16,
+              padding: '32px',
+            }}>
+              <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 22, fontWeight: 700, marginBottom: 6, color: 'var(--text)' }}>
+                Welcome back
+              </h1>
+              <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 28 }}>
+                Sign in to your ShopDesk dashboard
+              </p>
+
+              {error && (
+                <div style={{
+                  background: 'var(--danger-dim)',
+                  border: '1px solid var(--danger)',
+                  borderRadius: 8,
+                  padding: '10px 14px',
+                  marginBottom: 20,
+                  fontSize: 14,
+                  color: 'var(--danger)',
+                }}>
+                  {error}
+                </div>
+              )}
+
+              {/* Google */}
               <button
-                type="submit"
-                disabled={loading || googleLoading}
+                onClick={handleGoogle}
+                disabled={googleLoading || loading}
+                className="auth-btn-primary"
                 style={{
                   width: '100%',
                   boxSizing: 'border-box',
-                  background: 'var(--accent)',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: 8,
-                  padding: '12px',
-                  fontSize: 15,
-                  fontWeight: 600,
-                  cursor: (loading || googleLoading) ? 'not-allowed' : 'pointer',
-                  marginTop: 4,
-                  opacity: (loading || googleLoading) ? 0.7 : 1,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  gap: 8,
-                  transition: 'background 0.15s, opacity 0.15s',
+                  gap: 10,
+                  background: 'var(--card)',
+                  border: '1px solid rgba(255,255,255,0.15)',
+                  borderRadius: 8,
+                  padding: '14px 16px',
+                  fontSize: 15,
+                  fontWeight: 500,
+                  color: 'var(--text)',
+                  cursor: (googleLoading || loading) ? 'not-allowed' : 'pointer',
+                  marginBottom: 20,
+                  transition: 'border-color 0.15s, opacity 0.15s, box-shadow 0.15s',
+                  opacity: (googleLoading || loading) ? 0.7 : 1,
                 }}
               >
-                {loading && <Spinner />}
-                {loading ? 'Signing in...' : 'Sign in'}
+                {googleLoading ? <Spinner /> : <GoogleIcon />}
+                {googleLoading ? 'Loading...' : 'Continue with Google'}
               </button>
-            </form>
+
+              {/* Divider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+                <span style={{ fontSize: 11, color: 'var(--muted)', letterSpacing: '0.05em' }}>or</span>
+                <div style={{ flex: 1, height: 1, background: 'var(--border)' }} />
+              </div>
+
+              <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+                <div>
+                  <label style={labelStyle}>Email</label>
+                  <input
+                    type="email"
+                    value={email}
+                    onChange={e => setEmail(e.target.value)}
+                    placeholder="you@yourshop.com"
+                    required
+                    onFocus={() => setFocusedField('email')}
+                    onBlur={() => setFocusedField(null)}
+                    style={inputStyle('email')}
+                  />
+                </div>
+
+                <div>
+                  <label style={labelStyle}>Password</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={e => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      onFocus={() => setFocusedField('password')}
+                      onBlur={() => setFocusedField(null)}
+                      style={{ ...inputStyle('password'), paddingRight: 42 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(p => !p)}
+                      style={{
+                        position: 'absolute', right: 12, top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none', border: 'none',
+                        color: 'var(--muted)', cursor: 'pointer',
+                        padding: 0, display: 'flex',
+                      }}
+                      tabIndex={-1}
+                    >
+                      {showPassword ? <EyeOffIcon /> : <EyeIcon />}
+                    </button>
+                  </div>
+                  <div style={{ textAlign: 'right', marginTop: 6 }}>
+                    <Link href="/auth/forgot-password" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none' }}>
+                      Forgot password?
+                    </Link>
+                  </div>
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || googleLoading}
+                  className="auth-btn-primary"
+                  style={{
+                    width: '100%',
+                    boxSizing: 'border-box',
+                    background: 'var(--accent)',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: 10,
+                    padding: '13px',
+                    fontSize: 15,
+                    fontWeight: 600,
+                    cursor: (loading || googleLoading) ? 'not-allowed' : 'pointer',
+                    marginTop: 4,
+                    opacity: (loading || googleLoading) ? 0.7 : 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    transition: 'opacity 0.15s, box-shadow 0.15s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {loading && <Spinner />}
+                  {loading ? 'Signing in...' : 'Sign in'}
+                </button>
+              </form>
+            </div>
+
+            <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: 'var(--muted)' }}>
+              Don&apos;t have an account?{' '}
+              <Link href="/auth/signup" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+                Create one
+              </Link>
+            </p>
+
+            <p style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--muted)' }}>
+              <Link href="https://shopdesk.site" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
+                ← Back to shopdesk.site
+              </Link>
+            </p>
           </div>
-
-          <p style={{ textAlign: 'center', marginTop: 20, fontSize: 14, color: 'var(--muted)' }}>
-            Don&apos;t have an account?{' '}
-            <Link href="/auth/signup" style={{ color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
-              Create one
-            </Link>
-          </p>
-
-          <p style={{ textAlign: 'center', marginTop: 24, fontSize: 12, color: 'var(--muted)' }}>
-            <Link href="https://shopdesk.site" style={{ color: 'var(--muted)', textDecoration: 'none' }}>
-              ← Back to shopdesk.site
-            </Link>
-          </p>
         </div>
       </div>
     </>
   )
+}
+
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.05em',
+  color: 'var(--muted)',
+  marginBottom: 6,
 }
 
 function Spinner() {

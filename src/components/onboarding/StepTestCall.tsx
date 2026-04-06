@@ -4,10 +4,9 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
 const DEMO_NUMBER = '(407) 555-0123'
 
-export function StepTestCall({ shop, userId, onNext }: StepProps) {
+export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
   const displayNumber = shop?.twilio_number ?? DEMO_NUMBER
   const [showProblem, setShowProblem] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -24,7 +23,9 @@ export function StepTestCall({ shop, userId, onNext }: StepProps) {
 
   return (
     <div style={{ ...card, textAlign: 'center' }}>
-      <div style={{ fontSize: '48px', marginBottom: '16px' }}>📞</div>
+      <button onClick={onBack} style={{ ...backBtn, textAlign: 'left' }}>← Back</button>
+
+      <div style={{ fontSize: 48, marginBottom: 16 }}>📞</div>
       <h2 style={titleStyle}>Make a test call</h2>
       <p style={subtitleStyle}>
         Call your shop number right now. Let it ring 4 times without answering.
@@ -32,25 +33,27 @@ export function StepTestCall({ shop, userId, onNext }: StepProps) {
       </p>
 
       <div style={{
-        background: '#f0f9ff',
-        border: `2px solid ${TEAL}`,
-        borderRadius: '10px',
-        padding: '20px',
-        marginBottom: '32px',
+        background: 'var(--card)',
+        border: '2px solid var(--accent)',
+        borderRadius: 12,
+        padding: 24,
+        marginBottom: 32,
         display: 'inline-block',
-        minWidth: '200px',
+        minWidth: 200,
       }}>
-        <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '6px' }}>Call this number</p>
-        <p style={{ fontSize: '24px', fontWeight: 800, color: '#111827' }}>{displayNumber}</p>
+        <p style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>
+          Call this number
+        </p>
+        <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', fontFamily: 'monospace' }}>{displayNumber}</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <button onClick={handleSuccess} disabled={loading} style={primaryBtn}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+        <button onClick={handleSuccess} disabled={loading} className="step-btn-primary" style={{ marginTop: 0 }}>
           {loading ? 'Saving...' : 'It worked! 🎉'}
         </button>
         <button
           onClick={() => setShowProblem(p => !p)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#6b7280', fontSize: '14px', padding: '8px' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, padding: 8, fontFamily: 'inherit' }}
         >
           I had a problem
         </button>
@@ -58,14 +61,14 @@ export function StepTestCall({ shop, userId, onNext }: StepProps) {
 
       {showProblem && (
         <div style={{
-          marginTop: '20px',
-          background: '#fef3c7',
-          border: '1px solid #fbbf24',
-          borderRadius: '8px',
-          padding: '16px',
+          marginTop: 20,
+          background: 'var(--warning-dim)',
+          border: '1px solid var(--warning)',
+          borderRadius: 8,
+          padding: 16,
           textAlign: 'left',
         }}>
-          <p style={{ fontSize: '14px', color: '#92400e', margin: 0 }}>
+          <p style={{ fontSize: 14, color: 'var(--warning)', margin: 0 }}>
             Email us at{' '}
             <strong>support@shopdesk.ai</strong>
             {' '}and we will sort it out within the hour.
@@ -77,13 +80,37 @@ export function StepTestCall({ shop, userId, onNext }: StepProps) {
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '40px 32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '10px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '28px', lineHeight: '1.6' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '14px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 700, fontSize: '16px', width: '100%' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  width: '100%',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 10,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 28,
+}

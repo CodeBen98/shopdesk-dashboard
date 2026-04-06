@@ -5,9 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ShopHours } from '@/types'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
-
-export function StepAutoFillChoice({ shop, userId, onNext, onSkipTo, onShopUpdate }: StepProps) {
+export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onShopUpdate }: StepProps) {
   const [selected, setSelected] = useState<'auto' | 'manual'>('auto')
   const [loading, setLoading] = useState(false)
   const [notFoundMsg, setNotFoundMsg] = useState('')
@@ -69,9 +67,11 @@ export function StepAutoFillChoice({ shop, userId, onNext, onSkipTo, onShopUpdat
 
   return (
     <div style={card}>
+      <button onClick={onBack} style={backBtn}>← Back</button>
+
       <h2 style={titleStyle}>Want us to set up your profile automatically?</h2>
       <p style={subtitleStyle}>
-        We'll look up <strong>{shop?.name ?? 'your shop'}</strong> online and pre-fill your hours, services, and contact
+        We&apos;ll look up <strong style={{ color: 'var(--text)' }}>{shop?.name ?? 'your shop'}</strong> online and pre-fill your hours, services, and contact
         info. You can review and edit everything before continuing.
       </p>
 
@@ -79,32 +79,38 @@ export function StepAutoFillChoice({ shop, userId, onNext, onSkipTo, onShopUpdat
         {/* Auto-fill card */}
         <button
           onClick={() => setSelected('auto')}
+          className="option-card-anim"
           style={{
             ...optionCard,
-            border: selected === 'auto' ? `2px solid ${TEAL}` : '2px solid #e5e7eb',
+            border: selected === 'auto' ? '2px solid var(--accent)' : '2px solid var(--border)',
+            background: selected === 'auto' ? 'rgba(15,118,149,0.06)' : 'var(--card)',
+            boxShadow: selected === 'auto' ? '0 0 0 4px rgba(15,118,149,0.15)' : 'none',
           }}
         >
           <div style={optionIcon}>⚡</div>
-          <div style={optionBadgeWrap}>
-            <span style={badge}>Recommended</span>
+          <div style={{ marginBottom: 8 }}>
+            <span style={badge}>RECOMMENDED</span>
           </div>
           <div style={optionTitle}>Auto-fill my profile</div>
           <div style={optionDesc}>
-            We'll look up your shop online and fill in your hours, phone, and more. Takes about 10 seconds.
+            We&apos;ll look up your shop online and fill in your hours, phone, and more. Takes about 10 seconds.
           </div>
         </button>
 
         {/* Manual card */}
         <button
           onClick={() => setSelected('manual')}
+          className="option-card-anim"
           style={{
             ...optionCard,
-            border: selected === 'manual' ? `2px solid ${TEAL}` : '2px solid #e5e7eb',
+            border: selected === 'manual' ? '2px solid rgba(255,255,255,0.3)' : '2px solid var(--border)',
+            background: 'var(--card)',
+            boxShadow: 'none',
           }}
         >
           <div style={optionIcon}>✏️</div>
-          <div style={{ height: '24px' }} /> {/* spacer to align with badge row */}
-          <div style={optionTitle}>I'll fill it in myself</div>
+          <div style={{ height: 24, marginBottom: 8 }} />
+          <div style={optionTitle}>I&apos;ll fill it in myself</div>
           <div style={optionDesc}>
             Enter your hours, services, and contact info step by step.
           </div>
@@ -115,7 +121,7 @@ export function StepAutoFillChoice({ shop, userId, onNext, onSkipTo, onShopUpdat
         <p style={notFoundStyle}>{notFoundMsg}</p>
       )}
 
-      <button onClick={handleContinue} disabled={loading || !!notFoundMsg} style={primaryBtn}>
+      <button onClick={handleContinue} disabled={loading || !!notFoundMsg} className="step-btn-primary">
         {loading ? 'Looking up your shop...' : 'Continue →'}
       </button>
     </div>
@@ -123,43 +129,78 @@ export function StepAutoFillChoice({ shop, userId, onNext, onSkipTo, onShopUpdat
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '24px' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  transition: 'color 0.15s',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 28,
+}
 const cardsRow: React.CSSProperties = {
   display: 'flex',
-  gap: '12px',
-  marginBottom: '24px',
+  gap: 12,
+  marginBottom: 24,
   flexWrap: 'wrap',
 }
 const optionCard: React.CSSProperties = {
   flex: '1 1 180px',
-  background: '#fff',
-  borderRadius: '10px',
-  padding: '20px 16px',
+  borderRadius: 12,
+  padding: '24px',
   cursor: 'pointer',
   textAlign: 'left',
-  transition: 'border-color 0.15s',
   outline: 'none',
 }
-const optionIcon: React.CSSProperties = { fontSize: '28px', marginBottom: '8px' }
-const optionBadgeWrap: React.CSSProperties = { marginBottom: '8px', minHeight: '24px' }
+const optionIcon: React.CSSProperties = { fontSize: 28, marginBottom: 8 }
 const badge: React.CSSProperties = {
-  background: '#d1fae5',
-  color: '#065f46',
-  fontSize: '11px',
-  fontWeight: 600,
-  padding: '2px 8px',
-  borderRadius: '99px',
+  background: 'var(--accent)',
+  color: '#fff',
+  fontSize: 10,
+  fontWeight: 700,
+  letterSpacing: '0.06em',
+  padding: '3px 10px',
+  borderRadius: 9999,
   display: 'inline-block',
 }
-const optionTitle: React.CSSProperties = { fontSize: '15px', fontWeight: 700, color: '#111827', marginBottom: '6px' }
-const optionDesc: React.CSSProperties = { fontSize: '13px', color: '#6b7280', lineHeight: '1.5' }
-const notFoundStyle: React.CSSProperties = { fontSize: '14px', color: '#374151', background: '#f3f4f6', borderRadius: '8px', padding: '12px', marginBottom: '16px' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '15px', width: '100%' }
+const optionTitle: React.CSSProperties = {
+  fontSize: 15,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 6,
+}
+const optionDesc: React.CSSProperties = { fontSize: 13, color: 'var(--muted)', lineHeight: 1.5 }
+const notFoundStyle: React.CSSProperties = {
+  fontSize: 14,
+  color: 'var(--text-mid)',
+  background: 'var(--card)',
+  border: '1px solid var(--border)',
+  borderRadius: 8,
+  padding: 12,
+  marginBottom: 16,
+}

@@ -5,8 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { Service } from '@/types'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
-
 const SUGGESTIONS = [
   'Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Diagnostics',
   'AC Repair', 'Transmission Service', 'Alignment', 'Battery Replacement',
@@ -16,7 +14,7 @@ function emptyService(): Service {
   return { name: '', price: null, description: null }
 }
 
-export function StepServices({ shop, userId, onNext, onShopUpdate }: StepProps) {
+export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [services, setServices] = useState<Service[]>(
     shop?.services && shop.services.length > 0 ? shop.services : []
   )
@@ -76,12 +74,16 @@ export function StepServices({ shop, userId, onNext, onShopUpdate }: StepProps) 
 
   return (
     <div style={card}>
+      <button onClick={onBack} style={backBtn}>← Back</button>
+
       <h2 style={titleStyle}>What services do you offer?</h2>
       <p style={subtitleStyle}>Your AI will mention these when callers ask what you do.</p>
 
-      <div style={{ marginBottom: '16px' }}>
-        <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '8px' }}>Quick add:</p>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+      <div style={{ marginBottom: 16 }}>
+        <p style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>
+          Quick add:
+        </p>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {SUGGESTIONS.map(s => {
             const added = services.some(sv => sv.name === s)
             return (
@@ -90,13 +92,15 @@ export function StepServices({ shop, userId, onNext, onShopUpdate }: StepProps) 
                 onClick={() => !added && addSuggestion(s)}
                 style={{
                   padding: '6px 12px',
-                  borderRadius: '9999px',
-                  border: `1px solid ${added ? TEAL : '#d1d5db'}`,
-                  background: added ? '#e0f2fe' : '#f9fafb',
-                  color: added ? TEAL : '#374151',
-                  fontSize: '13px',
+                  borderRadius: 9999,
+                  border: `1px solid ${added ? 'var(--accent)' : 'var(--border)'}`,
+                  background: added ? 'var(--accent-dim)' : 'var(--card)',
+                  color: added ? 'var(--accent)' : 'var(--text-mid)',
+                  fontSize: 13,
                   cursor: added ? 'default' : 'pointer',
                   fontWeight: added ? 600 : 400,
+                  transition: 'border-color 0.15s, background 0.15s',
+                  fontFamily: 'inherit',
                 }}
               >
                 {added ? '✓ ' : '+ '}{s}
@@ -106,47 +110,50 @@ export function StepServices({ shop, userId, onNext, onShopUpdate }: StepProps) 
         </div>
       </div>
 
-      <div style={{ marginBottom: '16px' }}>
+      <div style={{ marginBottom: 16 }}>
         {services.map((service, i) => (
           <div
             key={i}
             style={{
-              background: '#f9fafb',
-              border: '1px solid #e5e7eb',
-              borderRadius: '8px',
-              padding: '16px',
-              marginBottom: '12px',
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: 8,
+              padding: 16,
+              marginBottom: 12,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-              <span style={{ fontSize: '13px', fontWeight: 600, color: '#374151' }}>Service {i + 1}</span>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-mid)' }}>Service {i + 1}</span>
               <button
                 onClick={() => removeService(i)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: '#ef4444', fontSize: '13px' }}
+                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: 13, fontFamily: 'inherit' }}
               >
                 Remove
               </button>
             </div>
-            <div style={{ marginBottom: '8px' }}>
+            <div style={{ marginBottom: 8 }}>
               <input
                 value={service.name}
                 onChange={e => updateService(i, { name: e.target.value })}
-                style={{ ...inputStyle, ...(errors[i] ? { borderColor: '#ef4444' } : {}) }}
+                className="step-input"
+                style={errors[i] ? { borderColor: 'var(--danger)' } : {}}
                 placeholder="Service name *"
               />
               {errors[i] && <p style={errorStyle}>{errors[i]}</p>}
             </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
+            <div style={{ display: 'flex', gap: 8 }}>
               <input
                 value={service.price ?? ''}
                 onChange={e => updateService(i, { price: e.target.value || null })}
-                style={{ ...inputStyle, flex: 1 }}
+                className="step-input"
+                style={{ flex: 1 }}
                 placeholder="Price (e.g. $49.99)"
               />
               <input
                 value={service.description ?? ''}
                 onChange={e => updateService(i, { description: e.target.value || null })}
-                style={{ ...inputStyle, flex: 2 }}
+                className="step-input"
+                style={{ flex: 2 }}
                 placeholder="Short description"
               />
             </div>
@@ -159,20 +166,22 @@ export function StepServices({ shop, userId, onNext, onShopUpdate }: StepProps) 
         style={{
           width: '100%',
           padding: '10px',
-          border: `2px dashed ${TEAL}`,
-          borderRadius: '8px',
+          border: '2px dashed var(--accent)',
+          borderRadius: 8,
           background: 'transparent',
-          color: TEAL,
-          fontSize: '14px',
+          color: 'var(--accent)',
+          fontSize: 14,
           fontWeight: 600,
           cursor: 'pointer',
-          marginBottom: '24px',
+          marginBottom: 24,
+          fontFamily: 'inherit',
+          transition: 'background 0.15s',
         }}
       >
         + Add Service
       </button>
 
-      <button onClick={handleSubmit} disabled={loading} style={primaryBtn}>
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>
@@ -180,15 +189,37 @@ export function StepServices({ shop, userId, onNext, onShopUpdate }: StepProps) 
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '20px' }
-const inputStyle: React.CSSProperties = { width: '100%', padding: '9px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', color: '#111827' }
-const errorStyle: React.CSSProperties = { fontSize: '12px', color: '#ef4444', marginTop: '4px' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '15px', width: '100%' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 28,
+}
+const errorStyle: React.CSSProperties = { fontSize: 12, color: 'var(--danger)', marginTop: 4 }

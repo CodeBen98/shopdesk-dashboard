@@ -4,9 +4,7 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
-
-export function StepEmergency({ shop, userId, onNext, onShopUpdate }: StepProps) {
+export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [contactName, setContactName] = useState(shop?.emergency_contact_name ?? '')
   const [contactPhone, setContactPhone] = useState(shop?.emergency_contact ?? '')
   const [errors, setErrors] = useState<{ name?: string; phone?: string }>({})
@@ -32,8 +30,10 @@ export function StepEmergency({ shop, userId, onNext, onShopUpdate }: StepProps)
 
   return (
     <div style={card}>
-      <div style={{ marginBottom: '16px' }}>
-        <span style={{ fontSize: '32px' }}>🚨</span>
+      <button onClick={onBack} style={backBtn}>← Back</button>
+
+      <div style={{ marginBottom: 16 }}>
+        <span style={{ fontSize: 32 }}>🚨</span>
       </div>
       <h2 style={titleStyle}>Emergency contact</h2>
       <p style={subtitleStyle}>
@@ -45,25 +45,27 @@ export function StepEmergency({ shop, userId, onNext, onShopUpdate }: StepProps)
         <input
           value={contactName}
           onChange={e => { setContactName(e.target.value); setErrors(p => ({ ...p, name: undefined })) }}
-          style={{ ...inputStyle, ...(errors.name ? { borderColor: '#ef4444' } : {}) }}
+          className="step-input"
+          style={errors.name ? { borderColor: 'var(--danger)' } : {}}
           placeholder="e.g. Mike Johnson"
         />
         {errors.name && <p style={errorStyle}>{errors.name}</p>}
       </div>
 
-      <div style={{ ...fieldStyle, marginBottom: '28px' }}>
+      <div style={{ ...fieldStyle, marginBottom: 28 }}>
         <label style={labelStyle}>Phone Number *</label>
         <input
           value={contactPhone}
           onChange={e => { setContactPhone(e.target.value); setErrors(p => ({ ...p, phone: undefined })) }}
-          style={{ ...inputStyle, ...(errors.phone ? { borderColor: '#ef4444' } : {}) }}
+          className="step-input"
+          style={errors.phone ? { borderColor: 'var(--danger)' } : {}}
           placeholder="+1 (407) 555-1234"
           type="tel"
         />
         {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
       </div>
 
-      <button onClick={handleSubmit} disabled={loading} style={primaryBtn}>
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>
@@ -71,17 +73,47 @@ export function StepEmergency({ shop, userId, onNext, onShopUpdate }: StepProps)
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '24px' }
-const fieldStyle: React.CSSProperties = { marginBottom: '16px' }
-const labelStyle: React.CSSProperties = { display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }
-const inputStyle: React.CSSProperties = { width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', color: '#111827' }
-const errorStyle: React.CSSProperties = { fontSize: '12px', color: '#ef4444', marginTop: '4px' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '15px', width: '100%' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 32,
+}
+const fieldStyle: React.CSSProperties = { marginBottom: 20 }
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 12,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color: 'var(--muted)',
+  marginBottom: 8,
+}
+const errorStyle: React.CSSProperties = { fontSize: 12, color: 'var(--danger)', marginTop: 4 }

@@ -5,8 +5,6 @@ import { createClient } from '@/lib/supabase/client'
 import { ShopHours, DayHours } from '@/types'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
-
 const DAYS: { key: keyof ShopHours; label: string }[] = [
   { key: 'monday', label: 'Monday' },
   { key: 'tuesday', label: 'Tuesday' },
@@ -27,7 +25,7 @@ const DEFAULT_HOURS: ShopHours = {
   sunday: { open: false, from: '08:00', to: '17:00' },
 }
 
-export function StepHours({ shop, userId, onNext, onShopUpdate }: StepProps) {
+export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [hours, setHours] = useState<ShopHours>(shop?.hours ?? DEFAULT_HOURS)
   const [loading, setLoading] = useState(false)
 
@@ -49,10 +47,12 @@ export function StepHours({ shop, userId, onNext, onShopUpdate }: StepProps) {
 
   return (
     <div style={card}>
+      <button onClick={onBack} style={backBtn}>← Back</button>
+
       <h2 style={titleStyle}>Set your business hours</h2>
       <p style={subtitleStyle}>Your AI receptionist will use these to greet callers appropriately.</p>
 
-      <div style={{ marginBottom: '24px' }}>
+      <div style={{ marginBottom: 24 }}>
         {DAYS.map(({ key, label }) => {
           const day = hours[key]
           return (
@@ -61,12 +61,12 @@ export function StepHours({ shop, userId, onNext, onShopUpdate }: StepProps) {
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '12px',
+                gap: 12,
                 padding: '12px 0',
-                borderBottom: '1px solid #f3f4f6',
+                borderBottom: '1px solid var(--border)',
               }}
             >
-              <div style={{ width: '100px', fontSize: '14px', fontWeight: 500, color: '#374151' }}>
+              <div style={{ width: 104, fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
                 {label}
               </div>
 
@@ -74,14 +74,16 @@ export function StepHours({ shop, userId, onNext, onShopUpdate }: StepProps) {
                 onClick={() => updateDay(key, { open: !day.open })}
                 style={{
                   padding: '4px 12px',
-                  borderRadius: '9999px',
+                  borderRadius: 9999,
                   border: 'none',
                   cursor: 'pointer',
-                  fontSize: '12px',
+                  fontSize: 12,
                   fontWeight: 600,
-                  background: day.open ? TEAL : '#e5e7eb',
-                  color: day.open ? '#fff' : '#6b7280',
-                  minWidth: '60px',
+                  background: day.open ? 'var(--accent)' : 'var(--card)',
+                  color: day.open ? '#fff' : 'var(--muted)',
+                  minWidth: 64,
+                  transition: 'background 0.15s, color 0.15s',
+                  fontFamily: 'inherit',
                 }}
               >
                 {day.open ? 'Open' : 'Closed'}
@@ -95,7 +97,7 @@ export function StepHours({ shop, userId, onNext, onShopUpdate }: StepProps) {
                     onChange={e => updateDay(key, { from: e.target.value })}
                     style={timeInput}
                   />
-                  <span style={{ fontSize: '13px', color: '#6b7280' }}>to</span>
+                  <span style={{ fontSize: 13, color: 'var(--muted)' }}>to</span>
                   <input
                     type="time"
                     value={day.to}
@@ -109,7 +111,7 @@ export function StepHours({ shop, userId, onNext, onShopUpdate }: StepProps) {
         })}
       </div>
 
-      <button onClick={handleSubmit} disabled={loading} style={primaryBtn}>
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>
@@ -117,14 +119,46 @@ export function StepHours({ shop, userId, onNext, onShopUpdate }: StepProps) {
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '24px' }
-const timeInput: React.CSSProperties = { padding: '6px 8px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '13px', color: '#111827' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '15px', width: '100%' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 32,
+}
+const timeInput: React.CSSProperties = {
+  padding: '7px 10px',
+  border: '1px solid var(--border)',
+  borderRadius: 8,
+  fontSize: 13,
+  color: 'var(--text)',
+  background: 'var(--card)',
+  outline: 'none',
+  fontFamily: 'inherit',
+}

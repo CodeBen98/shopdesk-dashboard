@@ -3,8 +3,6 @@
 import { StepProps } from './OnboardingWizard'
 import { ShopHours } from '@/types'
 
-const TEAL = '#0F7695'
-
 function formatHoursSummary(hours: ShopHours | undefined): string {
   if (!hours) return 'Not available'
 
@@ -18,7 +16,6 @@ function formatHoursSummary(hours: ShopHours | undefined): string {
     { key: 'sunday', short: 'Sun' },
   ]
 
-  // Group consecutive days with the same open/from/to
   type Group = { days: string[]; from: string; to: string; open: boolean }
   const groups: Group[] = []
   for (const { key, short } of DAY_NAMES) {
@@ -47,7 +44,7 @@ function formatTime12(t: string): string {
   return m === 0 ? `${h12}${ampm}` : `${h12}:${String(m).padStart(2, '0')}${ampm}`
 }
 
-export function StepAutoFillReview({ shop, onSkipTo }: StepProps) {
+export function StepAutoFillReview({ shop, onBack, onSkipTo }: StepProps) {
   const hoursSummary = formatHoursSummary(shop?.hours)
 
   function advance() {
@@ -56,7 +53,9 @@ export function StepAutoFillReview({ shop, onSkipTo }: StepProps) {
 
   return (
     <div style={card}>
-      <h2 style={titleStyle}>Here's what we found 👀</h2>
+      <button onClick={onBack} style={backBtn}>← Back</button>
+
+      <h2 style={titleStyle}>Here&apos;s what we found 👀</h2>
       <p style={subtitleStyle}>Review the info below. You can edit anything on the next steps.</p>
 
       <div style={infoList}>
@@ -69,10 +68,10 @@ export function StepAutoFillReview({ shop, onSkipTo }: StepProps) {
         ) : null}
       </div>
 
-      <button onClick={advance} style={primaryBtn}>
+      <button onClick={advance} className="step-btn-primary" style={{ marginTop: 0 }}>
         Looks good, continue →
       </button>
-      <div style={{ textAlign: 'center', marginTop: '12px' }}>
+      <div style={{ textAlign: 'center', marginTop: 12 }}>
         <button onClick={advance} style={linkBtn}>
           Edit manually instead
         </button>
@@ -101,21 +100,68 @@ function InfoRow({ label, value, placeholder }: { label: string; value?: string;
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const titleStyle: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitleStyle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '24px' }
-const infoList: React.CSSProperties = { marginBottom: '28px', display: 'flex', flexDirection: 'column', gap: '12px' }
-const infoRow: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', gap: '12px', padding: '12px', background: '#f9fafb', borderRadius: '8px' }
-const infoLabel: React.CSSProperties = { fontSize: '13px', fontWeight: 600, color: '#374151', minWidth: '80px', paddingTop: '1px' }
-const infoValueWrap: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', gap: '6px', flex: 1 }
-const checkmark: React.CSSProperties = { color: '#10b981', fontWeight: 700, fontSize: '14px', flexShrink: 0 }
-const infoValue: React.CSSProperties = { fontSize: '13px', color: '#111827', lineHeight: '1.5' }
-const notFound: React.CSSProperties = { fontSize: '13px', color: '#9ca3af' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '15px', width: '100%' }
-const linkBtn: React.CSSProperties = { background: 'none', border: 'none', color: '#6b7280', fontSize: '14px', cursor: 'pointer', textDecoration: 'underline' }
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  fontFamily: 'inherit',
+}
+const titleStyle: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitleStyle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 28,
+}
+const infoList: React.CSSProperties = { marginBottom: 28, display: 'flex', flexDirection: 'column', gap: 8 }
+const infoRow: React.CSSProperties = {
+  display: 'flex',
+  alignItems: 'flex-start',
+  gap: 12,
+  padding: '12px 16px',
+  background: 'var(--card)',
+  borderRadius: 8,
+  border: '1px solid var(--border)',
+}
+const infoLabel: React.CSSProperties = {
+  fontSize: 12,
+  fontWeight: 600,
+  color: 'var(--muted)',
+  minWidth: 80,
+  paddingTop: 1,
+  textTransform: 'uppercase',
+  letterSpacing: '0.04em',
+}
+const infoValueWrap: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', gap: 6, flex: 1 }
+const checkmark: React.CSSProperties = { color: 'var(--success)', fontWeight: 700, fontSize: 14, flexShrink: 0 }
+const infoValue: React.CSSProperties = { fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }
+const notFound: React.CSSProperties = { fontSize: 14, color: 'var(--muted)' }
+const linkBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  textDecoration: 'underline',
+  fontFamily: 'inherit',
+}

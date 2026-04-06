@@ -4,8 +4,6 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
-const TEAL = '#0F7695'
-
 export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShopUpdate }: StepProps) {
   const [name, setName] = useState(shop?.name ?? '')
   const [address, setAddress] = useState(shop?.address ?? '')
@@ -34,71 +32,122 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
   }
 
   return (
-    <div style={card}>
-      <h2 style={title}>Tell us about your shop</h2>
-      <p style={subtitle}>This helps your AI receptionist introduce your business correctly.</p>
-
-      <div style={field}>
-        <label style={label}>Shop Name *</label>
-        <input
-          value={name}
-          onChange={e => { setName(e.target.value); setNameError('') }}
-          style={{ ...input, ...(nameError ? { borderColor: '#ef4444' } : {}) }}
-          placeholder="e.g. Mike's Auto Repair"
-        />
-        {nameError && <p style={error}>{nameError}</p>}
+    <div>
+      {/* Welcome header above card */}
+      <div style={{ textAlign: 'center', marginBottom: 28, animation: 'card-enter 0.35s ease' }}>
+        <div style={{
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          background: 'var(--accent-dim)',
+          border: '1px solid rgba(15,118,149,0.3)',
+          borderRadius: 9999,
+          padding: '4px 14px',
+          marginBottom: 16,
+        }}>
+          <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 600 }}>Welcome to ShopDesk</span>
+        </div>
+        <h1 style={{
+          fontFamily: 'var(--font-space)',
+          fontSize: 28,
+          fontWeight: 800,
+          color: 'var(--text)',
+          marginBottom: 10,
+          lineHeight: 1.2,
+        }}>
+          Let&apos;s set up your AI receptionist
+        </h1>
+        <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.6 }}>
+          Takes less than 5 minutes. We&apos;ll have your AI answering calls today.
+        </p>
       </div>
 
-      <div style={field}>
-        <label style={label}>Address</label>
-        <input
-          value={address}
-          onChange={e => setAddress(e.target.value)}
-          style={input}
-          placeholder="123 Main St, Orlando, FL 32801"
-        />
-      </div>
+      <div style={card}>
+        <h2 style={title}>Tell us about your shop</h2>
+        <p style={subtitle}>This helps your AI receptionist introduce your business correctly.</p>
 
-      <div style={field}>
-        <label style={label}>Phone Number</label>
-        <input
-          value={phone}
-          onChange={e => setPhone(e.target.value)}
-          style={input}
-          placeholder="+1 (407) 555-1234"
-        />
-      </div>
+        <div style={field}>
+          <label style={label}>Shop Name *</label>
+          <input
+            value={name}
+            onChange={e => { setName(e.target.value); setNameError('') }}
+            className="step-input"
+            style={nameError ? { borderColor: 'var(--danger)' } : {}}
+            placeholder="e.g. Mike's Auto Repair"
+          />
+          {nameError && <p style={errorStyle}>{nameError}</p>}
+        </div>
 
-      <div style={{ ...field, marginBottom: '28px' }}>
-        <label style={label}>Email</label>
-        <input
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          style={input}
-          placeholder="shop@example.com"
-          type="email"
-        />
-      </div>
+        <div style={field}>
+          <label style={label}>Address</label>
+          <input
+            value={address}
+            onChange={e => setAddress(e.target.value)}
+            className="step-input"
+            placeholder="123 Main St, Orlando, FL 32801"
+          />
+        </div>
 
-      <button onClick={handleSubmit} disabled={loading} style={primaryBtn}>
-        {loading ? 'Saving...' : 'Continue →'}
-      </button>
+        <div style={field}>
+          <label style={label}>Phone Number</label>
+          <input
+            value={phone}
+            onChange={e => setPhone(e.target.value)}
+            className="step-input"
+            placeholder="+1 (407) 555-1234"
+          />
+        </div>
+
+        <div style={{ ...field, marginBottom: 28 }}>
+          <label style={label}>Email</label>
+          <input
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            className="step-input"
+            placeholder="shop@example.com"
+            type="email"
+          />
+        </div>
+
+        <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
+          {loading ? 'Saving...' : 'Continue →'}
+        </button>
+      </div>
     </div>
   )
 }
 
 const card: React.CSSProperties = {
-  background: '#fff',
-  borderRadius: '12px',
-  boxShadow: '0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06)',
-  padding: '32px',
-  maxWidth: '512px',
+  background: 'var(--surface)',
+  border: '1px solid var(--border)',
+  borderRadius: 16,
+  padding: '40px 48px',
+  maxWidth: 560,
   margin: '0 auto',
+  boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
+  animation: 'card-enter 0.35s ease',
 }
-const title: React.CSSProperties = { fontSize: '22px', fontWeight: 700, color: '#111827', marginBottom: '8px' }
-const subtitle: React.CSSProperties = { fontSize: '14px', color: '#6b7280', marginBottom: '24px' }
-const field: React.CSSProperties = { marginBottom: '16px' }
-const label: React.CSSProperties = { display: 'block', fontSize: '14px', fontWeight: 500, color: '#374151', marginBottom: '6px' }
-const input: React.CSSProperties = { width: '100%', padding: '10px 12px', border: '1px solid #d1d5db', borderRadius: '6px', fontSize: '14px', outline: 'none', boxSizing: 'border-box', color: '#111827' }
-const error: React.CSSProperties = { fontSize: '12px', color: '#ef4444', marginTop: '4px' }
-const primaryBtn: React.CSSProperties = { background: TEAL, color: '#fff', padding: '12px 28px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 600, fontSize: '15px', width: '100%' }
+const title: React.CSSProperties = {
+  fontFamily: 'var(--font-space)',
+  fontSize: 24,
+  fontWeight: 700,
+  color: 'var(--text)',
+  marginBottom: 8,
+}
+const subtitle: React.CSSProperties = {
+  fontSize: 15,
+  color: 'var(--muted)',
+  lineHeight: 1.6,
+  marginBottom: 32,
+}
+const field: React.CSSProperties = { marginBottom: 20 }
+const label: React.CSSProperties = {
+  display: 'block',
+  fontSize: 12,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color: 'var(--muted)',
+  marginBottom: 8,
+}
+const errorStyle: React.CSSProperties = { fontSize: 12, color: 'var(--danger)', marginTop: 4 }
