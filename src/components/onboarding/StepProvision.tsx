@@ -35,7 +35,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         const data = await res.json()
 
         if (!res.ok) {
-          if (!cancelled) setError(data.error ?? 'Something went wrong. Please try again.')
+          if (!cancelled) setError(data.error ?? `Error ${res.status} — please try again.`)
           return
         }
 

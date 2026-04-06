@@ -108,8 +108,13 @@ async function vapiRequest(path: string, method: string, body?: object) {
     },
     ...(body ? { body: JSON.stringify(body) } : {}),
   })
-  const data = await res.json()
-  if (!res.ok) throw new Error(JSON.stringify(data))
+  const text = await res.text()
+  let data
+  try { data = JSON.parse(text) } catch { data = { raw: text } }
+  if (!res.ok) {
+    console.error(`Vapi ${method} ${path} failed ${res.status}:`, text.slice(0, 500))
+    throw new Error(`Vapi ${res.status}: ${text.slice(0, 200)}`)
+  }
   return data
 }
 
@@ -214,6 +219,7 @@ export async function POST() {
 
   } catch (err) {
     console.error('Provision error:', err)
-    return NextResponse.json({ error: 'Failed to provision AI agent', details: String(err) }, { status: 500 })
+    const msg = err instanceof Error ? err.message : String(err)
+    return NextResponse.json({ error: msg }, { status: 500 })
   }
 }
