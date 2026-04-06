@@ -209,13 +209,27 @@ export async function POST(request: Request) {
     let agentId: string
 
     if (shop.vapi_agent_id && shop.vapi_agent_id !== 'pending') {
-      // Update existing agent for this shop
+      // Shop already has an agent — update it in place
       const updated = await vapiRequest(`/assistant/${shop.vapi_agent_id}`, 'PATCH', agentPayload)
       agentId = updated.id
     } else {
-      // Create a brand new agent for this shop
-      const created = await vapiRequest('/assistant', 'POST', agentPayload)
-      agentId = created.id
+      // No agent yet — check if one already exists in Vapi with this shop name
+      // This handles the case where the shop row was deleted and re-onboarded
+      const existingAgents = await vapiRequest('/assistant?limit=100', 'GET')
+      const agents = Array.isArray(existingAgents) ? existingAgents : existingAgents.results ?? []
+      const match = agents.find((a: { name?: string; id: string }) =>
+        a.name?.toLowerCase() === shop.name.toLowerCase()
+      )
+
+      if (match) {
+        // Found an existing agent with the same shop name — update it
+        const updated = await vapiRequest(`/assistant/${match.id}`, 'PATCH', agentPayload)
+        agentId = updated.id
+      } else {
+        // Truly new shop — create a fresh agent
+        const created = await vapiRequest('/assistant', 'POST', agentPayload)
+        agentId = created.id
+      }
     }
 
     // Assign this agent to the Twilio phone number
