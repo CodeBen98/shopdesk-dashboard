@@ -2,8 +2,21 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
-const VAPI_AGENT_ID = process.env.VAPI_AGENT_ID || 'e8a8e086-7098-42d7-b842-26ea577aedf2'
-const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!
+const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID || 'f8e74d03-2aa9-4ce2-9a95-8dbc83f3493a'
+
+const voiceNames: Record<string, string> = {
+  patricia: 'Sarah',
+  james: 'James',
+  sofia: 'Sofia',
+  marcus: 'Marcus',
+}
+
+const voiceMap: Record<string, { provider: string; voiceId: string }> = {
+  patricia: { provider: 'cartesia', voiceId: '79a125e8-cd45-4c13-8a67-188112f4dd22' },
+  james:    { provider: 'cartesia', voiceId: '638efaaa-4d0c-442e-b701-3fae16aad012' },
+  sofia:    { provider: 'cartesia', voiceId: '573e3144-a684-4e72-ac2b-9b2063a50b53' },
+  marcus:   { provider: 'cartesia', voiceId: 'b9de4a89-2257-424b-94c2-db18ba68c81a' },
+}
 
 function formatHours(hours: Record<string, { open: boolean; from: string; to: string }>): string {
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
@@ -24,14 +37,10 @@ function buildSystemPrompt(shop: {
   emergency_contact_name: string
   ai_voice: string
 }): string {
-  const voiceNames: Record<string, string> = {
-    patricia: 'Sarah',
-    james: 'James',
-    sofia: 'Sofia',
-    marcus: 'Marcus',
-  }
   const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
-  const serviceList = shop.services.map(s => `  - ${s.name}${s.price ? ` ($${s.price})` : ''}`).join('\n')
+  const serviceList = shop.services.map(s =>
+    `  - ${s.name}${s.price ? ` ($${s.price})` : ''}${s.description ? ` — ${s.description}` : ''}`
+  ).join('\n')
   const hoursText = formatHours(shop.hours)
   const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
 
@@ -65,11 +74,11 @@ Safe to drive: if you're hearing grinding, seeing smoke, or the car is overheati
 
 [Booking Flow]
 1. Find out what they need help with.
-2. Collect: name, phone number, vehicle (year/make/model), service needed, preferred day and time — ONE question at a time with a natural pause between each.
+2. Collect: name, phone number, vehicle (year/make/model), service needed, preferred day and time — ONE question at a time.
 3. Once you have everything, call the bookAppointment function.
 4. After the function returns success, confirm the booking details back to the customer.
 5. Ask if there is anything else.
-6. When they are done, say a warm goodbye and call the endCall function.
+6. When done, say a warm goodbye and call the endCall function.
 
 Do NOT call endCall until the customer says they are done.
 Do NOT say goodbye until you are ready to call endCall immediately after.
@@ -89,13 +98,26 @@ Outside scope: take their number, have a tech call them back.
 Today is ${today}.`
 }
 
+async function vapiRequest(path: string, method: string, body?: object) {
+  const res = await fetch(`https://api.vapi.ai${path}`, {
+    method,
+    headers: {
+      'Authorization': `Bearer ${VAPI_API_KEY}`,
+      'Content-Type': 'application/json',
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  })
+  const data = await res.json()
+  if (!res.ok) throw new Error(JSON.stringify(data))
+  return data
+}
+
 export async function POST() {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-    // Get shop data
     const { data: shop, error: shopError } = await supabase
       .from('shops')
       .select('*')
@@ -106,7 +128,6 @@ export async function POST() {
       return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
     }
 
-    // Step 1: Build system prompt from shop data
     const systemPrompt = buildSystemPrompt({
       name: shop.name,
       address: shop.address,
@@ -118,65 +139,79 @@ export async function POST() {
       ai_voice: shop.ai_voice,
     })
 
-    // Step 2: Voice mapping
-    const voiceNames: Record<string, string> = {
-      patricia: 'Sarah', james: 'James', sofia: 'Sofia', marcus: 'Marcus',
-    }
-
-    // Vapi voice IDs
-    const voiceMap: Record<string, { provider: string; voiceId: string }> = {
-      patricia: { provider: 'cartesia', voiceId: '79a125e8-cd45-4c13-8a67-188112f4dd22' }, // Sonic Cindy
-      james:    { provider: 'cartesia', voiceId: '638efaaa-4d0c-442e-b701-3fae16aad012' }, // Sonic James
-      sofia:    { provider: 'cartesia', voiceId: '573e3144-a684-4e72-ac2b-9b2063a50b53' }, // Sonic Sofia
-      marcus:   { provider: 'cartesia', voiceId: 'b9de4a89-2257-424b-94c2-db18ba68c81a' }, // Sonic Marcus
-    }
+    const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
     const voice = voiceMap[shop.ai_voice] ?? voiceMap.patricia
 
-    // Step 3: Push to Vapi
-    const vapiResponse = await fetch(`https://api.vapi.ai/assistant/${VAPI_AGENT_ID}`, {
-      method: 'PATCH',
-      headers: {
-        'Authorization': `Bearer ${VAPI_API_KEY}`,
-        'Content-Type': 'application/json',
+    const agentPayload = {
+      name: shop.name,
+      model: {
+        provider: 'anthropic',
+        model: 'claude-sonnet-4-5',
+        messages: [{ role: 'system', content: systemPrompt }],
+        temperature: 0.7,
       },
-      body: JSON.stringify({
-        name: shop.name,
-        model: {
-          provider: 'anthropic',
-          model: 'claude-sonnet-4-5',
-          messages: [{ role: 'system', content: systemPrompt }],
-          temperature: 0.7,
+      voice: {
+        provider: voice.provider,
+        voiceId: voice.voiceId,
+      },
+      firstMessage: `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`,
+      tools: [
+        {
+          type: 'function',
+          function: {
+            name: 'bookAppointment',
+            description: 'Book an appointment for the customer. Call this when you have collected all required information.',
+            parameters: {
+              type: 'object',
+              properties: {
+                customerName: { type: 'string', description: 'Full name of the customer' },
+                customerPhone: { type: 'string', description: 'Phone number of the customer' },
+                vehicle: { type: 'string', description: 'Year, make, and model of the vehicle' },
+                service: { type: 'string', description: 'Service requested' },
+                appointmentTime: { type: 'string', description: 'Requested appointment date and time' },
+              },
+              required: ['customerName', 'customerPhone', 'vehicle', 'service', 'appointmentTime'],
+            },
+          },
+          server: { url: 'https://shopdesk-booking-production.up.railway.app/book' },
         },
-        voice: {
-          provider: voice.provider,
-          voiceId: voice.voiceId,
+        {
+          type: 'endCall',
+          function: {
+            name: 'endCall',
+            description: 'End the phone call. Only call this after saying goodbye.',
+          },
         },
-        firstMessage: `Thank you for calling ${shop.name}. This is ${voiceNames[shop.ai_voice] ?? 'Sarah'}, how can I help you today?`,
-      }),
-    })
-
-    if (!vapiResponse.ok) {
-      const err = await vapiResponse.text()
-      console.error('Vapi error:', err)
-      return NextResponse.json({ error: 'Failed to update AI agent', details: err }, { status: 500 })
+      ],
     }
 
-    const vapiData = await vapiResponse.json()
+    let agentId: string
 
-    // Step 4: Save to DB
+    if (shop.vapi_agent_id && shop.vapi_agent_id !== 'pending') {
+      // Update existing agent for this shop
+      const updated = await vapiRequest(`/assistant/${shop.vapi_agent_id}`, 'PATCH', agentPayload)
+      agentId = updated.id
+    } else {
+      // Create a brand new agent for this shop
+      const created = await vapiRequest('/assistant', 'POST', agentPayload)
+      agentId = created.id
+    }
+
+    // Assign this agent to the Twilio phone number
+    await vapiRequest(`/phone-number/${VAPI_PHONE_NUMBER_ID}`, 'PATCH', {
+      assistantId: agentId,
+    })
+
+    // Save to DB
     await supabase.from('shops').update({
-      vapi_agent_id: VAPI_AGENT_ID,
+      vapi_agent_id: agentId,
       onboarding_step: 'forwarding',
     }).eq('owner_id', user.id)
 
-    return NextResponse.json({
-      success: true,
-      agentId: vapiData.id ?? VAPI_AGENT_ID,
-      prompt: systemPrompt,
-    })
+    return NextResponse.json({ success: true, agentId })
 
   } catch (err) {
     console.error('Provision error:', err)
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json({ error: 'Failed to provision AI agent', details: String(err) }, { status: 500 })
   }
 }
