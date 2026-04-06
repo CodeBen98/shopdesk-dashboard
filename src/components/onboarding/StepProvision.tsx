@@ -14,29 +14,48 @@ const STAGES = [
 export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [stageIndex, setStageIndex] = useState(0)
   const [done, setDone] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
+    let cancelled = false
     const timers: ReturnType<typeof setTimeout>[] = []
 
+    // Advance visual stages while API call runs
     STAGES.forEach((_, i) => {
       if (i === 0) return
-      timers.push(setTimeout(() => setStageIndex(i), i * 1000))
+      timers.push(setTimeout(() => {
+        if (!cancelled) setStageIndex(i)
+      }, i * 1200))
     })
 
-    timers.push(
-      setTimeout(async () => {
-        const supabase = createClient()
-        await supabase.from('shops').update({
-          onboarding_step: 'forwarding',
-          vapi_agent_id: 'pending',
-        }).eq('owner_id', userId)
-        onShopUpdate({ vapi_agent_id: 'pending' })
-        setDone(true)
-        onNext()
-      }, STAGES.length * 1000)
-    )
+    // Call real provision API
+    const provision = async () => {
+      try {
+        const res = await fetch('/api/provision-shop', { method: 'POST' })
+        const data = await res.json()
 
-    return () => timers.forEach(clearTimeout)
+        if (!res.ok) {
+          if (!cancelled) setError(data.error ?? 'Something went wrong. Please try again.')
+          return
+        }
+
+        if (!cancelled) {
+          onShopUpdate({ vapi_agent_id: data.agentId })
+          setDone(true)
+          // Small delay so user sees the last stage complete
+          setTimeout(() => { if (!cancelled) onNext() }, 600)
+        }
+      } catch {
+        if (!cancelled) setError('Network error. Please check your connection and try again.')
+      }
+    }
+
+    provision()
+
+    return () => {
+      cancelled = true
+      timers.forEach(clearTimeout)
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
@@ -62,8 +81,26 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
       <div style={{ position: 'relative', zIndex: 1 }}>
         <button onClick={onBack} style={backBtn}>← Back</button>
 
-        <h2 style={titleStyle}>Setting up your account</h2>
-        <p style={subtitleStyle}>This only takes a moment…</p>
+        <h2 style={titleStyle}>Setting up your AI receptionist</h2>
+        <p style={subtitleStyle}>We're configuring everything. This takes about 10 seconds.</p>
+
+        {error && (
+          <div style={{
+            background: 'var(--danger-dim)',
+            border: '1px solid var(--danger)',
+            borderRadius: 8,
+            padding: '12px 16px',
+            marginBottom: 24,
+            fontSize: 14,
+            color: 'var(--danger)',
+          }}>
+            {error}
+            <button onClick={() => { setError(''); setStageIndex(0); setDone(false) }}
+              style={{ marginLeft: 12, background: 'none', border: 'none', color: 'var(--danger)', cursor: 'pointer', textDecoration: 'underline', fontSize: 14 }}>
+              Try again
+            </button>
+          </div>
+        )}
 
         {/* Timeline */}
         <div style={{ position: 'relative', paddingLeft: 28, marginBottom: 32 }}>
