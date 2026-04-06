@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
+import { LogoutButton } from '@/components/LogoutButton'
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -36,9 +37,12 @@ export default async function DashboardPage() {
           )}
         </div>
 
-        <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 28, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
-          Dashboard
-        </h1>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+          <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 28, fontWeight: 700, color: 'var(--text)' }}>
+            Dashboard
+          </h1>
+          <LogoutButton />
+        </div>
         <p style={{ color: 'var(--muted)', fontSize: 15 }}>
           Your AI receptionist is live. Here&apos;s what&apos;s happening.
         </p>
