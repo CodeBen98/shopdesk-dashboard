@@ -54,7 +54,11 @@ export default async function DashboardPage() {
     .eq('owner_id', user.id)
     .single()
 
-  if (!shop) redirect('/auth/login')
+  if (!shop) {
+    // Trigger failed — create shop row and send to onboarding
+    await supabase.from('shops').insert({ owner_id: user.id, name: '' })
+    redirect('/onboard')
+  }
   if (!shop.onboarding_complete) redirect('/onboard')
 
   const [callsResult, bookingsResult, missedResult, recentCallsResult, upcomingResult] = await Promise.all([

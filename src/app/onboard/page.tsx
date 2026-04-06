@@ -11,11 +11,21 @@ export default async function OnboardPage() {
     redirect('/auth/login')
   }
 
-  const { data: shop } = await supabase
+  let { data: shop } = await supabase
     .from('shops')
     .select('*')
     .eq('owner_id', user.id)
     .single()
+
+  // If no shop row exists (trigger failed), create one now
+  if (!shop) {
+    const { data: newShop } = await supabase
+      .from('shops')
+      .insert({ owner_id: user.id, name: '' })
+      .select('*')
+      .single()
+    shop = newShop
+  }
 
   if (shop?.onboarding_complete) {
     redirect('/dashboard')
