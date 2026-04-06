@@ -98,6 +98,8 @@ export type JobStatus = {
 
 export type OnboardingStep =
   | 'shop_info'
+  | 'auto_fill_choice'
+  | 'auto_fill_review'
   | 'hours'
   | 'services'
   | 'emergency'

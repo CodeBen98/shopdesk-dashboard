@@ -6,7 +6,7 @@ import { StepProps } from './OnboardingWizard'
 
 const TEAL = '#0F7695'
 
-export function StepShopInfo({ shop, userId, onNext, onShopUpdate }: StepProps) {
+export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShopUpdate }: StepProps) {
   const [name, setName] = useState(shop?.name ?? '')
   const [address, setAddress] = useState(shop?.address ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
@@ -26,7 +26,7 @@ export function StepShopInfo({ shop, userId, onNext, onShopUpdate }: StepProps) 
       address: address.trim(),
       phone: phone.trim(),
       email: email.trim() || null,
-      onboarding_step: 'hours',
+      onboarding_step: 'auto_fill_choice',
     }).eq('owner_id', userId)
     onShopUpdate({ name: name.trim(), address: address.trim(), phone: phone.trim(), email: email.trim() || null })
     setLoading(false)

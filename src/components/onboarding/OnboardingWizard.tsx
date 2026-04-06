@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { Shop, OnboardingStep } from '@/types'
 import { ProgressBar } from './ProgressBar'
 import { StepShopInfo } from './StepShopInfo'
+import { StepAutoFillChoice } from './StepAutoFillChoice'
+import { StepAutoFillReview } from './StepAutoFillReview'
 import { StepHours } from './StepHours'
 import { StepServices } from './StepServices'
 import { StepEmergency } from './StepEmergency'
@@ -15,6 +17,12 @@ import { StepTestCall } from './StepTestCall'
 import { StepGoLive } from './StepGoLive'
 
 const STEPS: OnboardingStep[] = [
+  'shop_info', 'auto_fill_choice', 'auto_fill_review', 'hours', 'services', 'emergency',
+  'calendar', 'voice', 'provision', 'forwarding', 'test_call', 'go_live',
+]
+
+// Steps that count toward the visible progress (original 10)
+const DISPLAY_STEPS: OnboardingStep[] = [
   'shop_info', 'hours', 'services', 'emergency', 'calendar',
   'voice', 'provision', 'forwarding', 'test_call', 'go_live',
 ]
@@ -23,6 +31,7 @@ export interface StepProps {
   shop: Shop | null
   userId: string
   onNext: () => void
+  onSkipTo: (step: OnboardingStep) => void
   onShopUpdate: (updated: Partial<Shop>) => void
 }
 
@@ -37,6 +46,8 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
   const [shopData, setShopData] = useState<Shop | null>(shop)
 
   const stepIndex = STEPS.indexOf(currentStep)
+  const displayStepIndex = DISPLAY_STEPS.indexOf(currentStep)
+  const displayStep = displayStepIndex >= 0 ? displayStepIndex + 1 : 1
 
   function onNext() {
     const nextIndex = stepIndex + 1
@@ -45,17 +56,23 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
     }
   }
 
+  function onSkipTo(step: OnboardingStep) {
+    setCurrentStep(step)
+  }
+
   function onShopUpdate(updated: Partial<Shop>) {
     setShopData(prev => prev ? { ...prev, ...updated } : (updated as Shop))
   }
 
-  const commonProps: StepProps = { shop: shopData, userId, onNext, onShopUpdate }
+  const commonProps: StepProps = { shop: shopData, userId, onNext, onSkipTo, onShopUpdate }
 
   return (
     <div style={{ minHeight: '100vh', background: '#f9fafb' }}>
-      <ProgressBar currentStep={stepIndex + 1} totalSteps={10} />
+      <ProgressBar currentStep={displayStep} totalSteps={10} />
       <div style={{ padding: '40px 16px' }}>
         {currentStep === 'shop_info' && <StepShopInfo {...commonProps} />}
+        {currentStep === 'auto_fill_choice' && <StepAutoFillChoice {...commonProps} />}
+        {currentStep === 'auto_fill_review' && <StepAutoFillReview {...commonProps} />}
         {currentStep === 'hours' && <StepHours {...commonProps} />}
         {currentStep === 'services' && <StepServices {...commonProps} />}
         {currentStep === 'emergency' && <StepEmergency {...commonProps} />}
