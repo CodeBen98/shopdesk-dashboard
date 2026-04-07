@@ -248,6 +248,7 @@ export async function POST(request: Request) {
   } catch (err) {
     console.error('Provision error:', err)
     const msg = err instanceof Error ? err.message : String(err)
-    return NextResponse.json({ error: msg }, { status: 500 })
+    console.error('Full provision error:', msg)
+    return NextResponse.json({ error: msg.slice(0, 500) }, { status: 500 })
   }
 }
