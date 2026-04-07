@@ -188,7 +188,7 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
           width: 'auto',
           minWidth: 200,
           display: 'block',
-          marginLeft: 'auto',
+          marginLeft: 0,
           transition: 'background 0.15s, opacity 0.15s',
           opacity: loading ? 0.7 : 1,
         }}

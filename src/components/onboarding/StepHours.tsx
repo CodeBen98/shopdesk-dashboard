@@ -93,7 +93,7 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
       <button
         type="button"
         onClick={copyWeekdaysFromMonday}
-        style={{ background: 'transparent', color: 'var(--accent)', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, marginBottom: 16 }}
+        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', fontSize: 12, fontWeight: 600, padding: 0, marginBottom: 16, fontFamily: 'inherit', textDecoration: 'underline' }}
       >
         Copy Monday hours to all weekdays
       </button>
@@ -166,7 +166,7 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
 
       {saveError && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 12 }}>{saveError}</p>}
 
-      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}>
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>
@@ -205,7 +205,7 @@ const subtitleStyle: React.CSSProperties = {
   fontSize: 15,
   color: 'var(--muted)',
   lineHeight: 1.6,
-  marginBottom: 32,
+  marginBottom: 8,
 }
 const timeInput: React.CSSProperties = {
   padding: '7px 10px',

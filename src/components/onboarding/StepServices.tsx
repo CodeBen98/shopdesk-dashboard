@@ -213,7 +213,7 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       {minServiceError && <p style={{ ...errorStyle, marginBottom: 12 }}>{minServiceError}</p>}
       {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
 
-      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}>
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>

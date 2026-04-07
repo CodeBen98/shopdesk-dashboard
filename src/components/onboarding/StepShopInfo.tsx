@@ -93,9 +93,9 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
   }
 
   return (
-    <div>
-      {/* Welcome header above card */}
-      <div style={{ textAlign: 'center', marginBottom: 28, animation: 'card-enter 0.35s ease' }}>
+    <div style={card}>
+      {/* Welcome header */}
+      <div style={{ textAlign: 'center', marginBottom: 28 }}>
         <div style={{
           display: 'inline-flex',
           alignItems: 'center',
@@ -110,7 +110,7 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
         </div>
         <h1 style={{
           fontFamily: 'var(--font-space)',
-          fontSize: 32,
+          fontSize: 28,
           fontWeight: 800,
           color: 'var(--text)',
           marginBottom: 10,
@@ -118,12 +118,11 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
         }}>
           Set up your AI receptionist
         </h1>
-        <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.6, maxWidth: 440, margin: '0 auto' }}>
+        <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.6, maxWidth: 440, margin: '0 auto', marginBottom: 32 }}>
           Takes less than 5 minutes. Your AI will be answering calls today.
         </p>
       </div>
 
-      <div style={card}>
         <h2 style={title}>Tell us about your shop</h2>
         <p style={subtitle}>This helps your AI receptionist introduce your business correctly.</p>
 
@@ -250,10 +249,9 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
 
         {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
 
-        <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
+        <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}>
           {loading ? 'Saving...' : 'Continue →'}
         </button>
-      </div>
     </div>
   )
 }

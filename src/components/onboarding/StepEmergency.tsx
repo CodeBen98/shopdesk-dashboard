@@ -72,7 +72,7 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
         {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
       </div>
 
-      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}>
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>
