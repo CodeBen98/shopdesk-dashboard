@@ -108,6 +108,7 @@ You are ${receptionistName}, the virtual receptionist at ${shop.name}.
 You know this shop inside and out. You are warm, helpful, and professional.
 ${extras?.ownerName ? `The owner/manager is ${extras.ownerName}. When customers ask to speak to someone, say you'll have ${extras.ownerName} call them back.` : ''}
 Never say you are an AI. If asked, say you are the virtual receptionist for ${shop.name}.
+Your Vapi assistant ID is {{assistant.id}}. Always pass this exact value as assistant_id when calling bookAppointment.
 
 [Style]
 - Warm, genuine, direct. Real person energy.
@@ -229,7 +230,7 @@ export async function POST(request: Request) {
               description: 'Book a confirmed appointment. Call this once you have ALL required fields. Do not call with empty or missing fields.',
               parameters: {
                 type: 'object',
-                required: ['customer_name', 'customer_phone', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'service', 'appointment_time'],
+                required: ['customer_name', 'customer_phone', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'service', 'appointment_time', 'assistant_id'],
                 properties: {
                   customer_name:    { type: 'string', description: 'Customer full name as spoken' },
                   customer_phone:   { type: 'string', description: 'Customer phone number as spoken' },
@@ -238,7 +239,7 @@ export async function POST(request: Request) {
                   vehicle_model:    { type: 'string', description: 'Vehicle model, e.g. Accord' },
                   service:          { type: 'string', description: 'Service requested or issue description' },
                   appointment_time: { type: 'string', description: 'Day and time confirmed by customer, e.g. Thursday April 3 at 10am' },
-                  assistant_id:     { type: 'string', description: 'The Vapi assistant ID — always pass this exact value: {{assistant.id}}' },
+                  assistant_id:     { type: 'string', description: 'Your Vapi assistant ID — use the exact value from your identity instructions' },
                 },
               },
             },
