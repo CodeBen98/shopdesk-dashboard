@@ -150,15 +150,10 @@ export default async function DashboardPage() {
         marginBottom: 32,
       }}>
         {[
-          { label: 'Total Calls Answered', value: totalCalls.toLocaleString(), sub: 'all time' },
+          { label: 'Calls Answered', value: totalCalls.toLocaleString(), sub: 'all time' },
           { label: 'Bookings Made', value: totalBookings.toLocaleString(), sub: 'all time' },
           { label: 'Missed Calls', value: missedCalls.toLocaleString(), sub: 'all time', danger: missedCalls > 0 },
-          {
-            label: 'Est. Revenue Recovered',
-            value: `$${revenueRecovered.toLocaleString()}`,
-            sub: '× $650 avg repair order',
-            tooltip: true,
-          },
+          { label: 'Revenue Recovered', value: `$${revenueRecovered.toLocaleString()}`, sub: 'est. at $650/booking' },
         ].map(stat => (
           <div key={stat.label} style={{
             background: 'var(--surface)',
@@ -189,7 +184,7 @@ export default async function DashboardPage() {
         display: 'grid',
         gridTemplateColumns: '1fr 380px',
         gap: 20,
-        alignItems: 'start',
+        alignItems: 'stretch',
       }} className="dashboard-grid">
         {/* Recent Calls */}
         <div style={{
