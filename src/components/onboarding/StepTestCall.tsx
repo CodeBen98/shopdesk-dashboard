@@ -49,13 +49,13 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
         <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', fontFamily: 'monospace' }}>{displayNumber}</p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-        <button onClick={handleSuccess} disabled={loading} className="step-btn-primary" style={{ marginTop: 0 }}>
-          {loading ? 'Saving...' : 'It worked!'}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
+        <button onClick={handleSuccess} disabled={loading} className="step-btn-primary" style={{ marginTop: 0, width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block' }}>
+          {loading ? 'Saving...' : 'It worked'}
         </button>
         <button
           onClick={() => setShowProblem(p => !p)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, padding: 8, fontFamily: 'inherit' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, padding: 8, fontFamily: 'inherit', width: 'auto', minWidth: 200 }}
         >
           I had a problem
         </button>

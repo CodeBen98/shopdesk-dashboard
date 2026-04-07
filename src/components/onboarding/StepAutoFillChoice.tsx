@@ -69,10 +69,9 @@ export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onS
     <div style={card}>
       <button onClick={onBack} style={backBtn}>← Back</button>
 
-      <h2 style={titleStyle}>Want us to set up your profile automatically?</h2>
+      <h2 style={titleStyle}>Auto-fill your profile</h2>
       <p style={subtitleStyle}>
-        We&apos;ll look up <strong style={{ color: 'var(--text)' }}>{shop?.name ?? 'your shop'}</strong> online and pre-fill your hours, services, and contact
-        info. You can review and edit everything before continuing.
+        We found <strong style={{ color: 'var(--text)' }}>{shop?.name ?? 'your shop'}</strong> online and can pre-fill your hours and contact info. You review before continuing.
       </p>
 
       <div style={cardsRow}>
@@ -95,7 +94,7 @@ export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onS
           </div>
           <div style={optionTitle}>Auto-fill my profile</div>
           <div style={optionDesc}>
-            We&apos;ll look up your shop online and fill in your hours, phone, and more. Takes about 10 seconds.
+            We&apos;ll look up your shop online and fill in your hours, phone, and more. Takes about 10 seconds
           </div>
         </button>
 
@@ -114,7 +113,7 @@ export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onS
             <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M13 2l3 3-10 10H3v-3L13 2z" stroke="var(--text-mid)" strokeWidth="1.5" strokeLinejoin="round"/></svg>
           </div>
           <div style={{ height: 24, marginBottom: 8 }} />
-          <div style={optionTitle}>I&apos;ll fill it in myself</div>
+          <div style={optionTitle}>Fill in manually</div>
           <div style={optionDesc}>
             Enter your hours, services, and contact info step by step.
           </div>
@@ -125,7 +124,7 @@ export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onS
         <p style={notFoundStyle}>{notFoundMsg}</p>
       )}
 
-      <button onClick={handleContinue} disabled={loading || !!notFoundMsg} className="step-btn-primary">
+      <button onClick={handleContinue} disabled={loading || !!notFoundMsg} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
         {loading ? 'Looking up your shop...' : 'Continue →'}
       </button>
     </div>
@@ -172,14 +171,17 @@ const cardsRow: React.CSSProperties = {
   gap: 12,
   marginBottom: 24,
   flexWrap: 'wrap',
+  alignItems: 'stretch',
 }
 const optionCard: React.CSSProperties = {
-  flex: '1 1 180px',
+  flex: 1,
   borderRadius: 12,
   padding: '24px',
   cursor: 'pointer',
   textAlign: 'left',
   outline: 'none',
+  display: 'flex',
+  flexDirection: 'column',
 }
 const optionIcon: React.CSSProperties = { fontSize: 28, marginBottom: 8 }
 const badge: React.CSSProperties = {

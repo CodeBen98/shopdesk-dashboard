@@ -82,7 +82,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
 
       <div style={{ marginBottom: 24 }}>
         <p style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 12 }}>
-          How to set it up:
+          How to set it up
         </p>
         <ol style={{ margin: 0, paddingLeft: 20, lineHeight: 2, fontSize: 14, color: 'var(--text-mid)' }}>
           <li>Go to your phone carrier&apos;s settings (or call them)</li>
@@ -108,7 +108,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
         onClick={handleNext}
         disabled={!confirmed || loading}
         className="step-btn-primary"
-        style={{ opacity: confirmed ? 1 : 0.5, cursor: confirmed ? 'pointer' : 'not-allowed' }}
+        style={{ opacity: confirmed ? 1 : 0.5, cursor: confirmed ? 'pointer' : 'not-allowed', width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}
       >
         {loading ? 'Saving...' : 'Continue →'}
       </button>

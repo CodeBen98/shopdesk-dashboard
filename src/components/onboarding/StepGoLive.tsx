@@ -8,10 +8,10 @@ import { StepProps } from './OnboardingWizard'
 const DEMO_NUMBER = '(407) 555-0123'
 
 const VOICE_LABELS: Record<string, string> = {
-  patricia: 'Patricia — Warm & Professional',
-  james: 'James — Calm & Authoritative',
-  sofia: 'Sofia — Friendly & Energetic',
-  marcus: 'Marcus — Direct & Trustworthy',
+  patricia: 'Patricia, Warm and Professional',
+  james: 'James, Calm and Authoritative',
+  sofia: 'Sofia, Friendly and Energetic',
+  marcus: 'Marcus, Direct and Trustworthy',
 }
 
 const CONFETTI = [
@@ -65,7 +65,13 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
       <div style={{ ...card, textAlign: 'center' }}>
         <button onClick={onBack} style={{ ...backBtn, textAlign: 'left' }}>← Back</button>
 
-        <div style={{ fontSize: 56, marginBottom: 8 }}>🎉</div>
+        <div style={{ width: 80, height: 80, borderRadius: '50%', background: 'rgba(15,118,149,0.12)', border: '2px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 24, marginLeft: 'auto', marginRight: 'auto' }}>
+          <svg width="40" height="40" viewBox="0 0 40 40" fill="none">
+            <path d="M10 20l8 8 12-16" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"
+              style={{ strokeDasharray: 40, strokeDashoffset: 0, animation: 'checkmark-draw 0.6s ease forwards' }}
+            />
+          </svg>
+        </div>
         <h2 style={{
           fontFamily: 'var(--font-space)',
           fontSize: 32,
@@ -88,7 +94,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
           marginBottom: 32,
           textAlign: 'left',
         }}>
-          <p style={{ fontSize: 12, fontWeight: 700, color: '#4ade80', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
             Your Setup Summary
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>

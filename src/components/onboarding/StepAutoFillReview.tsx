@@ -55,7 +55,7 @@ export function StepAutoFillReview({ shop, onBack, onSkipTo }: StepProps) {
     <div style={card}>
       <button onClick={onBack} style={backBtn}>← Back</button>
 
-      <h2 style={titleStyle}>Here&apos;s what we found 👀</h2>
+      <h2 style={titleStyle}>Here is what we found</h2>
       <p style={subtitleStyle}>Review the info below. You can edit anything on the next steps.</p>
 
       <div style={infoList}>
@@ -88,7 +88,10 @@ function InfoRow({ label, value, placeholder }: { label: string; value?: string;
       <div style={infoValueWrap}>
         {found ? (
           <>
-            <span style={checkmark}>✓</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+              <circle cx="8" cy="8" r="7" fill="rgba(34,197,94,0.12)" stroke="var(--success)" strokeWidth="1.5"/>
+              <path d="M5 8l2 2 4-4" stroke="var(--success)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
             <span style={infoValue}>{value}</span>
           </>
         ) : (

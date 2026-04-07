@@ -159,18 +159,18 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
                   fontWeight: 600,
                   textAlign: 'right',
                 }}
-                placeholder="$49.99"
+                placeholder="Price (optional)"
               />
               <button
                 onClick={() => removeService(i)}
                 style={{
                   background: 'none', border: 'none', cursor: 'pointer',
-                  color: 'var(--muted)', fontSize: 18, lineHeight: 1,
-                  padding: '2px 4px', flexShrink: 0, fontFamily: 'inherit',
-                  transition: 'color 0.15s',
+                  color: 'var(--danger)', padding: '4px', display: 'flex', flexShrink: 0,
                 }}
               >
-                ×
+                <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                  <path d="M2 4h10M5 4V2.5h4V4M5.5 6.5v4M8.5 6.5v4M3 4l.5 7.5h7L11 4" stroke="var(--danger)" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </button>
             </div>
             {errors[i] && <p style={errorStyle}>{errors[i]}</p>}
@@ -213,7 +213,7 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       {minServiceError && <p style={{ ...errorStyle, marginBottom: 12 }}>{minServiceError}</p>}
       {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
 
-      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>

@@ -57,22 +57,14 @@ export function StepCalendar({ shop: _shop, userId, onNext, onBack, onShopUpdate
       </div>
       <h2 style={{ ...titleStyle, textAlign: 'center' }}>Connect Google Calendar</h2>
       <p style={{ ...subtitleStyle, textAlign: 'center' }}>
-        Let your AI receptionist book appointments directly into your calendar — no double-booking, ever.
+        Let your AI book appointments directly into your calendar. No double-booking, ever.
       </p>
 
-      <div style={{
-        background: 'var(--card)',
-        border: '1px solid var(--border)',
-        borderRadius: 8,
-        padding: 16,
-        marginBottom: 24,
-      }}>
-        <ul style={{ margin: 0, paddingLeft: 20, fontSize: 14, color: 'var(--text-mid)', lineHeight: 1.8 }}>
-          <li>Automatically block off booked slots</li>
-          <li>Send calendar invites to customers</li>
-          <li>See all appointments in one place</li>
-        </ul>
-      </div>
+      <ul style={{ margin: '0 0 24px', paddingLeft: 20, fontSize: 14, color: 'var(--text-mid)', lineHeight: 1.8 }}>
+        <li>Automatically block off booked slots</li>
+        <li>Send calendar invites to customers</li>
+        <li>See all appointments in one place</li>
+      </ul>
 
       <button onClick={handleConnect} disabled={loading || skipping || comingSoon} className="step-btn-primary">
         {loading ? 'Connecting...' : 'Connect Google Calendar'}
@@ -92,11 +84,11 @@ export function StepCalendar({ shop: _shop, userId, onNext, onBack, onShopUpdate
 
       {saveError && <p style={{ fontSize: 12, color: 'var(--danger)', marginTop: 8, textAlign: 'center' }}>{saveError}</p>}
 
-      <div style={{ textAlign: 'center', marginTop: 16 }}>
+      <div style={{ textAlign: 'right', marginTop: 16 }}>
         <button
           onClick={handleSkip}
           disabled={skipping || loading}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 14, fontFamily: 'inherit' }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-mid)', fontSize: 14, fontFamily: 'inherit', textDecoration: 'underline', width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}
         >
           {skipping ? 'Skipping...' : 'Skip for now'}
         </button>

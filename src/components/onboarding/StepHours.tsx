@@ -88,7 +88,15 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
       <button onClick={onBack} style={backBtn}>← Back</button>
 
       <h2 style={titleStyle}>Set your business hours</h2>
-      <p style={subtitleStyle}>Your AI receptionist will use these to greet callers appropriately.</p>
+      <p style={subtitleStyle}>Your AI uses these to answer calls at the right times.</p>
+
+      <button
+        type="button"
+        onClick={copyWeekdaysFromMonday}
+        style={{ background: 'transparent', color: 'var(--accent)', border: 'none', fontSize: 12, fontWeight: 600, cursor: 'pointer', padding: 0, marginBottom: 16 }}
+      >
+        Copy Monday hours to all weekdays
+      </button>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
         {DAYS.map(({ key, label }) => {
@@ -145,28 +153,6 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
                   </>
                 )}
 
-                {key === 'monday' && (
-                  <button
-                    type="button"
-                    onClick={copyWeekdaysFromMonday}
-                    style={{
-                      marginLeft: 'auto',
-                      background: 'transparent',
-                      border: '1px solid var(--border)',
-                      borderRadius: 8,
-                      color: 'var(--text-mid)',
-                      fontSize: 11,
-                      fontWeight: 500,
-                      cursor: 'pointer',
-                      padding: '4px 10px',
-                      fontFamily: 'inherit',
-                      flexShrink: 0,
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    Copy to Tue–Fri
-                  </button>
-                )}
               </div>
               {timeErrors[key] && (
                 <p style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0 120px' }}>
@@ -180,7 +166,7 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
 
       {saveError && <p style={{ fontSize: 12, color: 'var(--danger)', marginBottom: 12 }}>{saveError}</p>}
 
-      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>

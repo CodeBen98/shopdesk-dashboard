@@ -71,7 +71,7 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
 
       <h2 style={titleStyle}>Choose your AI voice</h2>
       <p style={subtitleStyle}>
-        This is the voice your customers will hear when they call. Preview each one before choosing.
+        Preview each voice and select the one your customers will hear.
       </p>
 
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
@@ -142,9 +142,19 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
                     Loading...
                   </>
                 ) : isPlaying ? (
-                  <>■ Stop</>
+                  <>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+                      <rect x="2" y="2" width="6" height="6" rx="1"/>
+                    </svg>
+                    Stop
+                  </>
                 ) : (
-                  <>▶ Preview</>
+                  <>
+                    <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+                      <path d="M2 1.5l6 3.5-6 3.5V1.5z"/>
+                    </svg>
+                    Preview
+                  </>
                 )}
               </button>
 
@@ -171,13 +181,16 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
         style={{
           background: selected ? 'var(--accent)' : 'var(--card-raised)',
           color: selected ? '#fff' : 'var(--muted)',
-          padding: '13px 24px',
+          padding: '13px 32px',
           borderRadius: 10,
-          border: 'none',
+          border: selected ? 'none' : '1px solid var(--border)',
           cursor: selected ? 'pointer' : 'not-allowed',
           fontWeight: 600,
           fontSize: 15,
-          width: '100%',
+          width: 'auto',
+          minWidth: 200,
+          display: 'block',
+          marginLeft: 'auto',
           transition: 'background 0.15s, opacity 0.15s',
           opacity: loading ? 0.7 : 1,
         }}

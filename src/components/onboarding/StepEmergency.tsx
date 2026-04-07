@@ -39,7 +39,7 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
       </div>
       <h2 style={titleStyle}>Emergency contact</h2>
       <p style={subtitleStyle}>
-        Who should be alerted if a caller reports an emergency — overheating, brakes failed, stranded, etc.?
+        Who gets alerted when a caller reports an emergency: overheating, brake failure, or stranded.
       </p>
 
       <div style={fieldStyle}>
@@ -50,24 +50,29 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
           className="step-input"
           style={errors.name ? { borderColor: 'var(--danger)' } : {}}
           placeholder="e.g. Mike Johnson"
+          autoCapitalize="words"
         />
         {errors.name && <p style={errorStyle}>{errors.name}</p>}
       </div>
 
       <div style={{ ...fieldStyle, marginBottom: 28 }}>
         <label style={labelStyle}>Phone Number *</label>
-        <input
-          value={contactPhone}
-          onChange={e => { setContactPhone(e.target.value); setErrors(p => ({ ...p, phone: undefined })) }}
-          className="step-input"
-          style={errors.phone ? { borderColor: 'var(--danger)' } : {}}
-          placeholder="+1 (407) 555-1234"
-          type="tel"
-        />
+        <div style={{ display: 'flex', border: `1px solid ${errors.phone ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8, overflow: 'hidden', background: 'var(--card)' }}>
+          <div style={{ padding: '10px 12px', borderRight: '1px solid var(--border)', fontSize: 14, color: 'var(--text-mid)', background: 'var(--card-raised)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+            🇺🇸 +1
+          </div>
+          <input
+            value={contactPhone}
+            onChange={e => { setContactPhone(e.target.value); setErrors(p => ({ ...p, phone: undefined })) }}
+            style={{ border: 'none', background: 'transparent', flex: 1, padding: '10px 14px', color: 'var(--text)', outline: 'none', fontSize: 14, fontFamily: 'inherit' }}
+            placeholder="(407) 555-1234"
+            type="tel"
+          />
+        </div>
         {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
       </div>
 
-      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
+      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>

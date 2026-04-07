@@ -5,12 +5,12 @@ import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const VEHICLE_OPTIONS = [
-  'All Makes & Models',
+  'All Makes and Models',
   'Domestic (Ford/GM/Chrysler)',
   'European (BMW/Mercedes/Audi/VW)',
   'Japanese (Toyota/Honda/Nissan)',
   'Korean (Hyundai/Kia)',
-  'Trucks & SUVs',
+  'Trucks and SUVs',
   'Diesel',
 ]
 
@@ -116,10 +116,10 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
           marginBottom: 10,
           lineHeight: 1.2,
         }}>
-          Let&apos;s set up your AI receptionist
+          Set up your AI receptionist
         </h1>
         <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.6, maxWidth: 440, margin: '0 auto' }}>
-          Takes less than 5 minutes. We&apos;ll have your AI answering calls today.
+          Takes less than 5 minutes. Your AI will be answering calls today.
         </p>
       </div>
 
@@ -142,13 +142,17 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
           </div>
           <div>
             <label style={labelStyle}>Phone Number *</label>
-            <input
-              value={phone}
-              onChange={e => { setPhone(e.target.value); setPhoneError('') }}
-              className="step-input"
-              style={phoneError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-              placeholder="+1 (407) 555-1234"
-            />
+            <div style={{ display: 'flex', border: `1px solid ${phoneError ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8, overflow: 'hidden', background: 'var(--card)' }}>
+              <div style={{ padding: '10px 12px', borderRight: '1px solid var(--border)', fontSize: 14, color: 'var(--text-mid)', background: 'var(--card-raised)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+                🇺🇸 +1
+              </div>
+              <input
+                value={phone}
+                onChange={e => { setPhone(e.target.value); setPhoneError('') }}
+                style={{ border: 'none', background: 'transparent', flex: 1, padding: '10px 14px', color: 'var(--text)', outline: 'none', fontSize: 14, fontFamily: 'inherit' }}
+                placeholder="(407) 555-1234"
+              />
+            </div>
             {phoneError && <p style={errorStyle}>{phoneError}</p>}
           </div>
         </div>
@@ -160,7 +164,9 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
             onChange={e => { setAddress(e.target.value); setAddressError('') }}
             className="step-input"
             style={addressError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-            placeholder="123 Main St, Orlando, FL 32801"
+            placeholder="Street address, City, State ZIP"
+            autoComplete="street-address"
+            data-1p-ignore
           />
           {addressError && <p style={errorStyle}>{addressError}</p>}
         </div>
@@ -168,10 +174,7 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
         {/* Owner Name + Email side by side */}
         <div className="form-grid-2" style={{ marginBottom: 20 }}>
           <div>
-            <label style={labelStyle}>Owner Name *</label>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, marginTop: 0 }}>
-              So AI can say &ldquo;I&apos;ll have [name] call you back&rdquo;
-            </p>
+            <label style={labelStyle}>Owner / Manager Name *</label>
             <input
               value={ownerName}
               onChange={e => { setOwnerName(e.target.value); setOwnerNameError('') }}
@@ -183,9 +186,6 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
           </div>
           <div>
             <label style={labelStyle}>Email</label>
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, marginTop: 0 }}>
-              Optional — for booking confirmations
-            </p>
             <input
               value={email}
               onChange={e => { setEmail(e.target.value); setEmailError('') }}
@@ -250,7 +250,7 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
 
         {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
 
-        <button onClick={handleSubmit} disabled={loading} className="step-btn-primary">
+        <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
           {loading ? 'Saving...' : 'Continue →'}
         </button>
       </div>

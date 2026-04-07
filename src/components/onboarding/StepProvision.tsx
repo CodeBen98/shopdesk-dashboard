@@ -52,7 +52,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
           onShopUpdate({ vapi_agent_id: data.agentId })
           setDone(true)
           // Small delay so user sees the last stage complete
-          setTimeout(() => { if (!cancelled) onNext() }, 600)
+          setTimeout(() => { if (!cancelled) onNext() }, 1500)
         }
       } catch {
         if (!cancelled) setError('Network error. Please check your connection and try again.')
