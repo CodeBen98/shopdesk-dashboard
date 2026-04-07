@@ -60,35 +60,6 @@ async function buyTwilioNumber(areaCode: string): Promise<{ sid: string; phoneNu
   }
 }
 
-// Register a Twilio number with Vapi so Vapi can receive calls on it
-async function registerNumberWithVapi(twilioSid: string, assistantId: string): Promise<string | null> {
-  try {
-    const res = await fetch('https://api.vapi.ai/phone-number', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${VAPI_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        provider: 'twilio',
-        number: '', // will be filled from twilioSid
-        twilioAccountSid: TWILIO_ACCOUNT_SID,
-        twilioAuthToken: TWILIO_AUTH_TOKEN,
-        assistantId,
-        // Use the Twilio SID to link
-        numberE164CheckEnabled: false,
-      }),
-    })
-    if (!res.ok) {
-      // Fallback: just patch the existing shared number
-      return null
-    }
-    const data = await res.json()
-    return data.id
-  } catch {
-    return null
-  }
-}
 
 const voiceNames: Record<string, string> = {
   patricia: 'Sarah',
