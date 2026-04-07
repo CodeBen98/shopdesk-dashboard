@@ -33,7 +33,9 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
       <button onClick={onBack} style={backBtn}>← Back</button>
 
       <div style={{ marginBottom: 16 }}>
-        <span style={{ fontSize: 32 }}>🚨</span>
+        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--danger-dim)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
+        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2L2 19h18L11 2z" stroke="var(--danger)" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 9v4M11 15.5v.5" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round"/></svg>
+      </div>
       </div>
       <h2 style={titleStyle}>Emergency contact</h2>
       <p style={subtitleStyle}>

@@ -87,7 +87,9 @@ export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onS
             boxShadow: selected === 'auto' ? '0 0 0 4px rgba(15,118,149,0.15)' : 'none',
           }}
         >
-          <div style={optionIcon}>⚡</div>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--accent-dim)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M10 2L3 10h7l-2 6 8-9h-7l1-5z" stroke="var(--accent)" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+          </div>
           <div style={{ marginBottom: 8 }}>
             <span style={badge}>RECOMMENDED</span>
           </div>
@@ -108,7 +110,9 @@ export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onS
             boxShadow: 'none',
           }}
         >
-          <div style={optionIcon}>✏️</div>
+          <div style={{ width: 40, height: 40, borderRadius: 10, background: 'var(--card-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 12 }}>
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none"><path d="M13 2l3 3-10 10H3v-3L13 2z" stroke="var(--text-mid)" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+          </div>
           <div style={{ height: 24, marginBottom: 8 }} />
           <div style={optionTitle}>I&apos;ll fill it in myself</div>
           <div style={optionDesc}>

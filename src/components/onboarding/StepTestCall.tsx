@@ -25,7 +25,9 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
     <div style={{ ...card, textAlign: 'center' }}>
       <button onClick={onBack} style={{ ...backBtn, textAlign: 'left' }}>← Back</button>
 
-      <div style={{ fontSize: 48, marginBottom: 16 }}>📞</div>
+      <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--accent-dim)', border: '1px solid rgba(15,118,149,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, marginLeft: 'auto', marginRight: 'auto' }}>
+        <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M5 5h6l2.5 6L10 13c1.5 2.5 5 5.5 7.5 7l2.5-3.5 6 2.5v6a2 2 0 01-2 2C11.5 27 1 16.5 1 5a2 2 0 012-2h2z" stroke="var(--accent)" strokeWidth="1.5" strokeLinejoin="round"/></svg>
+      </div>
       <h2 style={titleStyle}>Make a test call</h2>
       <p style={subtitleStyle}>
         Call your shop number right now. Let it ring 4 times without answering.
@@ -49,7 +51,7 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
         <button onClick={handleSuccess} disabled={loading} className="step-btn-primary" style={{ marginTop: 0 }}>
-          {loading ? 'Saving...' : 'It worked! 🎉'}
+          {loading ? 'Saving...' : 'It worked!'}
         </button>
         <button
           onClick={() => setShowProblem(p => !p)}

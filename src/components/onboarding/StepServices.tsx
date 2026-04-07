@@ -103,6 +103,7 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
               <button
                 key={s}
                 onClick={() => !added && addSuggestion(s)}
+                className={added ? 'quick-add-chip quick-add-chip--added' : 'quick-add-chip'}
                 style={{
                   padding: '6px 12px',
                   borderRadius: 9999,
@@ -112,7 +113,7 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
                   fontSize: 13,
                   cursor: added ? 'default' : 'pointer',
                   fontWeight: added ? 600 : 400,
-                  transition: 'border-color 0.15s, background 0.15s',
+                  transition: 'border-color 0.15s, background 0.15s, color 0.15s',
                   fontFamily: 'inherit',
                 }}
               >
@@ -130,46 +131,56 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
             style={{
               background: 'var(--card)',
               border: '1px solid var(--border)',
-              borderRadius: 8,
-              padding: 16,
-              marginBottom: 12,
+              borderRadius: 10,
+              padding: '14px 16px',
+              marginBottom: 10,
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-mid)' }}>Service {i + 1}</span>
-              <button
-                onClick={() => removeService(i)}
-                style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontSize: 13, fontFamily: 'inherit' }}
-              >
-                Remove
-              </button>
-            </div>
-            <div style={{ marginBottom: 8 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 8 }}>
               <input
                 value={service.name}
                 onChange={e => updateService(i, { name: e.target.value })}
                 className="step-input"
-                style={errors[i] ? { borderColor: 'var(--danger)' } : {}}
+                style={{
+                  ...(errors[i] ? { borderColor: 'var(--danger)' } : {}),
+                  flex: 1,
+                  fontWeight: 600,
+                  fontSize: 14,
+                }}
                 placeholder="Service name *"
               />
-              {errors[i] && <p style={errorStyle}>{errors[i]}</p>}
-            </div>
-            <div style={{ display: 'flex', gap: 8 }}>
               <input
                 value={service.price ?? ''}
                 onChange={e => updateService(i, { price: e.target.value || null })}
                 className="step-input"
-                style={{ flex: 1 }}
-                placeholder="Price (e.g. $49.99)"
+                style={{
+                  width: 110,
+                  color: 'var(--accent)',
+                  fontWeight: 600,
+                  textAlign: 'right',
+                }}
+                placeholder="$49.99"
               />
-              <input
-                value={service.description ?? ''}
-                onChange={e => updateService(i, { description: e.target.value || null })}
-                className="step-input"
-                style={{ flex: 2 }}
-                placeholder="Short description"
-              />
+              <button
+                onClick={() => removeService(i)}
+                style={{
+                  background: 'none', border: 'none', cursor: 'pointer',
+                  color: 'var(--muted)', fontSize: 18, lineHeight: 1,
+                  padding: '2px 4px', flexShrink: 0, fontFamily: 'inherit',
+                  transition: 'color 0.15s',
+                }}
+              >
+                ×
+              </button>
             </div>
+            {errors[i] && <p style={errorStyle}>{errors[i]}</p>}
+            <input
+              value={service.description ?? ''}
+              onChange={e => updateService(i, { description: e.target.value || null })}
+              className="step-input"
+              style={{ fontSize: 12, color: 'var(--muted)' }}
+              placeholder="Short description (optional)"
+            />
           </div>
         ))}
       </div>
@@ -178,9 +189,9 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
         onClick={() => addService()}
         style={{
           width: '100%',
-          padding: '10px',
-          border: '2px dashed var(--accent)',
-          borderRadius: 8,
+          padding: '12px',
+          border: '1px dashed rgba(15,118,149,0.4)',
+          borderRadius: 10,
           background: 'transparent',
           color: 'var(--accent)',
           fontSize: 14,
@@ -188,10 +199,15 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
           cursor: 'pointer',
           marginBottom: 24,
           fontFamily: 'inherit',
-          transition: 'background 0.15s',
+          transition: 'background 0.15s, border-color 0.15s',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 8,
         }}
       >
-        + Add Service
+        <span style={{ fontSize: 18, lineHeight: 1 }}>+</span>
+        Add Custom Service
       </button>
 
       {minServiceError && <p style={{ ...errorStyle, marginBottom: 12 }}>{minServiceError}</p>}

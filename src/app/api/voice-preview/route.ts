@@ -10,10 +10,10 @@ const VOICE_IDS: Record<string, string> = {
 }
 
 const PREVIEW_TEXT: Record<string, string> = {
-  patricia: "Thank you for calling. This is Sarah — how can I help you today?",
-  james:    "Thank you for calling. This is James — how can I help you today?",
-  sofia:    "Thank you for calling! This is Sofia — how can I help you today?",
-  marcus:   "Thank you for calling. This is Marcus — how can I help you today?",
+  patricia: "Thank you for calling. This is Sarah. How can I help you today?",
+  james:    "Thank you for calling. This is James. How can I help you today?",
+  sofia:    "Thank you for calling! This is Sofia. How can I help you today?",
+  marcus:   "Thank you for calling. This is Marcus. How can I help you today?",
 }
 
 export async function GET(request: Request) {

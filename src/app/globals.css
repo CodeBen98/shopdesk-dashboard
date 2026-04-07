@@ -179,3 +179,55 @@ input, textarea, select {
 .preview-btn:hover::after {
   opacity: 1;
 }
+
+/* Global focus ring for all inputs */
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 0 3px rgba(15,118,149,0.12) !important;
+  outline: none !important;
+}
+
+/* Smooth transitions on interactive elements */
+button, a {
+  transition: all 0.15s ease;
+}
+
+/* Underline tab indicator animation */
+@keyframes tab-slide {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Page section spacing */
+.section-header {
+  font-family: var(--font-space);
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+  margin-bottom: 4px;
+}
+
+.section-desc {
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 24px;
+}
+
+/* Responsive two-column form grid */
+.form-grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 580px) {
+  .form-grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Quick-add chip hover teal tint */
+.quick-add-chip:hover:not(.quick-add-chip--added) {
+  background: var(--accent-dim) !important;
+  border-color: rgba(15,118,149,0.5) !important;
+  color: var(--accent) !important;
+}

@@ -6,6 +6,7 @@ import { useToast } from '@/components/Toast'
 import type { Shop, ShopHours, Service } from '@/types'
 
 type Tab = 'shop' | 'hours' | 'services' | 'ai' | 'phone'
+type SaveStatus = 'idle' | 'saving' | 'saved'
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
 type Day = typeof DAYS[number]
@@ -16,46 +17,76 @@ const DAY_LABELS: Record<Day, string> = {
 }
 
 const VOICES = [
-  { id: 'nova',    name: 'Nova',    desc: 'Friendly & warm female voice' },
-  { id: 'alloy',   name: 'Alloy',   desc: 'Professional neutral voice' },
-  { id: 'echo',    name: 'Echo',    desc: 'Clear & calm male voice' },
-  { id: 'shimmer', name: 'Shimmer', desc: 'Energetic & bright female voice' },
+  { id: 'patricia', initial: 'P', color: '#0F7695', name: 'Patricia', desc: 'Warm and professional' },
+  { id: 'james',    initial: 'J', color: '#6366f1', name: 'James',    desc: 'Calm and authoritative' },
+  { id: 'sofia',    initial: 'S', color: '#f59e0b', name: 'Sofia',    desc: 'Friendly and energetic' },
+  { id: 'marcus',   initial: 'M', color: '#10b981', name: 'Marcus',   desc: 'Direct and trustworthy' },
+]
+
+const SUGGESTIONS = [
+  'Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Diagnostics',
+  'AC Repair', 'Transmission Service', 'Alignment', 'Battery Replacement',
 ]
 
 function inputStyle(focused: boolean): React.CSSProperties {
   return {
     width: '100%',
     boxSizing: 'border-box',
-    background: 'var(--card-raised)',
+    background: 'var(--card)',
     border: `1px solid ${focused ? 'var(--accent)' : 'var(--border)'}`,
+    boxShadow: focused ? '0 0 0 3px rgba(15,118,149,0.12)' : 'none',
     borderRadius: 8,
     padding: '10px 14px',
     fontSize: 14,
     color: 'var(--text)',
     outline: 'none',
-    transition: 'border-color 0.15s',
+    transition: 'border-color 0.15s, box-shadow 0.15s',
+    fontFamily: 'inherit',
   }
 }
 
-function SaveButton({ onClick, saving }: { onClick: () => void; saving: boolean }) {
+const labelStyle: React.CSSProperties = {
+  display: 'block',
+  fontSize: 11,
+  fontWeight: 600,
+  textTransform: 'uppercase',
+  letterSpacing: '0.06em',
+  color: 'var(--muted)',
+  marginBottom: 6,
+}
+
+function SaveButton({
+  onClick,
+  status,
+  savingText = 'Saving...',
+  savedText = '✓ Saved',
+}: {
+  onClick: () => void
+  status: SaveStatus
+  savingText?: string
+  savedText?: string
+}) {
+  const saved = status === 'saved'
+  const saving = status === 'saving'
   return (
     <button
       onClick={onClick}
-      disabled={saving}
+      disabled={saving || saved}
       style={{
-        background: 'var(--accent)',
-        color: '#fff',
-        border: 'none',
+        background: saved ? 'var(--success-dim)' : 'var(--accent)',
+        color: saved ? 'var(--success)' : '#fff',
+        border: saved ? '1px solid rgba(34,197,94,0.3)' : 'none',
         borderRadius: 8,
         padding: '10px 22px',
         fontSize: 14,
         fontWeight: 600,
-        cursor: saving ? 'not-allowed' : 'pointer',
+        cursor: saving || saved ? 'not-allowed' : 'pointer',
         opacity: saving ? 0.7 : 1,
         display: 'flex',
         alignItems: 'center',
         gap: 8,
-        transition: 'background 0.15s, opacity 0.15s',
+        transition: 'all 0.15s',
+        fontFamily: 'inherit',
       }}
     >
       {saving && (
@@ -64,7 +95,7 @@ function SaveButton({ onClick, saving }: { onClick: () => void; saving: boolean 
           <path d="M7 1.5A5.5 5.5 0 0112.5 7" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
         </svg>
       )}
-      {saving ? 'Saving...' : 'Save changes'}
+      {saved ? savedText : saving ? savingText : 'Save changes'}
     </button>
   )
 }
@@ -73,7 +104,7 @@ export default function SettingsPage() {
   const [shop, setShop] = useState<Shop | null>(null)
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('shop')
-  const [saving, setSaving] = useState(false)
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>('idle')
   const { show } = useToast()
 
   // Shop Info fields
@@ -84,13 +115,13 @@ export default function SettingsPage() {
 
   // Hours
   const [hours, setHours] = useState<ShopHours>({
-    monday: { open: true, from: '08:00', to: '17:00' },
-    tuesday: { open: true, from: '08:00', to: '17:00' },
-    wednesday: { open: true, from: '08:00', to: '17:00' },
-    thursday: { open: true, from: '08:00', to: '17:00' },
-    friday: { open: true, from: '08:00', to: '17:00' },
-    saturday: { open: false, from: '09:00', to: '14:00' },
-    sunday: { open: false, from: '09:00', to: '14:00' },
+    monday:    { open: true,  from: '08:00', to: '17:00' },
+    tuesday:   { open: true,  from: '08:00', to: '17:00' },
+    wednesday: { open: true,  from: '08:00', to: '17:00' },
+    thursday:  { open: true,  from: '08:00', to: '17:00' },
+    friday:    { open: true,  from: '08:00', to: '17:00' },
+    saturday:  { open: false, from: '09:00', to: '14:00' },
+    sunday:    { open: false, from: '09:00', to: '14:00' },
   })
 
   // Services
@@ -103,6 +134,9 @@ export default function SettingsPage() {
 
   // Focus states
   const [focused, setFocused] = useState<string | null>(null)
+
+  // Phone copy state
+  const [phoneCopied, setPhoneCopied] = useState(false)
 
   useEffect(() => {
     async function load() {
@@ -119,7 +153,7 @@ export default function SettingsPage() {
         setEmail(data.email ?? '')
         setHours(data.hours ?? {})
         setServices(data.services ?? [])
-        setVoice(data.ai_voice ?? 'nova')
+        setVoice(data.ai_voice ?? 'patricia')
         setEmergencyContact(data.emergency_contact ?? '')
         setEmergencyContactName(data.emergency_contact_name ?? '')
       }
@@ -136,17 +170,37 @@ export default function SettingsPage() {
 
   async function save(fields: Partial<Shop>, reprovision = false) {
     if (!shop) return
-    setSaving(true)
+    setSaveStatus('saving')
     const supabase = createClient()
     const { error } = await supabase.from('shops').update(fields).eq('id', shop.id)
-    setSaving(false)
     if (error) {
+      setSaveStatus('idle')
       show('Failed to save changes', 'error')
     } else {
-      show(reprovision ? 'Saved & AI updated' : 'Saved successfully', 'success')
+      setSaveStatus('saved')
       setShop(prev => prev ? { ...prev, ...fields } : prev)
       if (reprovision) reprovisionAgent()
+      setTimeout(() => setSaveStatus('idle'), 2000)
     }
+  }
+
+  function copyMonToWeekdays() {
+    const mon = hours.monday
+    setHours(prev => ({
+      ...prev,
+      tuesday:   { ...prev.tuesday,   from: mon.from, to: mon.to },
+      wednesday: { ...prev.wednesday, from: mon.from, to: mon.to },
+      thursday:  { ...prev.thursday,  from: mon.from, to: mon.to },
+      friday:    { ...prev.friday,    from: mon.from, to: mon.to },
+    }))
+  }
+
+  function copyPhoneNumber() {
+    if (!shop?.twilio_number) return
+    navigator.clipboard.writeText(shop.twilio_number).then(() => {
+      setPhoneCopied(true)
+      setTimeout(() => setPhoneCopied(false), 2000)
+    })
   }
 
   const tabs: { value: Tab; label: string }[] = [
@@ -171,7 +225,7 @@ export default function SettingsPage() {
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+        <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 24, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
           Settings
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 14 }}>
@@ -181,8 +235,8 @@ export default function SettingsPage() {
 
       {/* Tab bar */}
       <div style={{
-        display: 'flex', gap: 2, marginBottom: 28, flexWrap: 'wrap',
-        borderBottom: '1px solid var(--border)', paddingBottom: 0,
+        display: 'flex', gap: 0, marginBottom: 28, flexWrap: 'wrap',
+        borderBottom: '1px solid var(--border)',
       }}>
         {tabs.map(t => (
           <button
@@ -193,12 +247,13 @@ export default function SettingsPage() {
               border: 'none',
               borderBottom: tab === t.value ? '2px solid var(--accent)' : '2px solid transparent',
               background: 'transparent',
-              color: tab === t.value ? 'var(--accent)' : 'var(--muted)',
-              fontSize: 14,
-              fontWeight: tab === t.value ? 600 : 400,
+              color: tab === t.value ? 'var(--text)' : 'var(--muted)',
+              fontSize: 13,
+              fontWeight: tab === t.value ? 600 : 500,
               cursor: 'pointer',
               transition: 'color 0.15s',
               marginBottom: -1,
+              fontFamily: 'inherit',
             }}
           >
             {t.label}
@@ -211,39 +266,86 @@ export default function SettingsPage() {
         background: 'var(--surface)',
         border: '1px solid var(--border)',
         borderRadius: 12,
-        padding: '28px 32px',
+        padding: '24px',
         maxWidth: 620,
       }}>
 
         {/* ── Tab 1: Shop Info ── */}
         {tab === 'shop' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 4 }}>
-              Shop Information
-            </h2>
-            {[
-              { label: 'Shop Name', value: name, set: setName, key: 'name', placeholder: 'Your Auto Shop' },
-              { label: 'Address', value: address, set: setAddress, key: 'address', placeholder: '123 Main St, City, FL 32801' },
-              { label: 'Phone Number', value: phone, set: setPhone, key: 'phone', placeholder: '(407) 555-0100' },
-              { label: 'Email', value: email, set: setEmail, key: 'email', placeholder: 'hello@yourshop.com' },
-            ].map(field => (
-              <div key={field.key}>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-mid)', marginBottom: 6 }}>
-                  {field.label}
-                </label>
+            <div>
+              <h2 className="section-header">Shop Information</h2>
+              <p className="section-desc">Your AI receptionist uses this to introduce your business.</p>
+            </div>
+
+            {/* Name + Phone */}
+            <div className="form-grid-2">
+              <div>
+                <label style={labelStyle}>Shop Name</label>
                 <input
                   type="text"
-                  value={field.value}
-                  onChange={e => field.set(e.target.value)}
-                  placeholder={field.placeholder}
-                  onFocus={() => setFocused(field.key)}
+                  value={name}
+                  onChange={e => setName(e.target.value)}
+                  placeholder="Your Auto Shop"
+                  onFocus={() => setFocused('name')}
                   onBlur={() => setFocused(null)}
-                  style={inputStyle(focused === field.key)}
+                  style={inputStyle(focused === 'name')}
                 />
               </div>
-            ))}
-            <div style={{ marginTop: 8 }}>
-              <SaveButton onClick={() => save({ name, address, phone, email }, true)} saving={saving} />
+              <div>
+                <label style={labelStyle}>Phone Number</label>
+                <div style={{ position: 'relative' }}>
+                  <span style={{
+                    position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                    color: 'var(--muted)', display: 'flex', alignItems: 'center', pointerEvents: 'none',
+                  }}>
+                    <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                      <path d="M2.5 1.5h2.5l1 2.5-1.5 1A8 8 0 008 8.5l1-1.5 2.5 1v2.5a1 1 0 01-1 1C4.5 11.5 1.5 4.5 1.5 2.5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    value={phone}
+                    onChange={e => setPhone(e.target.value)}
+                    placeholder="(407) 555-0100"
+                    onFocus={() => setFocused('phone')}
+                    onBlur={() => setFocused(null)}
+                    style={{ ...inputStyle(focused === 'phone'), paddingLeft: 34 }}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Address + Email */}
+            <div className="form-grid-2">
+              <div>
+                <label style={labelStyle}>Address</label>
+                <input
+                  type="text"
+                  value={address}
+                  onChange={e => setAddress(e.target.value)}
+                  placeholder="123 Main St, City, FL 32801"
+                  onFocus={() => setFocused('address')}
+                  onBlur={() => setFocused(null)}
+                  style={inputStyle(focused === 'address')}
+                />
+              </div>
+              <div>
+                <label style={labelStyle}>Email</label>
+                <input
+                  type="text"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="hello@yourshop.com"
+                  onFocus={() => setFocused('email')}
+                  onBlur={() => setFocused(null)}
+                  style={inputStyle(focused === 'email')}
+                />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
+              <SaveButton onClick={() => save({ name, address, phone, email }, true)} status={saveStatus} />
             </div>
           </div>
         )}
@@ -251,75 +353,89 @@ export default function SettingsPage() {
         {/* ── Tab 2: Hours ── */}
         {tab === 'hours' && (
           <div>
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 20 }}>
-              Business Hours
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-              {DAYS.map(day => {
+            <div style={{ marginBottom: 20 }}>
+              <h2 className="section-header">Business Hours</h2>
+              <p className="section-desc">Set when your shop is open. Closed days will be communicated to callers.</p>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+              <button
+                onClick={copyMonToWeekdays}
+                style={{
+                  background: 'transparent',
+                  color: 'var(--text-mid)',
+                  border: '1px solid var(--border)',
+                  borderRadius: 8,
+                  padding: '6px 14px',
+                  fontSize: 12,
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                Copy Mon to all weekdays
+              </button>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {DAYS.map((day, idx) => {
                 const dh = hours[day] ?? { open: false, from: '08:00', to: '17:00' }
                 return (
                   <div key={day} style={{
                     display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '12px 14px',
-                    background: 'var(--card-raised)',
-                    borderRadius: 8,
-                    border: '1px solid var(--border)',
-                    opacity: dh.open ? 1 : 0.6,
+                    padding: '12px 0',
+                    borderBottom: idx < DAYS.length - 1 ? '1px solid var(--border)' : 'none',
+                    opacity: dh.open ? 1 : 0.5,
                   }}>
-                    {/* Toggle */}
+                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)', width: 40, flexShrink: 0 }}>
+                      {DAY_LABELS[day]}
+                    </span>
                     <button
                       onClick={() => setHours(prev => ({
                         ...prev,
                         [day]: { ...(prev[day] ?? { from: '08:00', to: '17:00' }), open: !dh.open },
                       }))}
                       style={{
-                        width: 36, height: 20,
-                        borderRadius: 10,
-                        background: dh.open ? 'var(--accent)' : 'var(--border)',
+                        padding: '4px 12px',
+                        borderRadius: 9999,
                         border: 'none',
                         cursor: 'pointer',
-                        position: 'relative',
-                        transition: 'background 0.15s',
+                        fontSize: 12,
+                        fontWeight: 600,
+                        background: dh.open ? 'var(--accent)' : 'var(--card)',
+                        color: dh.open ? '#fff' : 'var(--muted)',
+                        minWidth: 64,
+                        transition: 'background 0.15s, color 0.15s',
+                        fontFamily: 'inherit',
                         flexShrink: 0,
                       }}
                     >
-                      <span style={{
-                        position: 'absolute',
-                        top: 2, left: dh.open ? 18 : 2,
-                        width: 16, height: 16,
-                        borderRadius: '50%',
-                        background: '#fff',
-                        transition: 'left 0.15s',
-                      }} />
+                      {dh.open ? 'Open' : 'Closed'}
                     </button>
-                    <span style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)', width: 34, flexShrink: 0 }}>
-                      {DAY_LABELS[day]}
-                    </span>
-                    {dh.open ? (
+                    {dh.open && (
                       <>
                         <input
                           type="time"
                           value={dh.from ?? '08:00'}
                           onChange={e => setHours(prev => ({ ...prev, [day]: { ...dh, from: e.target.value } }))}
-                          style={{ ...inputStyle(false), width: 100, padding: '6px 10px', fontSize: 13 }}
+                          style={{ ...inputStyle(false), width: 110, padding: '6px 10px', fontSize: 13 }}
                         />
                         <span style={{ fontSize: 13, color: 'var(--muted)' }}>to</span>
                         <input
                           type="time"
                           value={dh.to ?? '17:00'}
                           onChange={e => setHours(prev => ({ ...prev, [day]: { ...dh, to: e.target.value } }))}
-                          style={{ ...inputStyle(false), width: 100, padding: '6px 10px', fontSize: 13 }}
+                          style={{ ...inputStyle(false), width: 110, padding: '6px 10px', fontSize: 13 }}
                         />
                       </>
-                    ) : (
-                      <span style={{ fontSize: 13, color: 'var(--muted)' }}>Closed</span>
                     )}
                   </div>
                 )
               })}
             </div>
-            <div style={{ marginTop: 20 }}>
-              <SaveButton onClick={() => save({ hours }, true)} saving={saving} />
+
+            <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
+              <SaveButton onClick={() => save({ hours }, true)} status={saveStatus} />
             </div>
           </div>
         )}
@@ -327,72 +443,164 @@ export default function SettingsPage() {
         {/* ── Tab 3: Services ── */}
         {tab === 'services' && (
           <div>
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 20 }}>
-              Services
-            </h2>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ marginBottom: 20 }}>
+              <h2 className="section-header">Services</h2>
+              <p className="section-desc">Your AI mentions these when callers ask what you offer.</p>
+            </div>
+
+            {/* Quick-add chips */}
+            <div style={{ marginBottom: 16 }}>
+              <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>
+                Quick Add
+              </p>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                {SUGGESTIONS.map(s => {
+                  const added = services.some(sv => sv.name === s)
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => !added && setServices(prev => [...prev, { name: s, price: '', description: '' }])}
+                      className={added ? 'quick-add-chip quick-add-chip--added' : 'quick-add-chip'}
+                      style={{
+                        padding: '5px 12px',
+                        borderRadius: 9999,
+                        border: `1px solid ${added ? 'var(--accent)' : 'var(--border)'}`,
+                        background: added ? 'var(--accent-dim)' : 'transparent',
+                        color: added ? 'var(--accent)' : 'var(--text-mid)',
+                        fontSize: 12,
+                        cursor: added ? 'default' : 'pointer',
+                        fontWeight: added ? 600 : 400,
+                        transition: 'border-color 0.15s, background 0.15s, color 0.15s',
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      {added ? '✓ ' : '+ '}{s}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
               {services.map((svc, i) => (
-                <div key={i} style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 100px auto',
-                  gap: 8,
-                  alignItems: 'center',
-                  background: 'var(--card-raised)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 8,
-                  padding: '10px 12px',
-                }}>
+                <div
+                  key={i}
+                  style={{
+                    background: 'var(--card)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 10,
+                    padding: '14px 16px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
+                    <input
+                      type="text"
+                      value={svc.name}
+                      onChange={e => setServices(prev => prev.map((s, idx) => idx === i ? { ...s, name: e.target.value } : s))}
+                      placeholder="Service name"
+                      onFocus={() => setFocused(`svc-name-${i}`)}
+                      onBlur={() => setFocused(null)}
+                      style={{
+                        background: 'transparent',
+                        border: 'none',
+                        outline: 'none',
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: 'var(--text)',
+                        fontFamily: 'inherit',
+                        flex: 1,
+                        padding: 0,
+                        boxSizing: 'border-box',
+                      }}
+                    />
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                      <input
+                        type="text"
+                        value={svc.price ?? ''}
+                        onChange={e => setServices(prev => prev.map((s, idx) => idx === i ? { ...s, price: e.target.value } : s))}
+                        placeholder="Price"
+                        onFocus={() => setFocused(`svc-price-${i}`)}
+                        onBlur={() => setFocused(null)}
+                        style={{
+                          background: 'transparent',
+                          border: 'none',
+                          outline: 'none',
+                          fontSize: 14,
+                          fontWeight: 600,
+                          color: 'var(--accent)',
+                          fontFamily: 'inherit',
+                          textAlign: 'right',
+                          width: 80,
+                          padding: 0,
+                          boxSizing: 'border-box',
+                        }}
+                      />
+                      <button
+                        onClick={() => setServices(prev => prev.filter((_, idx) => idx !== i))}
+                        style={{
+                          background: 'transparent', border: 'none',
+                          color: 'var(--muted)', cursor: 'pointer',
+                          fontSize: 18, lineHeight: 1, padding: '2px 4px',
+                          transition: 'color 0.15s',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        ×
+                      </button>
+                    </div>
+                  </div>
                   <input
                     type="text"
-                    value={svc.name}
-                    onChange={e => setServices(prev => prev.map((s, idx) => idx === i ? { ...s, name: e.target.value } : s))}
-                    placeholder="Service name"
-                    onFocus={() => setFocused(`svc-name-${i}`)}
+                    value={svc.description ?? ''}
+                    onChange={e => setServices(prev => prev.map((s, idx) => idx === i ? { ...s, description: e.target.value } : s))}
+                    placeholder="Short description (optional)"
+                    onFocus={() => setFocused(`svc-desc-${i}`)}
                     onBlur={() => setFocused(null)}
-                    style={{ ...inputStyle(focused === `svc-name-${i}`), padding: '7px 10px', fontSize: 13 }}
-                  />
-                  <input
-                    type="text"
-                    value={svc.price ?? ''}
-                    onChange={e => setServices(prev => prev.map((s, idx) => idx === i ? { ...s, price: e.target.value } : s))}
-                    placeholder="$0"
-                    onFocus={() => setFocused(`svc-price-${i}`)}
-                    onBlur={() => setFocused(null)}
-                    style={{ ...inputStyle(focused === `svc-price-${i}`), padding: '7px 10px', fontSize: 13 }}
-                  />
-                  <button
-                    onClick={() => setServices(prev => prev.filter((_, idx) => idx !== i))}
                     style={{
-                      background: 'transparent', border: 'none',
-                      color: 'var(--muted)', cursor: 'pointer',
-                      fontSize: 18, lineHeight: 1, padding: '4px 6px',
-                      transition: 'color 0.15s',
+                      background: 'transparent',
+                      border: 'none',
+                      borderTop: '1px solid var(--border)',
+                      outline: 'none',
+                      fontSize: 12,
+                      color: 'var(--muted)',
+                      fontFamily: 'inherit',
+                      width: '100%',
+                      padding: '8px 0 0',
+                      boxSizing: 'border-box',
                     }}
-                  >
-                    ×
-                  </button>
+                  />
                 </div>
               ))}
-              <button
-                onClick={() => setServices(prev => [...prev, { name: '', price: '', description: '' }])}
-                style={{
-                  background: 'transparent',
-                  border: '1px dashed var(--border)',
-                  borderRadius: 8,
-                  padding: '10px',
-                  color: 'var(--muted)',
-                  cursor: 'pointer',
-                  fontSize: 13,
-                  fontWeight: 500,
-                  transition: 'border-color 0.15s, color 0.15s',
-                  marginTop: 4,
-                }}
-              >
-                + Add service
-              </button>
             </div>
-            <div style={{ marginTop: 20 }}>
-              <SaveButton onClick={() => save({ services }, true)} saving={saving} />
+
+            <button
+              onClick={() => setServices(prev => [...prev, { name: '', price: '', description: '' }])}
+              style={{
+                background: 'transparent',
+                border: '1px dashed var(--border)',
+                borderRadius: 10,
+                padding: '12px',
+                color: 'var(--muted)',
+                cursor: 'pointer',
+                fontSize: 13,
+                fontWeight: 500,
+                width: '100%',
+                textAlign: 'center',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 6,
+                transition: 'border-color 0.15s, color 0.15s',
+                fontFamily: 'inherit',
+                marginBottom: 4,
+              }}
+            >
+              <span style={{ fontSize: 16, lineHeight: 1 }}>+</span>
+              Add Custom Service
+            </button>
+
+            <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
+              <SaveButton onClick={() => save({ services }, true)} status={saveStatus} />
             </div>
           </div>
         )}
@@ -400,11 +608,11 @@ export default function SettingsPage() {
         {/* ── Tab 4: AI & Voice ── */}
         {tab === 'ai' && (
           <div>
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 20 }}>
-              AI & Voice
-            </h2>
+            <div style={{ marginBottom: 20 }}>
+              <h2 className="section-header">AI & Voice</h2>
+              <p className="section-desc">Select your AI receptionist voice and configure emergency escalation.</p>
+            </div>
 
-            <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 14 }}>Select your AI receptionist voice</p>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 24 }}>
               {VOICES.map(v => {
                 const selected = voice === v.id
@@ -413,19 +621,47 @@ export default function SettingsPage() {
                     key={v.id}
                     onClick={() => setVoice(v.id)}
                     style={{
-                      background: selected ? 'var(--accent-dim)' : 'var(--card-raised)',
+                      background: selected ? 'var(--accent-dim)' : 'var(--card)',
                       border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
                       borderRadius: 10,
-                      padding: '14px 16px',
+                      padding: '16px',
                       textAlign: 'left',
                       cursor: 'pointer',
                       transition: 'all 0.15s',
+                      fontFamily: 'inherit',
                     }}
                   >
+                    <div style={{
+                      width: 48, height: 48, borderRadius: '50%',
+                      background: v.color,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      marginBottom: 12, fontSize: 20, fontWeight: 700, color: '#fff',
+                      fontFamily: 'var(--font-space)',
+                    }}>
+                      {v.initial}
+                    </div>
                     <div style={{ fontSize: 14, fontWeight: 600, color: selected ? 'var(--accent)' : 'var(--text)', marginBottom: 4 }}>
                       {v.name}
                     </div>
-                    <div style={{ fontSize: 12, color: 'var(--muted)' }}>{v.desc}</div>
+                    <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>{v.desc}</div>
+                    <span className="preview-btn" style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: 4,
+                      fontSize: 11,
+                      fontWeight: 500,
+                      color: 'var(--muted)',
+                      background: 'var(--card-raised)',
+                      border: '1px solid var(--border)',
+                      borderRadius: 6,
+                      padding: '3px 8px',
+                      cursor: 'pointer',
+                    }}>
+                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                        <polygon points="3,2 8,5 3,8" stroke="currentColor" strokeWidth="1.2" fill="currentColor" strokeLinejoin="round"/>
+                      </svg>
+                      Preview
+                    </span>
                   </button>
                 )
               })}
@@ -433,12 +669,12 @@ export default function SettingsPage() {
 
             <div style={{ height: 1, background: 'var(--border)', marginBottom: 20 }} />
 
-            <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 14 }}>Emergency Contact</h3>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 16 }}>
+              Emergency Contact
+            </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-mid)', marginBottom: 6 }}>
-                  Contact Name
-                </label>
+                <label style={labelStyle}>Contact Name</label>
                 <input
                   type="text"
                   value={emergencyContactName}
@@ -450,9 +686,7 @@ export default function SettingsPage() {
                 />
               </div>
               <div>
-                <label style={{ display: 'block', fontSize: 13, fontWeight: 500, color: 'var(--text-mid)', marginBottom: 6 }}>
-                  Contact Phone
-                </label>
+                <label style={labelStyle}>Contact Phone</label>
                 <input
                   type="tel"
                   value={emergencyContact}
@@ -464,14 +698,16 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
-            <div style={{ marginTop: 20 }}>
+            <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
               <SaveButton
                 onClick={() => save({
                   ai_voice: voice,
                   emergency_contact: emergencyContact,
                   emergency_contact_name: emergencyContactName,
                 }, true)}
-                saving={saving}
+                status={saveStatus}
+                savingText="Updating AI..."
+                savedText="✓ AI updated"
               />
             </div>
           </div>
@@ -480,30 +716,71 @@ export default function SettingsPage() {
         {/* ── Tab 5: Phone Setup ── */}
         {tab === 'phone' && (
           <div>
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 16, fontWeight: 600, color: 'var(--text)', marginBottom: 20 }}>
-              Phone Setup
-            </h2>
+            <div style={{ marginBottom: 20 }}>
+              <h2 className="section-header">Phone Setup</h2>
+              <p className="section-desc">Forward your shop number to this AI receptionist line.</p>
+            </div>
 
             {/* Assigned number */}
             <div style={{
-              background: 'var(--card-raised)',
+              background: 'var(--card)',
               border: '1px solid var(--border)',
               borderRadius: 10,
-              padding: '18px 20px',
+              padding: '20px 24px',
               marginBottom: 24,
             }}>
-              <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 8 }}>
+              <div style={{ fontSize: 11, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 10 }}>
                 Your AI Receptionist Number
               </div>
-              <div style={{ fontFamily: 'var(--font-space)', fontSize: 26, fontWeight: 700, color: shop?.twilio_number ? 'var(--text)' : 'var(--muted)' }}>
-                {shop?.twilio_number ?? 'Not yet assigned'}
+              <div style={{ display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap' }}>
+                <div style={{
+                  fontFamily: 'monospace',
+                  fontSize: 28,
+                  fontWeight: 700,
+                  color: shop?.twilio_number ? 'var(--accent)' : 'var(--muted)',
+                  letterSpacing: '0.02em',
+                }}>
+                  {shop?.twilio_number ?? 'Not yet assigned'}
+                </div>
+                {shop?.twilio_number && (
+                  <button
+                    onClick={copyPhoneNumber}
+                    style={{
+                      background: phoneCopied ? 'var(--success-dim)' : 'var(--card-raised)',
+                      border: `1px solid ${phoneCopied ? 'rgba(34,197,94,0.3)' : 'var(--border)'}`,
+                      borderRadius: 8,
+                      padding: '6px 12px',
+                      fontSize: 12,
+                      fontWeight: 500,
+                      color: phoneCopied ? 'var(--success)' : 'var(--text-mid)',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s',
+                      fontFamily: 'inherit',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 5,
+                    }}
+                  >
+                    {phoneCopied ? (
+                      <>✓ Copied</>
+                    ) : (
+                      <>
+                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                          <rect x="4" y="4" width="7" height="7" rx="1.5" stroke="currentColor" strokeWidth="1.2"/>
+                          <path d="M3 8H2a1 1 0 01-1-1V2a1 1 0 011-1h5a1 1 0 011 1v1" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                        </svg>
+                        Copy
+                      </>
+                    )}
+                  </button>
+                )}
               </div>
               {shop?.twilio_number && (
                 <a
                   href={`tel:${shop.twilio_number}`}
                   style={{
                     display: 'inline-flex', alignItems: 'center', gap: 6,
-                    marginTop: 10, fontSize: 13, color: 'var(--accent)',
+                    marginTop: 12, fontSize: 13, color: 'var(--accent)',
                     textDecoration: 'none', fontWeight: 500,
                   }}
                 >
@@ -516,32 +793,25 @@ export default function SettingsPage() {
             </div>
 
             {/* Forwarding instructions */}
-            <h3 style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)', marginBottom: 12 }}>
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 12 }}>
               Call Forwarding Instructions
-            </h3>
-            <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.7, marginBottom: 14 }}>
+            </p>
+            <p style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.7, marginBottom: 16 }}>
               Forward your shop&apos;s existing phone number to your AI receptionist number so every call is answered automatically.
             </p>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
                 { step: '1', text: 'Log in to your phone carrier\'s portal or call their support line' },
                 { step: '2', text: `Set up "Unconditional Call Forwarding" to ${shop?.twilio_number ?? 'your AI number'}` },
-                { step: '3', text: 'Alternatively, set "Forward when busy" and "Forward when unanswered" — this lets your staff answer first' },
+                { step: '3', text: 'Alternatively, set "Forward when busy" and "Forward when unanswered" so this lets your staff answer first' },
                 { step: '4', text: 'Make a test call to verify it\'s working' },
               ].map(item => (
-                <div key={item.step} style={{
-                  display: 'flex', gap: 12, alignItems: 'flex-start',
-                  background: 'var(--card-raised)',
-                  border: '1px solid var(--border)',
-                  borderRadius: 8,
-                  padding: '12px 14px',
-                }}>
+                <div key={item.step} style={{ display: 'flex', gap: 14, alignItems: 'flex-start' }}>
                   <span style={{
-                    width: 22, height: 22,
+                    width: 24, height: 24,
                     borderRadius: '50%',
-                    background: 'var(--accent-dim)',
-                    border: '1px solid var(--accent)',
-                    color: 'var(--accent)',
+                    background: 'var(--accent)',
+                    color: '#fff',
                     fontSize: 11,
                     fontWeight: 700,
                     display: 'flex',
@@ -551,7 +821,7 @@ export default function SettingsPage() {
                   }}>
                     {item.step}
                   </span>
-                  <span style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.6 }}>
+                  <span style={{ fontSize: 14, color: 'var(--text-mid)', lineHeight: 1.6, paddingTop: 2 }}>
                     {item.text}
                   </span>
                 </div>

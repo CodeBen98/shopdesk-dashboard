@@ -17,7 +17,7 @@ const navItems = [
     href: '/dashboard',
     exact: true,
     icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
         <rect x="11" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
         <rect x="1" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/>
@@ -30,7 +30,7 @@ const navItems = [
     href: '/dashboard/calls',
     exact: false,
     icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
         <path d="M3.5 2h3l1.5 3.5-1.75 1.25C7.2 8.25 9.75 10.8 11.25 11.75L12.5 10l3.5 1.5v3C16 15.88 15.5 16 15 16 7.82 16 2 10.18 2 3c0-.5.12-1 1.5-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/>
       </svg>
     ),
@@ -40,7 +40,7 @@ const navItems = [
     href: '/dashboard/bookings',
     exact: false,
     icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
         <rect x="2" y="3.5" width="14" height="13" rx="2" stroke="currentColor" strokeWidth="1.5"/>
         <path d="M6 2v3M12 2v3M2 8h14" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         <circle cx="6" cy="12" r="1" fill="currentColor"/>
@@ -54,7 +54,7 @@ const navItems = [
     href: '/dashboard/customers',
     exact: false,
     icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="7" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/>
         <path d="M1 16c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
         <path d="M13 8c1.657 0 3 .895 3 2.5V16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
@@ -67,7 +67,7 @@ const navItems = [
     href: '/dashboard/settings',
     exact: false,
     icon: (
-      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
         <circle cx="9" cy="9" r="2.5" stroke="currentColor" strokeWidth="1.5"/>
         <path d="M9 1.5v2M9 14.5v2M1.5 9h2M14.5 9h2M3.697 3.697l1.414 1.414M12.889 12.889l1.414 1.414M14.303 3.697l-1.414 1.414M5.111 12.889l-1.414 1.414" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
       </svg>
@@ -152,19 +152,19 @@ export function Sidebar({ shopName, userEmail, mobileOpen, onClose }: SidebarPro
                   display: 'flex',
                   alignItems: 'center',
                   gap: 10,
-                  padding: '9px 10px',
+                  padding: '12px 10px',
                   borderRadius: 8,
                   marginBottom: 2,
                   textDecoration: 'none',
                   fontSize: 14,
                   fontWeight: active ? 600 : 400,
                   color: active ? 'var(--accent)' : 'var(--text-mid)',
-                  background: active ? 'var(--accent-dim)' : 'transparent',
+                  background: active ? 'rgba(15,118,149,0.08)' : 'transparent',
                   borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
                   transition: 'background 0.15s, color 0.15s',
                 }}
               >
-                <span style={{ color: active ? 'var(--accent)' : 'var(--muted)', flexShrink: 0 }}>
+                <span style={{ color: active ? 'var(--accent)' : 'var(--muted)', flexShrink: 0, opacity: active ? 1 : 0.7 }}>
                   {item.icon}
                 </span>
                 {item.label}
@@ -175,7 +175,7 @@ export function Sidebar({ shopName, userEmail, mobileOpen, onClose }: SidebarPro
 
         {/* Bottom: user + sign out */}
         <div style={{
-          padding: '16px 12px',
+          padding: '20px 16px',
           borderTop: '1px solid var(--border)',
         }}>
           {userEmail && (

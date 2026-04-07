@@ -15,7 +15,6 @@ const DAYS: { key: keyof ShopHours; label: string }[] = [
   { key: 'sunday', label: 'Sunday' },
 ]
 
-const WEEKDAYS: (keyof ShopHours)[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
 
 const DEFAULT_HOURS: ShopHours = {
   monday:    { open: true,  from: '09:00', to: '17:00' },
@@ -54,8 +53,6 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
     })
   }
 
-  const allWeekdaysOpen = WEEKDAYS.every(k => hours[k].open)
-
   async function handleSubmit() {
     const newTimeErrors: Partial<Record<keyof ShopHours, string>> = {}
     DAYS.forEach(({ key }) => {
@@ -93,29 +90,7 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
       <h2 style={titleStyle}>Set your business hours</h2>
       <p style={subtitleStyle}>Your AI receptionist will use these to greet callers appropriately.</p>
 
-      {allWeekdaysOpen && (
-        <div style={{ marginBottom: 16, textAlign: 'right' }}>
-          <button
-            type="button"
-            onClick={copyWeekdaysFromMonday}
-            style={{
-              background: 'var(--accent-dim)',
-              border: '1px solid rgba(15,118,149,0.3)',
-              borderRadius: 8,
-              color: 'var(--accent)',
-              fontSize: 13,
-              fontWeight: 600,
-              cursor: 'pointer',
-              padding: '6px 14px',
-              fontFamily: 'inherit',
-            }}
-          >
-            Copy Mon hours to Tue–Fri
-          </button>
-        </div>
-      )}
-
-      <div style={{ marginBottom: 24 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
         {DAYS.map(({ key, label }) => {
           const day = hours[key]
           return (
@@ -125,11 +100,10 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
                   display: 'flex',
                   alignItems: 'center',
                   gap: 12,
-                  padding: '12px 0',
-                  borderBottom: timeErrors[key] ? 'none' : '1px solid var(--border)',
+                  opacity: day.open ? 1 : 0.6,
                 }}
               >
-                <div style={{ width: 104, fontSize: 14, fontWeight: 500, color: 'var(--text)' }}>
+                <div style={{ width: 104, fontSize: 14, fontWeight: 500, color: 'var(--text)', flexShrink: 0 }}>
                   {label}
                 </div>
 
@@ -145,8 +119,9 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
                     background: day.open ? 'var(--accent)' : 'var(--card)',
                     color: day.open ? '#fff' : 'var(--muted)',
                     minWidth: 64,
-                    transition: 'background 0.15s, color 0.15s',
+                    transition: 'background 0.2s, color 0.2s',
                     fontFamily: 'inherit',
+                    flexShrink: 0,
                   }}
                 >
                   {day.open ? 'Open' : 'Closed'}
@@ -169,9 +144,32 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
                     />
                   </>
                 )}
+
+                {key === 'monday' && (
+                  <button
+                    type="button"
+                    onClick={copyWeekdaysFromMonday}
+                    style={{
+                      marginLeft: 'auto',
+                      background: 'transparent',
+                      border: '1px solid var(--border)',
+                      borderRadius: 8,
+                      color: 'var(--text-mid)',
+                      fontSize: 11,
+                      fontWeight: 500,
+                      cursor: 'pointer',
+                      padding: '4px 10px',
+                      fontFamily: 'inherit',
+                      flexShrink: 0,
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Copy to Tue–Fri
+                  </button>
+                )}
               </div>
               {timeErrors[key] && (
-                <p style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 8px 120px', borderBottom: '1px solid var(--border)', paddingBottom: 8 }}>
+                <p style={{ fontSize: 12, color: 'var(--danger)', margin: '4px 0 0 120px' }}>
                   {timeErrors[key]}
                 </p>
               )}
@@ -232,4 +230,5 @@ const timeInput: React.CSSProperties = {
   background: 'var(--card)',
   outline: 'none',
   fontFamily: 'inherit',
+  boxSizing: 'border-box',
 }

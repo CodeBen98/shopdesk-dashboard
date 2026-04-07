@@ -5,14 +5,14 @@ import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const VOICES = [
-  { id: 'patricia', name: 'Patricia', tagline: 'Warm & Professional', emoji: '👩' },
-  { id: 'james',    name: 'James',    tagline: 'Calm & Authoritative', emoji: '👨' },
-  { id: 'sofia',    name: 'Sofia',    tagline: 'Friendly & Energetic', emoji: '👩‍💼' },
-  { id: 'marcus',   name: 'Marcus',   tagline: 'Direct & Trustworthy', emoji: '🧑‍💼' },
+  { id: 'patricia', name: 'Patricia', tagline: 'Warm and Professional',  initial: 'P', color: '#0F7695' },
+  { id: 'james',    name: 'James',    tagline: 'Calm and Authoritative', initial: 'J', color: '#6366f1' },
+  { id: 'sofia',    name: 'Sofia',    tagline: 'Friendly and Energetic', initial: 'S', color: '#f59e0b' },
+  { id: 'marcus',   name: 'Marcus',   tagline: 'Direct and Trustworthy', initial: 'M', color: '#10b981' },
 ]
 
 export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
-  // No default — user MUST pick
+  // No default -- user must pick one
   const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [playingId, setPlayingId] = useState<string | null>(null)
@@ -94,7 +94,16 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
                 transition: 'border-color 0.15s, box-shadow 0.15s, background 0.15s',
               }}
             >
-              <div style={{ fontSize: 28, marginBottom: 8 }}>{voice.emoji}</div>
+              <div style={{
+                width: 48, height: 48, borderRadius: '50%',
+                background: voice.color,
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                marginBottom: 12,
+                fontSize: 20, fontWeight: 700, color: '#fff',
+                fontFamily: 'var(--font-space)',
+              }}>
+                {voice.initial}
+              </div>
               <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 2 }}>
                 {voice.name}
               </div>

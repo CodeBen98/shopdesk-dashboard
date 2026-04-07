@@ -103,14 +103,14 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
           background: 'var(--accent-dim)',
           border: '1px solid rgba(15,118,149,0.3)',
           borderRadius: 9999,
-          padding: '4px 14px',
+          padding: '3px 10px',
           marginBottom: 16,
         }}>
-          <span style={{ color: 'var(--accent)', fontSize: 12, fontWeight: 600 }}>Welcome to ShopDesk</span>
+          <span style={{ color: 'var(--accent)', fontSize: 10, fontWeight: 600, letterSpacing: '0.04em' }}>Welcome to ShopDesk</span>
         </div>
         <h1 style={{
           fontFamily: 'var(--font-space)',
-          fontSize: 28,
+          fontSize: 32,
           fontWeight: 800,
           color: 'var(--text)',
           marginBottom: 10,
@@ -118,7 +118,7 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
         }}>
           Let&apos;s set up your AI receptionist
         </h1>
-        <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.6 }}>
+        <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.6, maxWidth: 440, margin: '0 auto' }}>
           Takes less than 5 minutes. We&apos;ll have your AI answering calls today.
         </p>
       </div>
@@ -127,31 +127,30 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
         <h2 style={title}>Tell us about your shop</h2>
         <p style={subtitle}>This helps your AI receptionist introduce your business correctly.</p>
 
-        <div style={field}>
-          <label style={labelStyle}>Shop Name *</label>
-          <input
-            value={name}
-            onChange={e => { setName(e.target.value); setNameError('') }}
-            className="step-input"
-            style={nameError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-            placeholder="e.g. Mike's Auto Repair"
-          />
-          {nameError && <p style={errorStyle}>{nameError}</p>}
-        </div>
-
-        <div style={field}>
-          <label style={labelStyle}>OWNER NAME *</label>
-          <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, marginTop: 0 }}>
-            We&apos;ll use this so your AI can say &ldquo;I&apos;ll have [name] call you back&rdquo;
-          </p>
-          <input
-            value={ownerName}
-            onChange={e => { setOwnerName(e.target.value); setOwnerNameError('') }}
-            className="step-input"
-            style={ownerNameError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-            placeholder="e.g. Bill, Mike, Sarah"
-          />
-          {ownerNameError && <p style={errorStyle}>{ownerNameError}</p>}
+        {/* Shop Name + Phone side by side */}
+        <div className="form-grid-2" style={{ marginBottom: 20 }}>
+          <div>
+            <label style={labelStyle}>Shop Name *</label>
+            <input
+              value={name}
+              onChange={e => { setName(e.target.value); setNameError('') }}
+              className="step-input"
+              style={nameError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
+              placeholder="e.g. Mike's Auto Repair"
+            />
+            {nameError && <p style={errorStyle}>{nameError}</p>}
+          </div>
+          <div>
+            <label style={labelStyle}>Phone Number *</label>
+            <input
+              value={phone}
+              onChange={e => { setPhone(e.target.value); setPhoneError('') }}
+              className="step-input"
+              style={phoneError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
+              placeholder="+1 (407) 555-1234"
+            />
+            {phoneError && <p style={errorStyle}>{phoneError}</p>}
+          </div>
         </div>
 
         <div style={field}>
@@ -166,29 +165,37 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
           {addressError && <p style={errorStyle}>{addressError}</p>}
         </div>
 
-        <div style={field}>
-          <label style={labelStyle}>Phone Number *</label>
-          <input
-            value={phone}
-            onChange={e => { setPhone(e.target.value); setPhoneError('') }}
-            className="step-input"
-            style={phoneError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-            placeholder="+1 (407) 555-1234"
-          />
-          {phoneError && <p style={errorStyle}>{phoneError}</p>}
-        </div>
-
-        <div style={field}>
-          <label style={labelStyle}>Email</label>
-          <input
-            value={email}
-            onChange={e => { setEmail(e.target.value); setEmailError('') }}
-            className="step-input"
-            style={emailError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-            placeholder="shop@example.com"
-            type="email"
-          />
-          {emailError && <p style={errorStyle}>{emailError}</p>}
+        {/* Owner Name + Email side by side */}
+        <div className="form-grid-2" style={{ marginBottom: 20 }}>
+          <div>
+            <label style={labelStyle}>Owner Name *</label>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, marginTop: 0 }}>
+              So AI can say &ldquo;I&apos;ll have [name] call you back&rdquo;
+            </p>
+            <input
+              value={ownerName}
+              onChange={e => { setOwnerName(e.target.value); setOwnerNameError('') }}
+              className="step-input"
+              style={ownerNameError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
+              placeholder="e.g. Bill, Mike, Sarah"
+            />
+            {ownerNameError && <p style={errorStyle}>{ownerNameError}</p>}
+          </div>
+          <div>
+            <label style={labelStyle}>Email</label>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 6, marginTop: 0 }}>
+              Optional — for booking confirmations
+            </p>
+            <input
+              value={email}
+              onChange={e => { setEmail(e.target.value); setEmailError('') }}
+              className="step-input"
+              style={emailError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
+              placeholder="shop@example.com"
+              type="email"
+            />
+            {emailError && <p style={errorStyle}>{emailError}</p>}
+          </div>
         </div>
 
         <div style={{ ...field, marginBottom: 28 }}>
@@ -202,7 +209,8 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
                   type="button"
                   onClick={() => toggleVehicleType(type)}
                   style={{
-                    padding: '6px 12px',
+                    position: 'relative',
+                    padding: '6px 14px',
                     borderRadius: 9999,
                     border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
                     background: selected ? 'var(--accent-dim)' : 'var(--card)',
@@ -214,7 +222,25 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
                     fontFamily: 'inherit',
                   }}
                 >
-                  {selected ? '✓ ' : ''}{type}
+                  {selected && (
+                    <span style={{
+                      position: 'absolute',
+                      top: -5,
+                      right: -5,
+                      width: 16,
+                      height: 16,
+                      borderRadius: '50%',
+                      background: 'var(--accent)',
+                      color: '#fff',
+                      fontSize: 9,
+                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      lineHeight: 1,
+                    }}>✓</span>
+                  )}
+                  {type}
                 </button>
               )
             })}

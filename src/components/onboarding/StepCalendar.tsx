@@ -52,7 +52,7 @@ export function StepCalendar({ shop: _shop, userId, onNext, onBack, onShopUpdate
           fontSize: 32,
           border: '1px solid rgba(15,118,149,0.2)',
         }}>
-          📅
+          <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect x="2" y="5" width="24" height="22" rx="3" stroke="var(--accent)" strokeWidth="1.5"/><path d="M8 2v6M20 2v6M2 12h24" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"/></svg>
         </div>
       </div>
       <h2 style={{ ...titleStyle, textAlign: 'center' }}>Connect Google Calendar</h2>
@@ -86,7 +86,7 @@ export function StepCalendar({ shop: _shop, userId, onNext, onBack, onShopUpdate
           lineHeight: 1.6,
           textAlign: 'center',
         }}>
-          📅 Google Calendar integration is coming soon. We&apos;ll notify you when it&apos;s ready. For now, your AI will take appointment requests and notify you.
+          Google Calendar integration is coming soon. We&apos;ll notify you when it&apos;s ready. For now, your AI will take appointment requests and notify you.
         </p>
       )}
 
