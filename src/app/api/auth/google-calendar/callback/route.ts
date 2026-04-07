@@ -50,7 +50,7 @@ export async function GET(request: Request) {
     const calendarId = calData.id || 'primary'
 
     // Save refresh token + calendar ID to shop
-    await supabase
+    await getSupabase()
       .from('shops')
       .update({
         google_refresh_token: tokens.refresh_token,
