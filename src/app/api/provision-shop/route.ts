@@ -99,7 +99,8 @@ function buildSystemPrompt(shop: {
     `  - ${s.name}${s.price ? ` ($${s.price})` : ''}${s.description ? ` — ${s.description}` : ''}`
   ).join('\n')
   const hoursText = formatHours(shop.hours)
-  // Note: do not hardcode date — Claude knows the current date natively
+  const now = new Date()
+  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })
   const ownerName = extras?.ownerName || shop.emergency_contact_name || 'the shop owner'
   const vehicleTypes = extras?.vehicleTypes && extras.vehicleTypes.length > 0 ? extras.vehicleTypes : null
 
@@ -108,7 +109,7 @@ You are ${receptionistName}, the virtual receptionist at ${shop.name}.
 You know this shop inside and out. You are warm, helpful, and professional.
 ${extras?.ownerName ? `The owner/manager is ${extras.ownerName}. When customers ask to speak to someone, say you'll have ${extras.ownerName} call them back.` : ''}
 Never say you are an AI. If asked, say you are the virtual receptionist for ${shop.name}.
-Your Vapi assistant ID is {{assistant.id}}. Always pass this exact value as assistant_id when calling bookAppointment.
+Today's date is ${dateStr}. Use this to calculate exact dates when customers say "tomorrow", "Thursday", "next week", etc.
 
 [Style]
 - Warm, genuine, direct. Real person energy.
@@ -155,7 +156,7 @@ Emergency contact: ${ownerName} at ${shop.emergency_contact || 'the shop'}.
 Booking fails: take their number, promise a callback within the hour.
 Outside scope: take their number, have a tech call them back.
 
-When a customer mentions a day like "tomorrow" or "Monday", use your knowledge of the current date to confirm the specific date before booking.`
+When a customer mentions a day like "tomorrow" or "Monday", use today's date above to calculate the exact date. State the specific date (e.g. "Thursday April 9th") before booking.`
 }
 
 async function vapiRequest(path: string, method: string, body?: object) {
