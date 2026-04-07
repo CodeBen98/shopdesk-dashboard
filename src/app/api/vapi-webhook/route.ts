@@ -1,10 +1,12 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-)
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!
+  )
+}
 
 function deriveOutcome(transcript: string, reason: string, duration: number): string {
   if (transcript.match(/you.*re all set|booked for|appointment.*confirmed|locked.*in|all set.*oil|all set.*brake/i)) {
@@ -47,7 +49,7 @@ export async function POST(request: Request) {
         .from('calls').select('id').eq('vapi_call_id', call.id).single()
       if (existing) return NextResponse.json({ received: true })
 
-      await supabase.from('calls').insert({
+      await getSupabase().from('calls').insert({
         shop_id: shop.id,
         caller_phone: call.customer?.number ?? '',
         caller_name: call.customer?.name ?? null,
@@ -77,7 +79,7 @@ export async function POST(request: Request) {
         .from('calls').select('id').eq('vapi_call_id', call.id).single()
 
       if (existing) {
-        await supabase.from('calls').update({
+        await getSupabase().from('calls').update({
           ended_at: call.endedAt ?? null,
           duration_seconds: duration || null,
           outcome,
@@ -91,7 +93,7 @@ export async function POST(request: Request) {
         const shop = await findShop(call.assistantId)
         if (!shop) return NextResponse.json({ received: true })
 
-        await supabase.from('calls').insert({
+        await getSupabase().from('calls').insert({
           shop_id: shop.id,
           caller_phone: call.customer?.number ?? '',
           caller_name: call.customer?.name ?? null,
