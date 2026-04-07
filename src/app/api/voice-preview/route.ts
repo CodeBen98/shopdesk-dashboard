@@ -5,14 +5,14 @@ const CARTESIA_API_KEY = process.env.CARTESIA_API_KEY!
 const VOICE_IDS: Record<string, string> = {
   patricia: 'e5a6cd18-d552-4192-9533-82a08cac8f23',
   james:    '42b39f37-515f-4eee-8546-73e841679c1d',
-  sofia:    '90c7d657-9599-4cd0-9ed2-2568359e4d1a',
+  sofia:    'f6ce3444-478b-4ce4-982e-bcb72dffe7aa',
   marcus:   '9301949d-b7cd-40d9-a246-5a4430992d6b',
 }
 
 const PREVIEW_TEXT: Record<string, string> = {
   patricia: "Thank you for calling. This is Sarah. How can I help you today?",
   james:    "Thank you for calling. This is James. How can I help you today?",
-  sofia:    "Thank you for calling! This is Sofia. How can I help you today?",
+  sofia:    "Thank you for calling! This is Emily. How can I help you today?",
   marcus:   "Thank you for calling. This is Marcus. How can I help you today?",
 }
 
