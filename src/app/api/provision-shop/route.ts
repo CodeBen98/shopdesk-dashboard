@@ -223,7 +223,7 @@ export async function POST(request: Request) {
         tools: [
           {
             type: 'function',
-            server: { url: BOOKING_WEBHOOK_URL },
+            server: { url: `${BOOKING_WEBHOOK_URL}?shop_id=${shop.id}` },
             function: {
               name: 'bookAppointment',
               strict: true,
