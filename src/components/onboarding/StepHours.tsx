@@ -4,7 +4,6 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { ShopHours, DayHours } from '@/types'
 import { StepProps } from './OnboardingWizard'
-import { DEFAULT_SHOP_HOURS } from '@/lib/utils'
 
 const DAYS: { key: keyof ShopHours; label: string }[] = [
   { key: 'monday', label: 'Monday' },
@@ -18,14 +17,14 @@ const DAYS: { key: keyof ShopHours; label: string }[] = [
 
 const WEEKDAYS: (keyof ShopHours)[] = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']
 
-const DEFAULT_HOURS: ShopHours = DEFAULT_SHOP_HOURS as ShopHours //
-  monday: { open: true, from: '09:00', to: '17:00' },
-  tuesday: { open: true, from: '09:00', to: '17:00' },
-  wednesday: { open: true, from: '09:00', to: '17:00' },
-  thursday: { open: true, from: '09:00', to: '17:00' },
-  friday: { open: true, from: '09:00', to: '17:00' },
-  saturday: { open: false, from: '09:00', to: '17:00' },
-  sunday: { open: false, from: '09:00', to: '17:00' },
+const DEFAULT_HOURS: ShopHours = {
+  monday:    { open: true,  from: '09:00', to: '17:00' },
+  tuesday:   { open: true,  from: '09:00', to: '17:00' },
+  wednesday: { open: true,  from: '09:00', to: '17:00' },
+  thursday:  { open: true,  from: '09:00', to: '17:00' },
+  friday:    { open: true,  from: '09:00', to: '17:00' },
+  saturday:  { open: false, from: '09:00', to: '17:00' },
+  sunday:    { open: false, from: '09:00', to: '17:00' },
 }
 
 export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
