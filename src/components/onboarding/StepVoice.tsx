@@ -7,7 +7,7 @@ import { StepProps } from './OnboardingWizard'
 const VOICES = [
   { id: 'patricia', name: 'Patricia', tagline: 'Warm and Professional',  initial: 'P', color: '#0F7695' },
   { id: 'james',    name: 'James',    tagline: 'Calm and Authoritative', initial: 'J', color: '#6366f1' },
-  { id: 'sofia',    name: 'Sofia',    tagline: 'Friendly and Energetic', initial: 'S', color: '#f59e0b' },
+  { id: 'sofia',    name: 'Emily',    tagline: 'Friendly and Energetic', initial: 'E', color: '#f59e0b' },
   { id: 'marcus',   name: 'Marcus',   tagline: 'Direct and Trustworthy', initial: 'M', color: '#10b981' },
 ]
 
@@ -185,10 +185,8 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
           cursor: selected ? 'pointer' : 'not-allowed',
           fontWeight: 600,
           fontSize: 15,
-          width: 'auto',
-          minWidth: 200,
+          width: '100%',
           display: 'block',
-          marginLeft: 0,
           transition: 'background 0.15s, opacity 0.15s',
           opacity: loading ? 0.7 : 1,
         }}
