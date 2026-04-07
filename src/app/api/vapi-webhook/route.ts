@@ -45,7 +45,7 @@ export async function POST(request: Request) {
       if (!shop) return NextResponse.json({ received: true })
 
       // Check for duplicate
-      const { data: existing } = await supabase
+      const { data: existing } = await getSupabase()
         .from('calls').select('id').eq('vapi_call_id', call.id).single()
       if (existing) return NextResponse.json({ received: true })
 
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
         : transcript
 
       // Try to update existing record first
-      const { data: existing } = await supabase
+      const { data: existing } = await getSupabase()
         .from('calls').select('id').eq('vapi_call_id', call.id).single()
 
       if (existing) {
