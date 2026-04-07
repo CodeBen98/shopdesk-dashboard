@@ -4,6 +4,91 @@ import { createClient } from '@/lib/supabase/server'
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID!
 const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
+const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID!
+const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN!
+const SHARED_TWILIO_NUMBER = process.env.TWILIO_PHONE_NUMBER || '(407) 555-0123'
+const TEST_MODE = process.env.SHOPDESK_TEST_MODE === 'true'
+
+// Extract area code from a phone number string
+function extractAreaCode(phone: string): string {
+  const digits = phone.replace(/\D/g, '')
+  // Strip leading country code (1 for US)
+  const local = digits.startsWith('1') && digits.length === 11 ? digits.slice(1) : digits
+  return local.slice(0, 3) || '407' // default to Orlando
+}
+
+// Buy a new Twilio number matching the shop's area code
+async function buyTwilioNumber(areaCode: string): Promise<{ sid: string; phoneNumber: string } | null> {
+  try {
+    // Search for available numbers in area code
+    const searchUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/AvailablePhoneNumbers/US/Local.json?AreaCode=${areaCode}&SmsEnabled=true&VoiceEnabled=true`
+    const searchRes = await fetch(searchUrl, {
+      headers: { 'Authorization': 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64') }
+    })
+    const searchData = await searchRes.json()
+    const available = searchData.available_phone_numbers ?? []
+
+    // If no numbers in area code, try any US number
+    let numberToBuy = available[0]?.phone_number
+    if (!numberToBuy) {
+      const fallbackUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/AvailablePhoneNumbers/US/Local.json?SmsEnabled=true&VoiceEnabled=true`
+      const fallbackRes = await fetch(fallbackUrl, {
+        headers: { 'Authorization': 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64') }
+      })
+      const fallbackData = await fallbackRes.json()
+      numberToBuy = fallbackData.available_phone_numbers?.[0]?.phone_number
+    }
+
+    if (!numberToBuy) return null
+
+    // Purchase the number
+    const buyRes = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/IncomingPhoneNumbers.json`, {
+      method: 'POST',
+      headers: {
+        'Authorization': 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64'),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body: new URLSearchParams({ PhoneNumber: numberToBuy }).toString(),
+    })
+    const buyData = await buyRes.json()
+    if (!buyRes.ok) throw new Error(`Twilio buy failed: ${JSON.stringify(buyData)}`)
+
+    return { sid: buyData.sid, phoneNumber: buyData.phone_number }
+  } catch (err) {
+    console.error('buyTwilioNumber error:', err)
+    return null
+  }
+}
+
+// Register a Twilio number with Vapi so Vapi can receive calls on it
+async function registerNumberWithVapi(twilioSid: string, assistantId: string): Promise<string | null> {
+  try {
+    const res = await fetch('https://api.vapi.ai/phone-number', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${VAPI_API_KEY}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        provider: 'twilio',
+        number: '', // will be filled from twilioSid
+        twilioAccountSid: TWILIO_ACCOUNT_SID,
+        twilioAuthToken: TWILIO_AUTH_TOKEN,
+        assistantId,
+        // Use the Twilio SID to link
+        numberE164CheckEnabled: false,
+      }),
+    })
+    if (!res.ok) {
+      // Fallback: just patch the existing shared number
+      return null
+    }
+    const data = await res.json()
+    return data.id
+  } catch {
+    return null
+  }
+}
 
 const voiceNames: Record<string, string> = {
   patricia: 'Sarah',
@@ -230,16 +315,57 @@ export async function POST(request: Request) {
       }
     }
 
-    // Assign this agent to the Twilio phone number
-    await vapiRequest(`/phone-number/${VAPI_PHONE_NUMBER_ID}`, 'PATCH', {
-      assistantId: agentId,
-    })
+    // Assign phone number to agent
+    let assignedNumber = SHARED_TWILIO_NUMBER
+
+    if (TEST_MODE) {
+      // TEST MODE: use shared number, just point it to this agent
+      console.log('TEST MODE: using shared number', SHARED_TWILIO_NUMBER)
+      await vapiRequest(`/phone-number/${VAPI_PHONE_NUMBER_ID}`, 'PATCH', {
+        assistantId: agentId,
+      })
+    } else {
+      // PRODUCTION MODE: provision a dedicated number per shop
+      if (shop.twilio_number && shop.twilio_number !== SHARED_TWILIO_NUMBER) {
+        // Shop already has their own number — reuse it, just update the agent assignment
+        console.log('Reusing existing shop number:', shop.twilio_number)
+        assignedNumber = shop.twilio_number
+        // Find the Vapi phone number ID for this number and update it
+        const vapiNumbers = await vapiRequest('/phone-number?limit=100', 'GET')
+        const numList = Array.isArray(vapiNumbers) ? vapiNumbers : vapiNumbers.results ?? []
+        const match = numList.find((n: { number?: string; id: string }) => n.number === shop.twilio_number)
+        if (match) {
+          await vapiRequest(`/phone-number/${match.id}`, 'PATCH', { assistantId: agentId })
+        }
+      } else {
+        // Buy a new dedicated number for this shop
+        const areaCode = extractAreaCode(shop.phone || '')
+        console.log('PRODUCTION MODE: buying new number for area code', areaCode)
+        const purchased = await buyTwilioNumber(areaCode)
+
+        if (purchased) {
+          assignedNumber = purchased.phoneNumber
+          console.log('Bought number:', assignedNumber, 'SID:', purchased.sid)
+          // Register with Vapi
+          await vapiRequest('/phone-number', 'POST', {
+            provider: 'twilio',
+            twilioAccountSid: TWILIO_ACCOUNT_SID,
+            twilioAuthToken: TWILIO_AUTH_TOKEN,
+            number: purchased.phoneNumber,
+            assistantId: agentId,
+          })
+        } else {
+          // Fallback to shared number if purchase failed
+          console.error('Number purchase failed, falling back to shared number')
+          await vapiRequest(`/phone-number/${VAPI_PHONE_NUMBER_ID}`, 'PATCH', { assistantId: agentId })
+        }
+      }
+    }
 
     // Save to DB
-    const twilioNumber = process.env.TWILIO_PHONE_NUMBER || '(407) 555-0123'
     await supabase.from('shops').update({
       vapi_agent_id: agentId,
-      twilio_number: twilioNumber,
+      twilio_number: assignedNumber,
       onboarding_step: 'forwarding',
     }).eq('owner_id', user.id)
 
