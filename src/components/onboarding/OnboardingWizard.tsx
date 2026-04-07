@@ -48,7 +48,15 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
 
   const stepIndex = STEPS.indexOf(currentStep)
   const displayStepIndex = DISPLAY_STEPS.indexOf(currentStep)
-  const displayStep = displayStepIndex >= 0 ? displayStepIndex + 1 : 1
+  // For steps not in DISPLAY_STEPS (auto_fill_choice, auto_fill_review), show the
+  // same number as the nearest preceding display step (shop_info = 1)
+  const displayStep = displayStepIndex >= 0 ? displayStepIndex + 1 : (() => {
+    for (let i = stepIndex - 1; i >= 0; i--) {
+      const idx = DISPLAY_STEPS.indexOf(STEPS[i])
+      if (idx >= 0) return idx + 1
+    }
+    return 1
+  })()
 
   function onNext() {
     const nextIndex = stepIndex + 1
