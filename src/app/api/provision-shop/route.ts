@@ -267,6 +267,7 @@ export async function POST(request: Request) {
                   vehicle_model:    { type: 'string', description: 'Vehicle model, e.g. Accord' },
                   service:          { type: 'string', description: 'Service requested or issue description' },
                   appointment_time: { type: 'string', description: 'Day and time confirmed by customer, e.g. Thursday April 3 at 10am' },
+                  assistant_id:     { type: 'string', description: 'The Vapi assistant ID — always pass this exact value: {{assistant.id}}' },
                 },
               },
             },
