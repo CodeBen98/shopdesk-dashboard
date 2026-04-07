@@ -64,14 +64,14 @@ async function buyTwilioNumber(areaCode: string): Promise<{ sid: string; phoneNu
 const voiceNames: Record<string, string> = {
   patricia: 'Sarah',
   james: 'James',
-  sofia: 'Sofia',
+  sofia: 'Emily',
   marcus: 'Marcus',
 }
 
 const voiceMap: Record<string, { provider: string; voiceId: string; model: string }> = {
   patricia: { provider: 'cartesia', voiceId: 'e5a6cd18-d552-4192-9533-82a08cac8f23', model: 'sonic-2' },
   james:    { provider: 'cartesia', voiceId: '42b39f37-515f-4eee-8546-73e841679c1d', model: 'sonic-2' },
-  sofia:    { provider: 'cartesia', voiceId: '90c7d657-9599-4cd0-9ed2-2568359e4d1a', model: 'sonic-2' },
+  sofia:    { provider: 'cartesia', voiceId: 'f6ce3444-478b-4ce4-982e-bcb72dffe7aa', model: 'sonic-2' },
   marcus:   { provider: 'cartesia', voiceId: '9301949d-b7cd-40d9-a246-5a4430992d6b', model: 'sonic-2' },
 }
 
