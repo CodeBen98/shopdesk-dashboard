@@ -353,81 +353,85 @@ export default function SettingsPage() {
         {/* ── Tab 2: Hours ── */}
         {tab === 'hours' && (
           <div>
-            <div style={{ marginBottom: 20 }}>
-              <h2 className="section-header">Business Hours</h2>
-              <p className="section-desc">Set when your shop is open. Closed days will be communicated to callers.</p>
-            </div>
-
-            <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 12 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
+              <div>
+                <h2 className="section-header">Business Hours</h2>
+                <p className="section-desc" style={{ marginBottom: 0 }}>Set when your shop is open. Your AI will use these when answering calls.</p>
+              </div>
               <button
                 onClick={copyMonToWeekdays}
                 style={{
                   background: 'transparent',
-                  color: 'var(--text-mid)',
-                  border: '1px solid var(--border)',
+                  color: 'var(--accent)',
+                  border: '1px solid rgba(15,118,149,0.3)',
                   borderRadius: 8,
-                  padding: '6px 14px',
+                  padding: '7px 14px',
                   fontSize: 12,
-                  fontWeight: 500,
+                  fontWeight: 600,
                   cursor: 'pointer',
                   fontFamily: 'inherit',
+                  whiteSpace: 'nowrap',
+                  flexShrink: 0,
                 }}
               >
-                Copy Mon to all weekdays
+                Copy Monday to weekdays
               </button>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
               {DAYS.map((day, idx) => {
-                const dh = hours[day] ?? { open: false, from: '08:00', to: '17:00' }
+                const dh = hours[day] ?? { open: false, from: '09:00', to: '17:00' }
                 return (
                   <div key={day} style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '12px 0',
+                    display: 'flex', alignItems: 'center', gap: 16,
+                    padding: '14px 20px',
                     borderBottom: idx < DAYS.length - 1 ? '1px solid var(--border)' : 'none',
-                    opacity: dh.open ? 1 : 0.5,
+                    background: dh.open ? 'transparent' : 'rgba(0,0,0,0.1)',
+                    flexWrap: 'wrap',
                   }}>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)', width: 110, flexShrink: 0 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: dh.open ? 'var(--text)' : 'var(--muted)', width: 100, flexShrink: 0 }}>
                       {DAY_LABELS[day]}
                     </span>
                     <button
                       onClick={() => setHours(prev => ({
                         ...prev,
-                        [day]: { ...(prev[day] ?? { from: '08:00', to: '17:00' }), open: !dh.open },
+                        [day]: { ...(prev[day] ?? { from: '09:00', to: '17:00' }), open: !dh.open },
                       }))}
                       style={{
-                        padding: '4px 12px',
+                        padding: '5px 14px',
                         borderRadius: 9999,
-                        border: 'none',
+                        border: dh.open ? 'none' : '1px solid var(--border)',
                         cursor: 'pointer',
                         fontSize: 12,
                         fontWeight: 600,
-                        background: dh.open ? 'var(--accent)' : 'var(--card)',
+                        background: dh.open ? 'var(--accent)' : 'transparent',
                         color: dh.open ? '#fff' : 'var(--muted)',
-                        minWidth: 64,
-                        transition: 'background 0.15s, color 0.15s',
+                        minWidth: 72,
+                        transition: 'all 0.15s',
                         fontFamily: 'inherit',
                         flexShrink: 0,
                       }}
                     >
                       {dh.open ? 'Open' : 'Closed'}
                     </button>
-                    {dh.open && (
-                      <>
+                    {dh.open ? (
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
                         <input
                           type="time"
-                          value={dh.from ?? '08:00'}
+                          value={dh.from ?? '09:00'}
                           onChange={e => setHours(prev => ({ ...prev, [day]: { ...dh, from: e.target.value } }))}
-                          style={{ ...inputStyle(false), width: 110, padding: '6px 10px', fontSize: 13 }}
+                          style={{ ...inputStyle(false), width: 130, padding: '7px 10px', fontSize: 13 }}
                         />
                         <span style={{ fontSize: 13, color: 'var(--muted)' }}>to</span>
                         <input
                           type="time"
                           value={dh.to ?? '17:00'}
                           onChange={e => setHours(prev => ({ ...prev, [day]: { ...dh, to: e.target.value } }))}
-                          style={{ ...inputStyle(false), width: 110, padding: '6px 10px', fontSize: 13 }}
+                          style={{ ...inputStyle(false), width: 130, padding: '7px 10px', fontSize: 13 }}
                         />
-                      </>
+                      </div>
+                    ) : (
+                      <span style={{ fontSize: 13, color: 'var(--muted)', fontStyle: 'italic' }}>Closed all day</span>
                     )}
                   </div>
                 )
