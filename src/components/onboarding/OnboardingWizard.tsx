@@ -17,11 +17,11 @@ import { StepTestCall } from './StepTestCall'
 import { StepGoLive } from './StepGoLive'
 
 const STEPS: OnboardingStep[] = [
-  'shop_info', 'hours', 'services', 'emergency',
+  'shop_info', 'auto_fill_choice', 'auto_fill_review', 'hours', 'services', 'emergency',
   'calendar', 'voice', 'provision', 'forwarding', 'test_call', 'go_live',
 ]
 
-// Steps that count toward the visible progress
+// Steps that count toward the visible progress (original 10)
 const DISPLAY_STEPS: OnboardingStep[] = [
   'shop_info', 'hours', 'services', 'emergency', 'calendar',
   'voice', 'provision', 'forwarding', 'test_call', 'go_live',

@@ -60,7 +60,7 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
       address: address.trim(),
       phone: phone.trim(),
       email: email.trim() || null,
-      onboarding_step: 'hours',
+      onboarding_step: 'auto_fill_choice',
     }
     if (!shop?.emergency_contact_name) {
       patch.emergency_contact_name = ownerName.trim()
