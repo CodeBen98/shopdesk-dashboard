@@ -12,8 +12,8 @@ const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'
 type Day = typeof DAYS[number]
 
 const DAY_LABELS: Record<Day, string> = {
-  monday: 'Mon', tuesday: 'Tue', wednesday: 'Wed', thursday: 'Thu',
-  friday: 'Fri', saturday: 'Sat', sunday: 'Sun',
+  monday: 'Monday', tuesday: 'Tuesday', wednesday: 'Wednesday', thursday: 'Thursday',
+  friday: 'Friday', saturday: 'Saturday', sunday: 'Sunday',
 }
 
 const VOICES = [
@@ -387,7 +387,7 @@ export default function SettingsPage() {
                     borderBottom: idx < DAYS.length - 1 ? '1px solid var(--border)' : 'none',
                     opacity: dh.open ? 1 : 0.5,
                   }}>
-                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)', width: 40, flexShrink: 0 }}>
+                    <span style={{ fontSize: 14, fontWeight: 500, color: 'var(--text)', width: 110, flexShrink: 0 }}>
                       {DAY_LABELS[day]}
                     </span>
                     <button
