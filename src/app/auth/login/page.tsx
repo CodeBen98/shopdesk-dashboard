@@ -127,7 +127,7 @@ export default function LoginPage() {
 
             {/* Tagline */}
             <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.2, marginBottom: 32 }}>
-              Never miss a call again.
+              Never miss a call again
             </h2>
 
             {/* Proof points */}
@@ -154,7 +154,7 @@ export default function LoginPage() {
 
             {/* Social proof */}
             <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-              Trusted by auto shops across Florida
+              Built exclusively for independent auto repair shops
             </p>
           </div>
         </div>
