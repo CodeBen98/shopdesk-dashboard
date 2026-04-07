@@ -22,7 +22,7 @@ function deriveOutcome(transcript: string, reason: string, duration: number): st
 }
 
 async function findShop(assistantId: string) {
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from('shops')
     .select('id')
     .eq('vapi_agent_id', assistantId)
