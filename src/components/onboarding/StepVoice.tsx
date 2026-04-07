@@ -87,7 +87,7 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
               style={{
                 border: isSelected ? '2px solid var(--accent)' : '2px solid var(--border)',
                 borderRadius: 12,
-                padding: 16,
+                padding: '20px 16px 16px',
                 cursor: 'pointer',
                 background: isSelected ? 'rgba(15,118,149,0.06)' : 'var(--card)',
                 boxShadow: isSelected ? '0 0 0 4px rgba(15,118,149,0.15)' : 'none',
@@ -107,7 +107,7 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
               <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text)', marginBottom: 2 }}>
                 {voice.name}
               </div>
-              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 12 }}>
+              <div style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 12 }}>
                 {voice.tagline}
               </div>
 
@@ -158,11 +158,9 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
                 )}
               </button>
 
-              {isSelected && (
-                <div style={{ marginTop: 8, fontSize: 12, color: 'var(--accent)', fontWeight: 600, textAlign: 'center' }}>
-                  ✓ Selected
-                </div>
-              )}
+              <div style={{ marginTop: 8, fontSize: 12, color: isSelected ? 'var(--accent)' : 'transparent', fontWeight: 600, textAlign: 'center', visibility: isSelected ? 'visible' : 'hidden' }}>
+                ✓ Selected
+              </div>
             </div>
           )
         })}

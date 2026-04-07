@@ -154,12 +154,12 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
                 onChange={e => updateService(i, { price: e.target.value || null })}
                 className="step-input"
                 style={{
-                  width: 110,
+                  width: 130,
+                  flexShrink: 0,
                   color: 'var(--accent)',
                   fontWeight: 600,
-                  textAlign: 'right',
                 }}
-                placeholder="Price (optional)"
+                placeholder="Price"
               />
               <button
                 onClick={() => removeService(i)}
