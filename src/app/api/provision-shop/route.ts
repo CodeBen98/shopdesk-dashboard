@@ -43,7 +43,7 @@ function buildSystemPrompt(shop: {
     `  - ${s.name}${s.price ? ` ($${s.price})` : ''}${s.description ? ` — ${s.description}` : ''}`
   ).join('\n')
   const hoursText = formatHours(shop.hours)
-  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+  // Note: do not hardcode date — Claude knows the current date natively
   const ownerName = extras?.ownerName || shop.emergency_contact_name || 'the shop owner'
   const vehicleTypes = extras?.vehicleTypes && extras.vehicleTypes.length > 0 ? extras.vehicleTypes : null
 
@@ -98,7 +98,7 @@ Emergency contact: ${ownerName} at ${shop.emergency_contact || 'the shop'}.
 Booking fails: take their number, promise a callback within the hour.
 Outside scope: take their number, have a tech call them back.
 
-Today is ${today}.`
+When a customer mentions a day like "tomorrow" or "Monday", use your knowledge of the current date to confirm the specific date before booking.`
 }
 
 async function vapiRequest(path: string, method: string, body?: object) {
