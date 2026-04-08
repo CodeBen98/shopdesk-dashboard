@@ -49,19 +49,7 @@ const navItems = [
       </svg>
     ),
   },
-  {
-    label: 'Customers',
-    href: '/dashboard/customers',
-    exact: false,
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <circle cx="7" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/>
-        <path d="M1 16c0-3.314 2.686-5 6-5s6 1.686 6 5" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <path d="M13 8c1.657 0 3 .895 3 2.5V16" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
-        <circle cx="13" cy="5.5" r="2" stroke="currentColor" strokeWidth="1.5"/>
-      </svg>
-    ),
-  },
+  // Customers — Phase 2 feature, hidden until built
   {
     label: 'Settings',
     href: '/dashboard/settings',
