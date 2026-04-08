@@ -137,18 +137,28 @@ export async function POST(request: Request) {
         })
       }
 
-      // Backfill caller_name from booking if available (booking links to call via call_id)
+      // Backfill caller_name from most recent booking for this shop (within last 10 minutes)
       const callUuid = existing?.id
+      const callerPhone = call.customer?.number ?? ''
       if (callUuid) {
+        const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
+        const shopForCall = await findShop(call.assistantId)
         const { data: booking } = await getSupabase()
           .from('bookings')
-          .select('customer_name')
-          .eq('call_id', callUuid)
+          .select('customer_name, id')
+          .eq('shop_id', shopForCall?.id ?? '')
+          .gte('created_at', tenMinAgo)
+          .order('created_at', { ascending: false })
+          .limit(1)
           .single()
         if (booking?.customer_name) {
+          // Update call with customer name AND link booking to call
           await getSupabase().from('calls')
             .update({ caller_name: booking.customer_name })
             .eq('id', callUuid)
+          await getSupabase().from('bookings')
+            .update({ call_id: callUuid })
+            .eq('id', booking.id)
         }
       }
 
