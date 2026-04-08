@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatDateTime, formatDuration } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { SkeletonRow } from '@/components/Skeleton'
 import type { Call } from '@/types'
@@ -27,20 +28,9 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
   )
 }
 
-function formatDateTime(dt: string | null) {
-  if (!dt) return '—'
-  return new Date(dt).toLocaleString('en-US', {
-    month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true,
-  })
-}
+// formatDateTime imported from @/lib/utils
 
-function formatDuration(seconds: number | null) {
-  if (!seconds) return '—'
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${String(s).padStart(2, '0')}`
-}
+// formatDuration imported from @/lib/utils
 
 const PAGE_SIZE = 20
 
