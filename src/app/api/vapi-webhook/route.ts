@@ -68,7 +68,13 @@ export async function POST(request: Request) {
       // Per Vapi docs: transcript is in msg.artifact.transcript for end-of-call-report
       const transcript = msg.artifact?.transcript ?? call.transcript ?? ''
       const reason = msg.endedReason ?? call.endedReason ?? ''
-      const duration = call.durationSeconds ?? 0
+      // durationSeconds is often null from Vapi — calculate from timestamps instead
+      const startedAt = call.startedAt ?? null
+      const endedAt = call.endedAt ?? null
+      const calculatedDuration = (startedAt && endedAt)
+        ? Math.round((new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000)
+        : 0
+      const duration = call.durationSeconds ?? calculatedDuration
       const outcome = deriveOutcome(transcript, reason, duration)
 
       const summary = msg.artifact?.summary ?? call.summary ?? ''
