@@ -325,6 +325,7 @@ export async function POST(request: Request) {
       assignedNumber = DEMO_TWILIO_NUMBER
       await vapiRequest(`/phone-number/${DEMO_VAPI_PHONE_NUMBER_ID}`, 'PATCH', {
         assistantId: agentId,
+        serverUrl: webhookUrl,
       })
     } else if (TEST_MODE) {
       // TEST MODE: use shared number, just point it to this agent
@@ -343,7 +344,7 @@ export async function POST(request: Request) {
         const numList = Array.isArray(vapiNumbers) ? vapiNumbers : vapiNumbers.results ?? []
         const match = numList.find((n: { number?: string; id: string }) => n.number === shop.twilio_number)
         if (match) {
-          await vapiRequest(`/phone-number/${match.id}`, 'PATCH', { assistantId: agentId })
+          await vapiRequest(`/phone-number/${match.id}`, 'PATCH', { assistantId: agentId, serverUrl: webhookUrl })
         }
       } else {
         // Buy a new dedicated number for this shop
@@ -361,6 +362,7 @@ export async function POST(request: Request) {
             twilioAuthToken: TWILIO_AUTH_TOKEN,
             number: purchased.phoneNumber,
             assistantId: agentId,
+            serverUrl: webhookUrl,
           })
         } else {
           // Fallback to shared number if purchase failed
