@@ -35,6 +35,8 @@ export async function POST(request: Request) {
     const body = await request.json()
     const msg = body.message
     const type = msg?.type
+    // Log every event type for debugging
+    console.log(`vapi-webhook event: type=${type} callId=${msg?.call?.id ?? 'none'}`)
 
     // call-started: create the call record with basic info
     if (type === 'call-started') {
