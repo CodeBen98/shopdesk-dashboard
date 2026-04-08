@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
 import type { Shop, ShopHours, Service } from '@/types'
@@ -17,10 +17,10 @@ const DAY_LABELS: Record<Day, string> = {
 }
 
 const VOICES = [
-  { id: 'patricia', initial: 'P', color: '#0F7695', name: 'Patricia', desc: 'Warm and professional' },
-  { id: 'james',    initial: 'J', color: '#6366f1', name: 'James',    desc: 'Calm and authoritative' },
-  { id: 'sofia',    initial: 'S', color: '#f59e0b', name: 'Sofia',    desc: 'Friendly and energetic' },
-  { id: 'marcus',   initial: 'M', color: '#10b981', name: 'Marcus',   desc: 'Direct and trustworthy' },
+  { id: 'cindy',      initial: 'C', color: '#0F7695', name: 'Cindy',      desc: 'Smooth and welcoming' },
+  { id: 'jacqueline', initial: 'J', color: '#8b5cf6', name: 'Jacqueline', desc: 'Confident and warm' },
+  { id: 'james',      initial: 'J', color: '#6366f1', name: 'James',      desc: 'Calm and authoritative' },
+  { id: 'marcus',     initial: 'M', color: '#10b981', name: 'Marcus',     desc: 'Direct and trustworthy' },
 ]
 
 const SUGGESTIONS = [
@@ -129,6 +129,9 @@ export default function SettingsPage() {
 
   // AI & Voice
   const [voice, setVoice] = useState('')
+  const [playingVoice, setPlayingVoice] = useState<string | null>(null)
+  const [loadingVoice, setLoadingVoice] = useState<string | null>(null)
+  const voiceAudioRef = useRef<HTMLAudioElement | null>(null)
   const [emergencyContact, setEmergencyContact] = useState('')
   const [emergencyContactName, setEmergencyContactName] = useState('')
 
@@ -219,6 +222,36 @@ export default function SettingsPage() {
         </div>
       </div>
     )
+  }
+
+  async function playVoicePreview(voiceId: string, e: React.MouseEvent) {
+    e.stopPropagation()
+    if (voiceAudioRef.current) {
+      voiceAudioRef.current.pause()
+      voiceAudioRef.current = null
+    }
+    if (playingVoice === voiceId) {
+      setPlayingVoice(null)
+      return
+    }
+    setLoadingVoice(voiceId)
+    try {
+      const res = await fetch(`/api/voice-preview?voice=${voiceId}`)
+      if (!res.ok) throw new Error('Preview failed')
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const audio = new Audio(url)
+      voiceAudioRef.current = audio
+      setPlayingVoice(voiceId)
+      setLoadingVoice(null)
+      audio.play()
+      audio.onended = () => {
+        setPlayingVoice(null)
+        URL.revokeObjectURL(url)
+      }
+    } catch {
+      setLoadingVoice(null)
+    }
   }
 
   return (
@@ -648,24 +681,43 @@ export default function SettingsPage() {
                       {v.name}
                     </div>
                     <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10 }}>{v.desc}</div>
-                    <span className="preview-btn" style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 4,
-                      fontSize: 11,
-                      fontWeight: 500,
-                      color: 'var(--muted)',
-                      background: 'var(--card-raised)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 6,
-                      padding: '3px 8px',
-                      cursor: 'pointer',
-                    }}>
-                      <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
-                        <polygon points="3,2 8,5 3,8" stroke="currentColor" strokeWidth="1.2" fill="currentColor" strokeLinejoin="round"/>
-                      </svg>
-                      Preview
-                    </span>
+                    <button
+                      onClick={(e) => playVoicePreview(v.id, e)}
+                      disabled={!!loadingVoice}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 4,
+                        fontSize: 11,
+                        fontWeight: 500,
+                        color: playingVoice === v.id ? 'var(--success)' : 'var(--muted)',
+                        background: playingVoice === v.id ? 'rgba(34,197,94,0.1)' : 'var(--card-raised)',
+                        border: `1px solid ${playingVoice === v.id ? 'var(--success)' : 'var(--border)'}`,
+                        borderRadius: 6,
+                        padding: '3px 8px',
+                        cursor: loadingVoice ? 'wait' : 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'all 0.15s',
+                      }}
+                    >
+                      {loadingVoice === v.id ? (
+                        'Loading...'
+                      ) : playingVoice === v.id ? (
+                        <>
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="currentColor">
+                            <rect x="2" y="2" width="6" height="6" rx="1"/>
+                          </svg>
+                          Stop
+                        </>
+                      ) : (
+                        <>
+                          <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                            <polygon points="3,2 8,5 3,8" stroke="currentColor" strokeWidth="1.2" fill="currentColor" strokeLinejoin="round"/>
+                          </svg>
+                          Preview
+                        </>
+                      )}
+                    </button>
                   </button>
                 )
               })}
