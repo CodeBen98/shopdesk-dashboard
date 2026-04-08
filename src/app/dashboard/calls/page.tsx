@@ -10,7 +10,7 @@ type OutcomeFilter = 'all' | 'booked' | 'info_only' | 'missed' | 'emergency'
 function OutcomeBadge({ outcome }: { outcome: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
     booked:    { bg: 'var(--success-dim)',          color: 'var(--success)',  label: 'Booked' },
-    missed:    { bg: 'var(--danger-dim)',            color: 'var(--danger)',   label: 'Missed' },
+    missed:    { bg: 'rgba(255,255,255,0.06)',        color: 'var(--muted)',    label: 'No Booking' },
     info_only: { bg: 'rgba(255,255,255,0.06)',       color: 'var(--muted)',    label: 'Info Only' },
     emergency: { bg: 'var(--warning-dim)',           color: 'var(--warning)',  label: 'Emergency' },
   }
@@ -83,7 +83,7 @@ export default function CallsPage() {
     { value: 'all',       label: 'All' },
     { value: 'booked',    label: 'Booked' },
     { value: 'info_only', label: 'Info Only' },
-    { value: 'missed',    label: 'Missed' },
+    { value: 'missed',    label: 'No Booking' },
     { value: 'emergency', label: 'Emergency' },
   ]
 
