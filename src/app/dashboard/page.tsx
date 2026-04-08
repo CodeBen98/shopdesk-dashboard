@@ -6,7 +6,7 @@ import type { Call, Booking } from '@/types'
 function OutcomeBadge({ outcome }: { outcome: string }) {
   const styles: Record<string, { bg: string; color: string; label: string }> = {
     booked:     { bg: 'var(--success-dim)',  color: 'var(--success)',  label: 'Booked' },
-    missed:     { bg: 'var(--danger-dim)',   color: 'var(--danger)',   label: 'Missed' },
+    missed:     { bg: 'rgba(255,255,255,0.06)', color: 'var(--muted)', label: 'No Booking' },
     info_only:  { bg: 'rgba(255,255,255,0.07)', color: 'var(--muted)', label: 'Info Only' },
     emergency:  { bg: 'var(--warning-dim)',  color: 'var(--warning)',  label: 'Emergency' },
   }
@@ -150,9 +150,9 @@ export default async function DashboardPage() {
         marginBottom: 32,
       }}>
         {[
-          { label: 'Calls Answered', value: totalCalls.toLocaleString(), sub: 'all time' },
+          { label: 'Calls Handled', value: totalCalls.toLocaleString(), sub: 'all time' },
           { label: 'Bookings Made', value: totalBookings.toLocaleString(), sub: 'all time' },
-          { label: 'Missed Calls', value: missedCalls.toLocaleString(), sub: 'all time', danger: missedCalls > 0 },
+          { label: 'No Booking', value: missedCalls.toLocaleString(), sub: 'caller didn\'t book' },
           { label: 'Revenue Recovered', value: `$${revenueRecovered.toLocaleString()}`, sub: 'est. at $650/booking' },
         ].map(stat => (
           <div key={stat.label} style={{
