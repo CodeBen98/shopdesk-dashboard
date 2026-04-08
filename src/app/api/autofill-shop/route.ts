@@ -60,25 +60,35 @@ export async function GET(request: Request) {
   const periods = place.regularOpeningHours?.periods ?? []
   let hasHours = false
 
-  for (const period of periods) {
-    const dayNum = period.open?.day
-    if (dayNum === undefined) continue
-    const dayName = dayMap[dayNum]
-    if (!dayName || !period.open) continue
+  // Detect 24/7 shops: single period on Sunday (day 0) with no close = open all week
+  const is247 = periods.length === 1 && periods[0].open?.day === 0 && !periods[0].close
 
-    // 24-hour shops have no close time
-    if (!period.close) {
-      hours[dayName] = { open: true, from: '00:00', to: '23:59' }
-      hasHours = true
-      continue
+  if (is247) {
+    for (const d of Object.values(dayMap)) {
+      hours[d] = { open: true, from: '00:00', to: '23:59' }
     }
+    hasHours = true
+  } else {
+    for (const period of periods) {
+      const dayNum = period.open?.day
+      if (dayNum === undefined) continue
+      const dayName = dayMap[dayNum]
+      if (!dayName || !period.open) continue
 
-    const from = toTimeInput(period.open)
-    const to = toTimeInput(period.close)
+      // Single day 24-hour (no close time)
+      if (!period.close) {
+        hours[dayName] = { open: true, from: '00:00', to: '23:59' }
+        hasHours = true
+        continue
+      }
 
-    if (from && to) {
-      hours[dayName] = { open: true, from, to }
-      hasHours = true
+      const from = toTimeInput(period.open)
+      const to = toTimeInput(period.close)
+
+      if (from && to) {
+        hours[dayName] = { open: true, from, to }
+        hasHours = true
+      }
     }
   }
 
