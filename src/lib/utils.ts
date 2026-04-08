@@ -13,27 +13,34 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-export function formatDate(date: string | Date): string {
+// All times displayed in Eastern time (shop timezone)
+const TZ = 'America/New_York'
+
+export function formatDate(date: string | Date | null): string {
+  if (!date) return '—'
   return new Intl.DateTimeFormat('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
+    month: 'short', day: 'numeric', year: 'numeric', timeZone: TZ,
   }).format(new Date(date))
 }
 
-export function formatTime(date: string | Date): string {
+export function formatTime(date: string | Date | null): string {
+  if (!date) return '—'
   return new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric',
-    minute: '2-digit',
-    hour12: true,
+    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: TZ,
   }).format(new Date(date))
 }
 
-export function formatDateTime(date: string | Date): string {
-  return `${formatDate(date)} at ${formatTime(date)}`
+export function formatDateTime(date: string | Date | null): string {
+  if (!date) return '—'
+  return new Intl.DateTimeFormat('en-US', {
+    month: 'short', day: 'numeric',
+    hour: 'numeric', minute: '2-digit', hour12: true,
+    timeZone: TZ,
+  }).format(new Date(date))
 }
 
-export function formatDuration(seconds: number): string {
+export function formatDuration(seconds: number | null): string {
+  if (!seconds) return '—'
   const m = Math.floor(seconds / 60)
   const s = seconds % 60
   return `${m}:${s.toString().padStart(2, '0')}`
