@@ -62,48 +62,55 @@ export async function POST(request: Request) {
 
     // end-of-call-report: update with full details
     if (type === 'end-of-call-report') {
-      const call = msg.call
-      if (!call?.id) return NextResponse.json({ received: true })
+      // Vapi sends end-of-call data at msg level (not msg.call)
+      const callId = msg.call?.id ?? msg.id
+      if (!callId) return NextResponse.json({ received: true })
 
-      const transcript = call.transcript ?? ''
-      const reason = call.endedReason ?? ''
-      const duration = call.durationSeconds ?? 0
+      const transcript = msg.transcript ?? msg.call?.transcript ?? ''
+      const reason = msg.endedReason ?? msg.call?.endedReason ?? ''
+      const duration = msg.durationSeconds ?? msg.call?.durationSeconds ?? 0
       const outcome = deriveOutcome(transcript, reason, duration)
+      const summary = msg.summary ?? msg.call?.summary ?? ''
 
-      const fullTranscript = call.summary
-        ? `SUMMARY: ${call.summary}\n\nTRANSCRIPT:\n${transcript}`
+      const fullTranscript = summary
+        ? `SUMMARY: ${summary}\n\nTRANSCRIPT:\n${transcript}`
         : transcript
+
+      const endedAt = msg.endedAt ?? msg.call?.endedAt ?? null
+      const recordingUrl = msg.stereoRecordingUrl ?? msg.call?.stereoRecordingUrl ?? null
+      const callerName = msg.customer?.name ?? msg.call?.customer?.name ?? null
+      const callerPhone = msg.customer?.number ?? msg.call?.customer?.number ?? ''
+      const assistantId = msg.assistantId ?? msg.call?.assistantId
 
       // Try to update existing record first
       const { data: existing } = await getSupabase()
-        .from('calls').select('id').eq('vapi_call_id', call.id).single()
+        .from('calls').select('id').eq('vapi_call_id', callId).single()
 
       if (existing) {
         await getSupabase().from('calls').update({
-          ended_at: call.endedAt ?? null,
+          ended_at: endedAt,
           duration_seconds: duration || null,
           outcome,
           transcript: fullTranscript || null,
-          recording_url: call.stereoRecordingUrl ?? null,
-          caller_name: call.customer?.name ?? null,
-          caller_phone: call.customer?.number ?? '',
-        }).eq('vapi_call_id', call.id)
+          recording_url: recordingUrl,
+          caller_name: callerName,
+          caller_phone: callerPhone,
+        }).eq('vapi_call_id', callId)
       } else {
-        // No existing record — create from scratch
-        const shop = await findShop(call.assistantId)
+        const shop = await findShop(assistantId)
         if (!shop) return NextResponse.json({ received: true })
 
         await getSupabase().from('calls').insert({
           shop_id: shop.id,
-          caller_phone: call.customer?.number ?? '',
-          caller_name: call.customer?.name ?? null,
-          started_at: call.startedAt ?? new Date().toISOString(),
-          ended_at: call.endedAt ?? null,
+          caller_phone: callerPhone,
+          caller_name: callerName,
+          started_at: msg.startedAt ?? msg.call?.startedAt ?? new Date().toISOString(),
+          ended_at: endedAt,
           duration_seconds: duration || null,
           outcome,
           transcript: fullTranscript || null,
-          recording_url: call.stereoRecordingUrl ?? null,
-          vapi_call_id: call.id,
+          recording_url: recordingUrl,
+          vapi_call_id: callId,
         })
       }
 
