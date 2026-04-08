@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { formatDateTime, formatDuration } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { SkeletonRow } from '@/components/Skeleton'
 import { useToast } from '@/components/Toast'
@@ -29,13 +30,7 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function formatDateTime(dt: string | null) {
-  if (!dt) return '—'
-  return new Date(dt).toLocaleString('en-US', {
-    month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true,
-  })
-}
+// formatDateTime imported from @/lib/utils
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
