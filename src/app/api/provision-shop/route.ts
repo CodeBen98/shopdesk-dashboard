@@ -100,6 +100,10 @@ function formatHours(hours: Record<string, { open: boolean; from: string; to: st
   return days.map(day => {
     const h = hours[day]
     if (!h || !h.open) return `  ${day.charAt(0).toUpperCase() + day.slice(1)}: Closed`
+    // 24-hour check
+    if (h.from === '00:00' && h.to === '23:59') {
+      return `  ${day.charAt(0).toUpperCase() + day.slice(1)}: Open 24 hours`
+    }
     const from = formatTimeForPrompt(h.from)
     const to = formatTimeForPrompt(h.to)
     return `  ${day.charAt(0).toUpperCase() + day.slice(1)}: ${from} to ${to}`
