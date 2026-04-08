@@ -15,6 +15,19 @@ const DEFAULT_AUTO_SERVICES = [
   { name: 'General Auto Repair', price: null, description: null },
 ]
 
+// Convert Google's {hour, minute} to HH:MM 24hr format for <input type="time">
+function toTimeInput(t: { hour: number; minute: number }): string {
+  return `${String(t.hour).padStart(2, '0')}:${String(t.minute).padStart(2, '0')}`
+}
+
+// Also return human-readable for Vapi system prompt display
+function toHumanTime(t: { hour: number; minute: number }): string {
+  const h = t.hour; const m = t.minute
+  const suffix = h < 12 ? 'AM' : 'PM'
+  const h12 = h % 12 || 12
+  return `${h12}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const q = searchParams.get('q')
@@ -37,7 +50,6 @@ export async function GET(request: Request) {
   const place = data.places?.[0]
   if (!place) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  // Parse hours
   const dayMap: Record<number, string> = {
     0: 'sunday', 1: 'monday', 2: 'tuesday', 3: 'wednesday',
     4: 'thursday', 5: 'friday', 6: 'saturday'
@@ -52,21 +64,13 @@ export async function GET(request: Request) {
     const dayNum = period.open?.day
     if (dayNum === undefined) continue
     const dayName = dayMap[dayNum]
-    if (!dayName) continue
+    if (!dayName || !period.open || !period.close) continue
 
-    const fmt = (t: { hour: number; minute: number }) => {
-      const h = t.hour; const m = t.minute
-      const suffix = h < 12 ? 'AM' : 'PM'
-      const h12 = h % 12 || 12
-      return `${h12}:${String(m).padStart(2, '0')} ${suffix}`
-    }
+    const from = toTimeInput(period.open)
+    const to = toTimeInput(period.close)
 
-    const fromStr = fmt(period.open)
-    const toStr = period.close ? fmt(period.close) : ''
-
-    // Only mark as open if we have valid times
-    if (fromStr && toStr) {
-      hours[dayName] = { open: true, from: fromStr, to: toStr }
+    if (from && to) {
+      hours[dayName] = { open: true, from, to }
       hasHours = true
     }
   }
@@ -74,9 +78,9 @@ export async function GET(request: Request) {
   // Fallback hours if Google has none
   if (!hasHours) {
     for (const d of ['monday','tuesday','wednesday','thursday','friday']) {
-      hours[d] = { open: true, from: '8:00 AM', to: '5:00 PM' }
+      hours[d] = { open: true, from: '08:00', to: '17:00' }
     }
-    hours['saturday'] = { open: true, from: '9:00 AM', to: '2:00 PM' }
+    hours['saturday'] = { open: true, from: '09:00', to: '14:00' }
   }
 
   const shopData = {
@@ -95,7 +99,6 @@ export async function GET(request: Request) {
     const { error } = await supabase.from('shops').update(shopData).eq('owner_id', user.id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
-    // Trigger reprovision async
     const baseUrl = new URL(request.url).origin
     fetch(`${baseUrl}/api/provision-shop`, { method: 'POST' }).catch(() => {})
 
