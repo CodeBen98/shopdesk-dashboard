@@ -1,3 +1,4 @@
+import { formatDateTime, formatDuration } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
@@ -28,21 +29,9 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
   )
 }
 
-function formatDuration(seconds: number | null) {
-  if (!seconds) return '—'
-  const m = Math.floor(seconds / 60)
-  const s = seconds % 60
-  return `${m}:${String(s).padStart(2, '0')}`
-}
+// formatDuration imported from @/lib/utils
 
-function formatDateTime(dt: string | null) {
-  if (!dt) return '—'
-  return new Date(dt).toLocaleString('en-US', {
-    month: 'short', day: 'numeric',
-    hour: 'numeric', minute: '2-digit', hour12: true,
-    timeZone: 'America/New_York',
-  })
-}
+// formatDateTime imported from @/lib/utils
 
 export default async function DashboardPage() {
   const supabase = await createClient()
