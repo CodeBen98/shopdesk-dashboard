@@ -235,13 +235,18 @@ export default function SettingsPage() {
     setAutofillError(null)
     try {
       const query = address ? `${name} ${address}` : name
-      const res = await fetch(`/api/autofill-shop?q=${encodeURIComponent(query)}`)
+      const res = await fetch(`/api/autofill-shop?q=${encodeURIComponent(query)}&save=true`)
       if (!res.ok) throw new Error('Not found')
       const data = await res.json()
+      // Update local UI state to reflect what was saved
       if (data.name) setName(data.name)
       if (data.phone) setPhone(data.phone)
       if (data.address) setAddress(data.address)
       if (data.hours) setHours(data.hours)
+      if (data.services) setServices(data.services)
+      setShop(prev => prev ? { ...prev, ...data } : prev)
+      setSaveStatus('saved')
+      setTimeout(() => setSaveStatus('idle'), 3000)
     } catch {
       setAutofillError('Could not find shop on Google Places. Try a more specific name or address.')
     } finally {
@@ -352,7 +357,7 @@ export default function SettingsPage() {
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
                   <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
                 </svg>
-                {loadingAutofill ? 'Loading...' : 'Load from Google Places'}
+                {loadingAutofill ? 'Loading & saving...' : 'Load from Google + Update AI'}
               </button>
               {autofillError && (
                 <span style={{ fontSize: 12, color: 'var(--error, #ef4444)' }}>{autofillError}</span>
