@@ -65,13 +65,15 @@ export async function POST(request: Request) {
       const call = msg.call
       if (!call?.id) return NextResponse.json({ received: true })
 
-      const transcript = call.transcript ?? ''
-      const reason = call.endedReason ?? ''
+      // Per Vapi docs: transcript is in msg.artifact.transcript for end-of-call-report
+      const transcript = msg.artifact?.transcript ?? call.transcript ?? ''
+      const reason = msg.endedReason ?? call.endedReason ?? ''
       const duration = call.durationSeconds ?? 0
       const outcome = deriveOutcome(transcript, reason, duration)
 
-      const fullTranscript = call.summary
-        ? `SUMMARY: ${call.summary}\n\nTRANSCRIPT:\n${transcript}`
+      const summary = msg.artifact?.summary ?? call.summary ?? ''
+      const fullTranscript = summary
+        ? `SUMMARY: ${summary}\n\nTRANSCRIPT:\n${transcript}`
         : transcript
 
       // Try to update existing record first
@@ -84,7 +86,7 @@ export async function POST(request: Request) {
           duration_seconds: duration || null,
           outcome,
           transcript: fullTranscript || null,
-          recording_url: call.stereoRecordingUrl ?? null,
+          recording_url: msg.artifact?.recording?.stereoUrl ?? call.stereoRecordingUrl ?? null,
           caller_name: call.customer?.name ?? null,
           caller_phone: call.customer?.number ?? '',
         }).eq('vapi_call_id', call.id)
@@ -102,7 +104,7 @@ export async function POST(request: Request) {
           duration_seconds: duration || null,
           outcome,
           transcript: fullTranscript || null,
-          recording_url: call.stereoRecordingUrl ?? null,
+          recording_url: msg.artifact?.recording?.stereoUrl ?? call.stereoRecordingUrl ?? null,
           vapi_call_id: call.id,
         })
       }
