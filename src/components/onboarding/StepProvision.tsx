@@ -49,7 +49,19 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
 
         if (!cancelled) {
           localStorage.removeItem('shopdesk_onboarding_extras')
-          onShopUpdate({ vapi_agent_id: data.agentId })
+          // Re-fetch full shop row so forwarding step gets the real twilio_number
+          try {
+            const supabase = createClient()
+            const { data: freshShop } = await supabase
+              .from('shops')
+              .select('*')
+              .eq('owner_id', userId)
+              .single()
+            if (freshShop) onShopUpdate(freshShop)
+            else onShopUpdate({ vapi_agent_id: data.agentId })
+          } catch {
+            onShopUpdate({ vapi_agent_id: data.agentId })
+          }
           setDone(true)
           // Small delay so user sees the last stage complete
           setTimeout(() => { if (!cancelled) onNext() }, 1500)
