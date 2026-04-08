@@ -7,6 +7,8 @@ const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID!
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN!
 const SHARED_TWILIO_NUMBER = process.env.TWILIO_PHONE_NUMBER || '(407) 555-0123'
+const DEMO_TWILIO_NUMBER = process.env.DEMO_TWILIO_NUMBER || '(407) 555-0123'
+const DEMO_VAPI_PHONE_NUMBER_ID = process.env.DEMO_VAPI_PHONE_NUMBER_ID || 'd667edd7-197e-495c-8936-ffcc17d9e38f'
 const TEST_MODE = process.env.SHOPDESK_TEST_MODE === 'true'
 
 // Extract area code from a phone number string
@@ -297,7 +299,14 @@ export async function POST(request: Request) {
     // Assign phone number to agent
     let assignedNumber = SHARED_TWILIO_NUMBER
 
-    if (TEST_MODE) {
+    if (shop.is_demo) {
+      // DEMO MODE: always use the designated demo number, never buy a new one
+      console.log('DEMO MODE: using demo number', DEMO_TWILIO_NUMBER)
+      assignedNumber = DEMO_TWILIO_NUMBER
+      await vapiRequest(`/phone-number/${DEMO_VAPI_PHONE_NUMBER_ID}`, 'PATCH', {
+        assistantId: agentId,
+      })
+    } else if (TEST_MODE) {
       // TEST MODE: use shared number, just point it to this agent
       console.log('TEST MODE: using shared number', SHARED_TWILIO_NUMBER)
       await vapiRequest(`/phone-number/${VAPI_PHONE_NUMBER_ID}`, 'PATCH', {
