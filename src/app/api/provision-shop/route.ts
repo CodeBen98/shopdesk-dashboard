@@ -119,6 +119,7 @@ Today's date is ${dateStr}. Use this to calculate exact dates when customers say
 - Skip questions already answered in conversation.
 - Did not understand: "Sorry, could you repeat that?"
 - Never invent prices or times.
+- Never assume or invent the customer's name, phone, or vehicle. Always ask. Never use a name until the customer gives it to you.
 
 [Shop Info]
 ${shop.name} | ${shop.address}${shop.phone ? ` | ${shop.phone}` : ''}
