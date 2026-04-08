@@ -5,14 +5,13 @@ import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const VOICES = [
-  { id: 'patricia', name: 'Patricia', tagline: 'Warm and Professional',  initial: 'P', color: '#0F7695' },
-  { id: 'james',    name: 'James',    tagline: 'Calm and Authoritative', initial: 'J', color: '#6366f1' },
-  { id: 'sofia',    name: 'Emily',    tagline: 'Friendly and Energetic', initial: 'E', color: '#f59e0b' },
-  { id: 'marcus',   name: 'Marcus',   tagline: 'Direct and Trustworthy', initial: 'M', color: '#10b981' },
+  { id: 'cindy',    name: 'Cindy',     tagline: 'Smooth and Welcoming',   initial: 'C', color: '#0F7695' },
+  { id: 'jacqueline', name: 'Jacqueline', tagline: 'Confident and Warm',  initial: 'J', color: '#8b5cf6' },
+  { id: 'james',    name: 'James',     tagline: 'Calm and Authoritative', initial: 'J', color: '#6366f1' },
+  { id: 'marcus',   name: 'Marcus',    tagline: 'Direct and Trustworthy', initial: 'M', color: '#10b981' },
 ]
 
 export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
-  // No default -- user must pick one
   const [selected, setSelected] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [playingId, setPlayingId] = useState<string | null>(null)
@@ -21,8 +20,6 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
 
   async function playPreview(voiceId: string, e: React.MouseEvent) {
     e.stopPropagation()
-
-    // Stop any playing audio
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current = null
@@ -31,7 +28,6 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
       setPlayingId(null)
       return
     }
-
     setLoadingPreview(voiceId)
     try {
       const res = await fetch(`/api/voice-preview?voice=${voiceId}`)
@@ -68,18 +64,15 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
   return (
     <div style={card}>
       <button onClick={onBack} style={backBtn}>← Back</button>
-
       <h2 style={titleStyle}>Choose your AI voice</h2>
       <p style={subtitleStyle}>
         Preview each voice and select the one your customers will hear.
       </p>
-
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
         {VOICES.map(voice => {
           const isSelected = selected === voice.id
           const isPlaying = playingId === voice.id
           const isLoadingThis = loadingPreview === voice.id
-
           return (
             <div
               key={voice.id}
@@ -110,8 +103,6 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
               <div style={{ fontSize: 12, color: 'var(--text-mid)', marginBottom: 12 }}>
                 {voice.tagline}
               </div>
-
-              {/* Preview button */}
               <button
                 onClick={(e) => playPreview(voice.id, e)}
                 disabled={!!loadingPreview}
@@ -157,7 +148,6 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
                   </>
                 )}
               </button>
-
               <div style={{ marginTop: 8, fontSize: 12, color: isSelected ? 'var(--accent)' : 'transparent', fontWeight: 600, textAlign: 'center', visibility: isSelected ? 'visible' : 'hidden' }}>
                 ✓ Selected
               </div>
@@ -165,14 +155,11 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
           )
         })}
       </div>
-
-      {/* Must pick instruction */}
       {!selected && (
         <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', marginBottom: 16 }}>
           Preview and select a voice to continue
         </p>
       )}
-
       <button
         onClick={handleSubmit}
         disabled={!selected || loading}
