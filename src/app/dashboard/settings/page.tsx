@@ -238,15 +238,8 @@ export default function SettingsPage() {
       const res = await fetch(`/api/autofill-shop?q=${encodeURIComponent(query)}&save=true`)
       if (!res.ok) throw new Error('Not found')
       const data = await res.json()
-      // Update local UI state to reflect what was saved
-      if (data.name) setName(data.name)
-      if (data.phone) setPhone(data.phone)
-      if (data.address) setAddress(data.address)
-      if (data.hours) setHours(data.hours)
-      if (data.services) setServices(data.services)
-      setShop(prev => prev ? { ...prev, ...data } : prev)
-      setSaveStatus('saved')
-      setTimeout(() => setSaveStatus('idle'), 3000)
+      // Reload the page so all tabs reflect the new data cleanly
+      window.location.reload()
     } catch {
       setAutofillError('Could not find shop on Google Places. Try a more specific name or address.')
     } finally {
