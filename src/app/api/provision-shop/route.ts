@@ -81,12 +81,28 @@ const voiceMap: Record<string, { provider: string; voiceId: string; model: strin
   marcus:   { provider: 'cartesia', voiceId: '9301949d-b7cd-40d9-a246-5a4430992d6b', model: 'sonic-2' },
 }
 
+// Convert HH:MM 24hr to human-readable "8:30 AM" for Vapi prompt
+function formatTimeForPrompt(t: string): string {
+  if (!t) return ''
+  // Already human-readable (e.g. "8:30 AM")
+  if (t.includes('AM') || t.includes('PM')) return t
+  // Convert HH:MM to 12hr
+  const [hStr, mStr] = t.split(':')
+  const h = parseInt(hStr, 10)
+  const m = parseInt(mStr, 10)
+  const suffix = h < 12 ? 'AM' : 'PM'
+  const h12 = h % 12 || 12
+  return `${h12}:${String(m).padStart(2, '0')} ${suffix}`
+}
+
 function formatHours(hours: Record<string, { open: boolean; from: string; to: string }>): string {
   const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday']
   return days.map(day => {
     const h = hours[day]
     if (!h || !h.open) return `  ${day.charAt(0).toUpperCase() + day.slice(1)}: Closed`
-    return `  ${day.charAt(0).toUpperCase() + day.slice(1)}: ${h.from} to ${h.to}`
+    const from = formatTimeForPrompt(h.from)
+    const to = formatTimeForPrompt(h.to)
+    return `  ${day.charAt(0).toUpperCase() + day.slice(1)}: ${from} to ${to}`
   }).join('\n')
 }
 
