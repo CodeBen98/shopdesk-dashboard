@@ -64,7 +64,14 @@ export async function GET(request: Request) {
     const dayNum = period.open?.day
     if (dayNum === undefined) continue
     const dayName = dayMap[dayNum]
-    if (!dayName || !period.open || !period.close) continue
+    if (!dayName || !period.open) continue
+
+    // 24-hour shops have no close time
+    if (!period.close) {
+      hours[dayName] = { open: true, from: '00:00', to: '23:59' }
+      hasHours = true
+      continue
+    }
 
     const from = toTimeInput(period.open)
     const to = toTimeInput(period.close)
