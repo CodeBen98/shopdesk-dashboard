@@ -46,7 +46,8 @@ export async function POST(request: Request) {
 
       // Check for duplicate
       const { data: existing } = await getSupabase()
-        .from('calls').select('id').eq('vapi_call_id', call.id).single()
+        .from('calls').select('id, caller_phone').eq('vapi_call_id', call.id).single()
+      const existing_phone = (existing as { caller_phone?: string } | null)?.caller_phone ?? ''
       if (existing) return NextResponse.json({ received: true })
 
       await getSupabase().from('calls').insert({
@@ -84,18 +85,23 @@ export async function POST(request: Request) {
 
       // Try to update existing record first
       const { data: existing } = await getSupabase()
-        .from('calls').select('id').eq('vapi_call_id', call.id).single()
+        .from('calls').select('id, caller_phone').eq('vapi_call_id', call.id).single()
+      const existing_phone = (existing as { caller_phone?: string } | null)?.caller_phone ?? ''
 
       if (existing) {
-        await getSupabase().from('calls').update({
+        const updatePayload: Record<string, unknown> = {
           ended_at: call.endedAt ?? null,
           duration_seconds: duration || null,
           outcome,
           transcript: fullTranscript || null,
           recording_url: msg.artifact?.recording?.stereoUrl ?? call.stereoRecordingUrl ?? null,
-          caller_name: call.customer?.name ?? null,
-          caller_phone: call.customer?.number ?? '',
-        }).eq('vapi_call_id', call.id)
+          caller_phone: call.customer?.number || existing_phone || '',
+        }
+        // Only set caller_name if Vapi provides one — don't overwrite booking webhook's value with null
+        if (call.customer?.name) {
+          updatePayload.caller_name = call.customer.name
+        }
+        await getSupabase().from('calls').update(updatePayload).eq('vapi_call_id', call.id)
       } else {
         // No existing record — create from scratch
         const shop = await findShop(call.assistantId)
