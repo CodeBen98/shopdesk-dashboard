@@ -71,9 +71,23 @@ export async function POST(request: Request) {
       // Per Vapi docs: transcript is in msg.artifact.transcript for end-of-call-report
       const transcript = msg.artifact?.transcript ?? call.transcript ?? ''
       const reason = msg.endedReason ?? call.endedReason ?? ''
-      // durationSeconds is often null from Vapi — calculate from timestamps instead
-      const startedAt = call.startedAt ?? null
-      const endedAt = call.endedAt ?? null
+
+      // endedAt and durationSeconds are often null in webhook payload — fetch from Vapi API as fallback
+      let startedAt = call.startedAt ?? null
+      let endedAt = call.endedAt ?? null
+      const VAPI_KEY = process.env.VAPI_API_KEY ?? ''
+      if ((!endedAt || !call.durationSeconds) && VAPI_KEY) {
+        try {
+          const vapiRes = await fetch(`https://api.vapi.ai/call/${call.id}`, {
+            headers: { 'Authorization': `Bearer ${VAPI_KEY}` }
+          })
+          if (vapiRes.ok) {
+            const vapiCall = await vapiRes.json()
+            startedAt = vapiCall.startedAt ?? startedAt
+            endedAt = vapiCall.endedAt ?? endedAt
+          }
+        } catch { /* non-fatal */ }
+      }
       const calculatedDuration = (startedAt && endedAt)
         ? Math.round((new Date(endedAt).getTime() - new Date(startedAt).getTime()) / 1000)
         : 0
