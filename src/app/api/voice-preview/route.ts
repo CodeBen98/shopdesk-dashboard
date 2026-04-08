@@ -3,17 +3,17 @@ import { NextResponse } from 'next/server'
 const CARTESIA_API_KEY = process.env.CARTESIA_API_KEY!
 
 const VOICE_IDS: Record<string, string> = {
-  patricia: 'e5a6cd18-d552-4192-9533-82a08cac8f23',
-  james:    '42b39f37-515f-4eee-8546-73e841679c1d',
-  sofia:    'f6ce3444-478b-4ce4-982e-bcb72dffe7aa',
-  marcus:   '9301949d-b7cd-40d9-a246-5a4430992d6b',
+  cindy:      '1242fb95-7ddd-44ac-8a05-9e8a22a6137d',
+  jacqueline: '9626c31c-bec5-4cca-baa8-f8ba9e84c8bc',
+  james:      '42b39f37-515f-4eee-8546-73e841679c1d',
+  marcus:     '9301949d-b7cd-40d9-a246-5a4430992d6b',
 }
 
 const PREVIEW_TEXT: Record<string, string> = {
-  patricia: "Thank you for calling. This is Sarah. How can I help you today?",
-  james:    "Thank you for calling. This is James. How can I help you today?",
-  sofia:    "Thank you for calling! This is Emily. How can I help you today?",
-  marcus:   "Thank you for calling. This is Marcus. How can I help you today?",
+  cindy:      "Thank you for calling. This is Cindy. How can I help you today?",
+  jacqueline: "Thank you for calling. This is Jacqueline. How can I help you today?",
+  james:      "Thank you for calling. This is James. How can I help you today?",
+  marcus:     "Thank you for calling. This is Marcus. How can I help you today?",
 }
 
 export async function GET(request: Request) {
@@ -48,7 +48,7 @@ export async function GET(request: Request) {
   return new NextResponse(audioBuffer, {
     headers: {
       'Content-Type': 'audio/mpeg',
-      'Cache-Control': 'public, max-age=86400', // cache for 24h
+      'Cache-Control': 'public, max-age=86400',
     },
   })
 }
