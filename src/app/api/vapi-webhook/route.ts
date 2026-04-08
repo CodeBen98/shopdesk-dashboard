@@ -123,17 +123,18 @@ export async function POST(request: Request) {
         })
       }
 
-      // Backfill caller_name from booking if the call resulted in one
-      if (existing?.id) {
+      // Backfill caller_name from booking if available (booking links to call via call_id)
+      const callUuid = existing?.id
+      if (callUuid) {
         const { data: booking } = await getSupabase()
           .from('bookings')
           .select('customer_name')
-          .eq('call_id', existing.id)
+          .eq('call_id', callUuid)
           .single()
         if (booking?.customer_name) {
           await getSupabase().from('calls')
             .update({ caller_name: booking.customer_name })
-            .eq('id', existing.id)
+            .eq('id', callUuid)
         }
       }
 
