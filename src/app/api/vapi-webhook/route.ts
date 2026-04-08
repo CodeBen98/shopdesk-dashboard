@@ -140,10 +140,12 @@ export async function POST(request: Request) {
       // Backfill caller_name from most recent booking for this shop (within last 10 minutes)
       const callUuid = existing?.id
       const callerPhone = call.customer?.number ?? ''
+      console.log('[vapi-webhook] Backfill check - callUuid:', callUuid, 'assistantId:', call.assistantId)
       if (callUuid) {
         const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
         const shopForCall = await findShop(call.assistantId)
-        const { data: booking } = await getSupabase()
+        console.log('[vapi-webhook] Shop for backfill:', shopForCall?.id, 'tenMinAgo:', tenMinAgo)
+        const { data: booking, error: bookingErr } = await getSupabase()
           .from('bookings')
           .select('customer_name, id')
           .eq('shop_id', shopForCall?.id ?? '')
@@ -151,11 +153,13 @@ export async function POST(request: Request) {
           .order('created_at', { ascending: false })
           .limit(1)
           .single()
+        console.log('[vapi-webhook] Booking query result:', booking, 'error:', bookingErr)
         if (booking?.customer_name) {
           // Update call with customer name AND link booking to call
-          await getSupabase().from('calls')
+          const { error: callUpdateErr } = await getSupabase().from('calls')
             .update({ caller_name: booking.customer_name })
             .eq('id', callUuid)
+          console.log('[vapi-webhook] Call update result - name:', booking.customer_name, 'error:', callUpdateErr)
           await getSupabase().from('bookings')
             .update({ call_id: callUuid })
             .eq('id', booking.id)
