@@ -167,7 +167,7 @@ export default async function DashboardPage() {
             <div style={{
               fontSize: 30,
               fontWeight: 700,
-              color: stat.danger ? 'var(--danger)' : 'var(--text)',
+              color: 'var(--text)',
               fontFamily: 'var(--font-space)',
               lineHeight: 1,
               marginBottom: 6,
