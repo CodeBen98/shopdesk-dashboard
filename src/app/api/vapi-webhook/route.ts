@@ -115,6 +115,20 @@ export async function POST(request: Request) {
         })
       }
 
+      // Backfill caller_name from booking if the call resulted in one
+      if (existing?.id) {
+        const { data: booking } = await getSupabase()
+          .from('bookings')
+          .select('customer_name')
+          .eq('call_id', existing.id)
+          .single()
+        if (booking?.customer_name) {
+          await getSupabase().from('calls')
+            .update({ caller_name: booking.customer_name })
+            .eq('id', existing.id)
+        }
+      }
+
       return NextResponse.json({ received: true, type: 'end-of-call-report', outcome })
     }
 
