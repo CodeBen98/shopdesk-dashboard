@@ -137,8 +137,15 @@ export async function POST(request: Request) {
         })
       }
 
+      // Get the call UUID (either from existing or by querying after insert)
+      let callUuid = existing?.id
+      if (!callUuid) {
+        const { data: inserted } = await getSupabase()
+          .from('calls').select('id').eq('vapi_call_id', call.id).maybeSingle()
+        callUuid = inserted?.id
+      }
+
       // Backfill caller_name from most recent booking for this shop (within last 10 minutes)
-      const callUuid = existing?.id
       const callerPhone = call.customer?.number ?? ''
       console.log('[vapi-webhook] Backfill check - callUuid:', callUuid, 'assistantId:', call.assistantId)
       if (callUuid) {
