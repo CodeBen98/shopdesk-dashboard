@@ -37,7 +37,6 @@ function ResetPasswordForm() {
       })
     })
   }, [searchParams])
-  }, [searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
