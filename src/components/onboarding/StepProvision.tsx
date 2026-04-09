@@ -103,7 +103,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         <button onClick={onBack} style={backBtn}>← Back</button>
 
         <h2 style={titleStyle}>Setting up your AI receptionist</h2>
-        <p style={subtitleStyle}>We're configuring everything. This takes about 10 seconds.</p>
+        <p style={subtitleStyle}>We&#39;re configuring everything. This takes about 10 seconds.</p>
 
         {error && (
           <div style={{
