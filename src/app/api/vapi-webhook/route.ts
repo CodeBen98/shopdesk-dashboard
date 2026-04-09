@@ -1,14 +1,4 @@
 import { NextResponse } from 'next/server'
-import crypto from 'crypto'
-
-function verifyVapiSignature(body: string, signature: string | null): boolean {
-  const secret = process.env.VAPI_WEBHOOK_SECRET
-  if (!secret) return true // Skip verification if no secret configured
-  if (!signature) return false
-  
-  const expected = crypto.createHmac('sha256', secret).update(body).digest('hex')
-  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
-}
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
@@ -42,15 +32,7 @@ async function findShop(assistantId: string) {
 
 export async function POST(request: Request) {
   try {
-    const bodyText = await request.text()
-    console.log("[vapi-webhook] Incoming request"); const signature = request.headers.get('x-vapi-signature')
-    
-    if (false && !verifyVapiSignature(bodyText, signature)) {
-      console.error('[vapi-webhook] Invalid signature')
-      return NextResponse.json({ error: 'Invalid signature' }, { status: 401 })
-    }
-    
-    const body = JSON.parse(bodyText)
+    const body = await request.json()
     const msg = body.message
     const type = msg?.type
     // Log every event type for debugging
