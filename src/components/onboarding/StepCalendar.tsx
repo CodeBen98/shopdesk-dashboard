@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
@@ -8,22 +8,32 @@ export function StepCalendar({ shop, userId, onNext, onBack, onShopUpdate }: Ste
   const [skipping, setSkipping] = useState(false)
   const [saveError, setSaveError] = useState('')
   const [connected, setConnected] = useState(!!shop?.google_calendar_id)
+  const hasHandledCallback = useRef(false)
 
   // Check if returning from OAuth callback
   useEffect(() => {
+    if (hasHandledCallback.current) return
+    
     const params = new URLSearchParams(window.location.search)
     const calendarStatus = params.get('calendar')
+    
     if (calendarStatus === 'connected') {
-      setConnected(true)
-      // Clean up URL
+      hasHandledCallback.current = true
+      // Clean up URL first
       window.history.replaceState({}, '', window.location.pathname)
-      // Auto-advance after a brief moment
-      setTimeout(() => onNext(), 1500)
+      // Then update state after a microtask
+      queueMicrotask(() => {
+        setConnected(true)
+        setTimeout(() => onNext(), 1500)
+      })
     } else if (calendarStatus === 'error') {
-      setSaveError('Could not connect Google Calendar. You can skip and connect later from Settings.')
+      hasHandledCallback.current = true
       window.history.replaceState({}, '', window.location.pathname)
+      queueMicrotask(() => {
+        setSaveError('Could not connect Google Calendar. You can skip and connect later from Settings.')
+      })
     }
-  }, [])
+  }, [onNext])
 
   function handleConnect() {
     // Redirect to OAuth flow
