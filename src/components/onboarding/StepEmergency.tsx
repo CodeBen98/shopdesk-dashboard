@@ -7,15 +7,13 @@ import { StepProps } from './OnboardingWizard'
 export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [contactName, setContactName] = useState(shop?.emergency_contact_name ?? '')
   const [contactPhone, setContactPhone] = useState(shop?.emergency_contact ?? '')
-  const [smsConsent, setSmsConsent] = useState(shop?.sms_consent ?? false)
-  const [errors, setErrors] = useState<{ name?: string; phone?: string; sms?: string }>({})
+  const [errors, setErrors] = useState<{ name?: string; phone?: string }>({})
   const [loading, setLoading] = useState(false)
 
   async function handleSubmit() {
-    const errs: { name?: string; phone?: string; sms?: string } = {}
+    const errs: { name?: string; phone?: string } = {}
     if (!contactName.trim()) errs.name = 'Contact name is required'
     if (!contactPhone.trim()) errs.phone = 'Phone number is required'
-    if (!smsConsent) errs.sms = 'You must agree to receive SMS notifications to continue'
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
 
     setLoading(true)
@@ -23,10 +21,9 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
     await supabase.from('shops').update({
       emergency_contact_name: contactName.trim(),
       emergency_contact: contactPhone.trim(),
-      sms_consent: true,
       onboarding_step: 'calendar',
     }).eq('owner_id', userId)
-    onShopUpdate({ emergency_contact_name: contactName.trim(), emergency_contact: contactPhone.trim(), sms_consent: true })
+    onShopUpdate({ emergency_contact_name: contactName.trim(), emergency_contact: contactPhone.trim() })
     setLoading(false)
     onNext()
   }
@@ -36,13 +33,27 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
       <button onClick={onBack} style={backBtn}>← Back</button>
 
       <div style={{ marginBottom: 16 }}>
-        <div style={{ width: 48, height: 48, borderRadius: 12, background: 'var(--danger-dim)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
-        <svg width="22" height="22" viewBox="0 0 22 22" fill="none"><path d="M11 2L2 19h18L11 2z" stroke="var(--danger)" strokeWidth="1.5" strokeLinejoin="round"/><path d="M11 9v4M11 15.5v.5" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round"/></svg>
+        <div style={{
+          width: 48,
+          height: 48,
+          borderRadius: 12,
+          background: 'var(--danger-dim)',
+          border: '1px solid rgba(239,68,68,0.2)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          marginBottom: 4,
+        }}>
+          <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
+            <path d="M11 2L2 19h18L11 2z" stroke="var(--danger)" strokeWidth="1.5" strokeLinejoin="round"/>
+            <path d="M11 9v4M11 15.5v.5" stroke="var(--danger)" strokeWidth="1.5" strokeLinecap="round"/>
+          </svg>
+        </div>
       </div>
-      </div>
-      <h2 style={titleStyle}>Emergency contact</h2>
+
+      <h2 style={titleStyle}>Who handles urgent caller situations?</h2>
       <p style={subtitleStyle}>
-        Who gets alerted when a caller reports an emergency: overheating, brake failure, or stranded.
+        If a caller says their car is overheating, their brakes failed, or they're stranded — who should we text immediately so someone can help them?
       </p>
 
       <div style={fieldStyle}>
@@ -52,13 +63,13 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
           onChange={e => { setContactName(e.target.value); setErrors(p => ({ ...p, name: undefined })) }}
           className="step-input"
           style={errors.name ? { borderColor: 'var(--danger)' } : {}}
-          placeholder="e.g. Mike Johnson"
+          placeholder="e.g. Mike Johnson, On-call Tech"
           autoCapitalize="words"
         />
         {errors.name && <p style={errorStyle}>{errors.name}</p>}
       </div>
 
-      <div style={{ ...fieldStyle, marginBottom: 28 }}>
+      <div style={{ ...fieldStyle, marginBottom: 8 }}>
         <label style={labelStyle}>Phone Number *</label>
         <div style={{ display: 'flex', border: `1px solid ${errors.phone ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8, overflow: 'hidden', background: 'var(--card)' }}>
           <div style={{ padding: '10px 12px', borderRight: '1px solid var(--border)', fontSize: 14, color: 'var(--text-mid)', background: 'var(--card-raised)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
@@ -75,43 +86,16 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
         {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
       </div>
 
-      <div style={{ marginBottom: 28 }}>
-        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
-          <div
-            onClick={() => { setSmsConsent(v => !v); setErrors(p => ({ ...p, sms: undefined })) }}
-            style={{
-              width: 18,
-              height: 18,
-              borderRadius: 4,
-              border: `2px solid ${errors.sms ? 'var(--danger)' : smsConsent ? 'var(--accent)' : 'var(--border)'}`,
-              background: smsConsent ? 'var(--accent)' : 'var(--card)',
-              flexShrink: 0,
-              marginTop: 2,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'background 0.15s, border-color 0.15s',
-            }}
-          >
-            {smsConsent && (
-              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
-                <path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-              </svg>
-            )}
-          </div>
-          <span style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.6 }}>
-            I agree to receive SMS booking alerts and emergency notifications from ShopDesk.{' '}
-            Msg &amp; data rates may apply. Reply STOP to opt out at any time.{' '}
-            <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
-              View our SMS Consent Policy
-            </a>
-          </span>
-        </label>
-        {errors.sms && <p style={{ ...errorStyle, marginTop: 8 }}>{errors.sms}</p>}
-      </div>
+      <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 28 }}>
+        This is only used when a caller reports a breakdown or emergency. For everyday booking alerts, we use the mobile number you gave us in the previous step.
+      </p>
 
-      <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}>
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="step-btn-primary"
+        style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}
+      >
         {loading ? 'Saving...' : 'Continue →'}
       </button>
     </div>

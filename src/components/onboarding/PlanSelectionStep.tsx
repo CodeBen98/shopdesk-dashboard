@@ -81,7 +81,7 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
         is_founding_member: true,
         trial_started_at: now.toISOString(),
         trial_ends_at: trialEnds.toISOString(),
-        onboarding_step: 'shop_info',
+        onboarding_step: 'welcome',
       })
       .eq('owner_id', userId)
 
@@ -107,7 +107,7 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
       <div style={banner}>
         <span style={{ fontSize: 16 }}>🔒</span>
         <span style={bannerText}>
-          <strong>Founding Member Pricing — Limited Spots</strong> — Lock in these rates forever. Prices increase when early access ends.
+          <strong>Founding Member Pricing, Limited Spots.</strong> Lock in these rates forever. Prices increase when early access ends.
         </span>
       </div>
 

@@ -5,10 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const STAGES = [
-  'Building your shop profile...',
-  'Configuring AI voice...',
-  'Setting up phone routing...',
-  'Almost ready...',
+  'Creating your AI receptionist...',
+  'Teaching it your shop\'s name and hours...',
+  'Setting up your dedicated phone number...',
+  'Almost done — final checks...',
 ]
 
 export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProps) {
@@ -103,7 +103,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         <button onClick={onBack} style={backBtn}>← Back</button>
 
         <h2 style={titleStyle}>Setting up your AI receptionist</h2>
-        <p style={subtitleStyle}>We&#39;re configuring everything. This takes about 10 seconds.</p>
+        <p style={subtitleStyle}>This takes about 30 seconds.</p>
 
         {error && (
           <div style={{

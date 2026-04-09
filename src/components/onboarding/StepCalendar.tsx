@@ -91,8 +91,8 @@ export function StepCalendar({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       </h2>
       <p style={{ ...subtitleStyle, textAlign: 'center' }}>
         {connected
-          ? 'Appointments will be booked directly into your Google Calendar.'
-          : 'Let your AI book appointments directly into your calendar. No double-booking, ever.'
+          ? 'Every booking automatically appears in your schedule. No more manual entry.'
+          : 'Connect your Google Calendar so bookings go straight into your schedule. You can skip this and connect later in Settings.'
         }
       </p>
 

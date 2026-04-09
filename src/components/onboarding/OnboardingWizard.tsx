@@ -3,11 +3,13 @@
 import { useState } from 'react'
 import { Shop, OnboardingStep } from '@/types'
 import { ProgressBar } from './ProgressBar'
+import { WelcomeStep } from './WelcomeStep'
 import { StepShopInfo } from './StepShopInfo'
 import { StepAutoFillChoice } from './StepAutoFillChoice'
 import { StepAutoFillReview } from './StepAutoFillReview'
 import { StepHours } from './StepHours'
 import { StepServices } from './StepServices'
+import { StepNotifications } from './StepNotifications'
 import { StepEmergency } from './StepEmergency'
 import { StepCalendar } from './StepCalendar'
 import { StepVoice } from './StepVoice'
@@ -18,14 +20,15 @@ import { StepGoLive } from './StepGoLive'
 import { PlanSelectionStep } from './PlanSelectionStep'
 
 const STEPS: OnboardingStep[] = [
-  'plan_selection', 'shop_info', 'auto_fill_choice', 'auto_fill_review', 'hours', 'services', 'emergency',
+  'plan_selection', 'welcome', 'shop_info', 'auto_fill_choice', 'auto_fill_review',
+  'hours', 'services', 'notifications', 'emergency',
   'calendar', 'voice', 'provision', 'forwarding', 'test_call', 'go_live',
 ]
 
-// Steps that count toward the visible progress
+// Steps that count toward the visible progress bar
 const DISPLAY_STEPS: OnboardingStep[] = [
-  'plan_selection', 'shop_info', 'hours', 'services', 'emergency', 'calendar',
-  'voice', 'provision', 'forwarding', 'test_call', 'go_live',
+  'plan_selection', 'welcome', 'shop_info', 'hours', 'services', 'notifications', 'emergency',
+  'calendar', 'voice', 'provision', 'forwarding', 'test_call', 'go_live',
 ]
 
 export interface StepProps {
@@ -50,7 +53,7 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
   const stepIndex = STEPS.indexOf(currentStep)
   const displayStepIndex = DISPLAY_STEPS.indexOf(currentStep)
   // For steps not in DISPLAY_STEPS (auto_fill_choice, auto_fill_review), show the
-  // same number as the nearest preceding display step (shop_info = 1)
+  // same number as the nearest preceding display step
   const displayStep = displayStepIndex >= 0 ? displayStepIndex + 1 : (() => {
     for (let i = stepIndex - 1; i >= 0; i--) {
       const idx = DISPLAY_STEPS.indexOf(STEPS[i])
@@ -85,14 +88,16 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <ProgressBar currentStep={displayStep} totalSteps={11} />
+      <ProgressBar currentStep={displayStep} totalSteps={13} />
       <div style={{ padding: '40px 16px' }}>
         {currentStep === 'plan_selection' && <PlanSelectionStep {...commonProps} />}
+        {currentStep === 'welcome' && <WelcomeStep {...commonProps} />}
         {currentStep === 'shop_info' && <StepShopInfo {...commonProps} />}
         {currentStep === 'auto_fill_choice' && <StepAutoFillChoice {...commonProps} />}
         {currentStep === 'auto_fill_review' && <StepAutoFillReview {...commonProps} />}
         {currentStep === 'hours' && <StepHours {...commonProps} />}
         {currentStep === 'services' && <StepServices {...commonProps} />}
+        {currentStep === 'notifications' && <StepNotifications {...commonProps} />}
         {currentStep === 'emergency' && <StepEmergency {...commonProps} />}
         {currentStep === 'calendar' && <StepCalendar {...commonProps} />}
         {currentStep === 'voice' && <StepVoice {...commonProps} />}

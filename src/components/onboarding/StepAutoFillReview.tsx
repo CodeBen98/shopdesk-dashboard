@@ -55,8 +55,8 @@ export function StepAutoFillReview({ shop, onBack, onSkipTo }: StepProps) {
     <div style={card}>
       <button onClick={onBack} style={backBtn}>← Back</button>
 
-      <h2 style={titleStyle}>Here is what we found</h2>
-      <p style={subtitleStyle}>Review the info below. You can edit anything on the next steps.</p>
+      <h2 style={titleStyle}>Review your shop info</h2>
+      <p style={subtitleStyle}>We found this online. Fix anything that's wrong before your AI learns it.</p>
 
       <div style={infoList}>
         <InfoRow label="Shop name" value={shop?.name} />
@@ -67,6 +67,10 @@ export function StepAutoFillReview({ shop, onBack, onSkipTo }: StepProps) {
           <InfoRow label="Website" value={String((shop as Record<string, unknown>).website)} />
         ) : null}
       </div>
+
+      <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 20 }}>
+        You can always update this later in Settings.
+      </p>
 
       <button onClick={advance} className="step-btn-primary" style={{ marginTop: 0 }}>
         Looks good, continue →

@@ -8,6 +8,9 @@ const DEMO_NUMBER = '(407) 555-0123'
 
 export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
   const displayNumber = shop?.twilio_number ?? DEMO_NUMBER
+  // Strip to digits only for use in dial codes
+  const rawDigits = displayNumber.replace(/\D/g, '')
+
   const [confirmed, setConfirmed] = useState(false)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -30,13 +33,40 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
     onNext()
   }
 
+  const carriers = [
+    {
+      name: 'AT&T',
+      code: `*72${rawDigits}`,
+      example: `*72+${rawDigits} then press Call`,
+      note: null,
+    },
+    {
+      name: 'Verizon',
+      code: `*71${rawDigits}`,
+      example: null,
+      note: null,
+    },
+    {
+      name: 'T-Mobile',
+      code: `**67*${rawDigits}#`,
+      example: null,
+      note: null,
+    },
+    {
+      name: 'Other / Landline',
+      code: null,
+      example: null,
+      note: 'Call your carrier or go to your phone settings → Forward Unanswered Calls → enter your ShopDesk number.',
+    },
+  ]
+
   return (
     <div style={card}>
       <button onClick={onBack} style={backBtn}>← Back</button>
 
-      <h2 style={titleStyle}>Set up call forwarding</h2>
+      <h2 style={titleStyle}>Forward your shop's calls to ShopDesk</h2>
       <p style={subtitleStyle}>
-        Forward unanswered calls from your shop number to your dedicated ShopDesk number below.
+        When your shop phone rings and you don't answer, ShopDesk picks up. Here's how to set that up:
       </p>
 
       {/* Phone number display */}
@@ -44,7 +74,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
         background: 'var(--card)',
         border: '2px solid var(--accent)',
         borderRadius: 12,
-        padding: '24px',
+        padding: '20px 24px',
         textAlign: 'center',
         marginBottom: 28,
       }}>
@@ -52,11 +82,11 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
           Your dedicated ShopDesk number
         </p>
         <p style={{
-          fontSize: 32,
+          fontSize: 30,
           fontWeight: 800,
           color: 'var(--accent)',
           letterSpacing: '0.03em',
-          marginBottom: 16,
+          marginBottom: 14,
           fontFamily: 'monospace',
         }}>
           {displayNumber}
@@ -80,19 +110,56 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
         </button>
       </div>
 
+      {/* Carrier cards */}
       <div style={{ marginBottom: 24 }}>
         <p style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 12 }}>
-          How to set it up
+          Quick setup by carrier — takes 30 seconds:
         </p>
-        <ol style={{ margin: 0, paddingLeft: 20, lineHeight: 2, fontSize: 14, color: 'var(--text-mid)' }}>
-          <li>Go to your phone carrier&apos;s settings (or call them)</li>
-          <li>Enable <strong style={{ color: 'var(--text)' }}>&quot;Forward unanswered calls&quot;</strong></li>
-          <li>Enter the number above as the forwarding destination</li>
-          <li>Test it by calling your shop number and not answering</li>
-        </ol>
+        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+          {carriers.map(carrier => (
+            <div key={carrier.name} style={{
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: 10,
+              padding: '14px 16px',
+            }}>
+              <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text)', marginBottom: 8 }}>
+                {carrier.name}
+              </div>
+              {carrier.code ? (
+                <>
+                  <div style={{
+                    fontFamily: 'monospace',
+                    fontSize: 13,
+                    color: 'var(--accent)',
+                    fontWeight: 600,
+                    background: 'var(--accent-dim)',
+                    border: '1px solid rgba(15,118,149,0.2)',
+                    borderRadius: 6,
+                    padding: '6px 10px',
+                    marginBottom: carrier.example ? 6 : 0,
+                    wordBreak: 'break-all',
+                  }}>
+                    Dial: {carrier.code}
+                  </div>
+                  {carrier.example && (
+                    <div style={{ fontSize: 11, color: 'var(--muted)', lineHeight: 1.5 }}>
+                      Example: {carrier.example}
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6 }}>
+                  {carrier.note}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
       </div>
 
-      <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 24, cursor: 'pointer' }}>
+      {/* Confirmation checkbox */}
+      <label style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16, cursor: 'pointer' }}>
         <input
           type="checkbox"
           checked={confirmed}
@@ -103,6 +170,10 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
           I have set up call forwarding
         </span>
       </label>
+
+      <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 24, lineHeight: 1.5 }}>
+        You can always change this later. Call forwarding works on any smartphone.
+      </p>
 
       <button
         onClick={handleNext}
@@ -121,7 +192,7 @@ const card: React.CSSProperties = {
   border: '1px solid var(--border)',
   borderRadius: 16,
   padding: '40px 48px',
-  maxWidth: 560,
+  maxWidth: 580,
   margin: '0 auto',
   boxShadow: '0 4px 24px rgba(0,0,0,0.3)',
   animation: 'card-enter 0.35s ease',

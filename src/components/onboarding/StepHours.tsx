@@ -169,6 +169,20 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
       <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}>
         {loading ? 'Saving...' : 'Continue →'}
       </button>
+      <div style={{ textAlign: 'center', marginTop: 12 }}>
+        <button
+          onClick={async () => {
+            setLoading(true)
+            const supabase = (await import('@/lib/supabase/client')).createClient()
+            await supabase.from('shops').update({ onboarding_step: 'services' }).eq('owner_id', userId)
+            setLoading(false)
+            onNext()
+          }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 13, fontFamily: 'inherit', textDecoration: 'underline' }}
+        >
+          Skip for now, set later in Settings →
+        </button>
+      </div>
     </div>
   )
 }

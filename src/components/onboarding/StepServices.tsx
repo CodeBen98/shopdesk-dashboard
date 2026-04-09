@@ -7,7 +7,8 @@ import { StepProps } from './OnboardingWizard'
 
 const SUGGESTIONS = [
   'Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Diagnostics',
-  'AC Repair', 'Transmission Service', 'Alignment', 'Battery Replacement',
+  'AC Service', 'Transmission', 'Battery Replacement', 'Wheel Alignment',
+  'Suspension', 'Exhaust',
 ]
 
 function emptyService(): Service {
@@ -73,7 +74,7 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     const supabase = createClient()
     const { error: saveErr } = await supabase.from('shops').update({
       services: cleaned,
-      onboarding_step: 'emergency',
+      onboarding_step: 'notifications',
     }).eq('owner_id', userId)
     if (saveErr) {
       setSaveError('Failed to save. Please try again.')
@@ -94,7 +95,7 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
 
       <div style={{ marginBottom: 16 }}>
         <p style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>
-          Quick add:
+          Quick-add common services:
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
           {SUGGESTIONS.map(s => {
@@ -216,6 +217,20 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}>
         {loading ? 'Saving...' : 'Continue →'}
       </button>
+      <div style={{ textAlign: 'center', marginTop: 12 }}>
+        <button
+          onClick={async () => {
+            setLoading(true)
+            const supabase = (await import('@/lib/supabase/client')).createClient()
+            await supabase.from('shops').update({ onboarding_step: 'notifications' }).eq('owner_id', userId)
+            setLoading(false)
+            onNext()
+          }}
+          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--muted)', fontSize: 13, fontFamily: 'inherit', textDecoration: 'underline' }}
+        >
+          Skip for now, set later in Settings →
+        </button>
+      </div>
     </div>
   )
 }

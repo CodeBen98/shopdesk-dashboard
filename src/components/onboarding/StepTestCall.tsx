@@ -72,7 +72,7 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
         }}>
           <p style={{ fontSize: 14, color: 'var(--warning)', margin: 0 }}>
             Email us at{' '}
-            <strong>support@shopdesk.ai</strong>
+            <strong>support@shopdesk.site</strong>
             {' '}and we will sort it out within the hour.
           </p>
         </div>

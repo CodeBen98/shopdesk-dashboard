@@ -22,6 +22,8 @@ export type Shop = {
   onboarding_complete: boolean
   onboarding_step: OnboardingStep
   sms_consent: boolean
+  owner_phone: string | null
+  owner_phone_sms_consent: boolean
   created_at: string
 }
 
@@ -102,11 +104,13 @@ export type JobStatus = {
 
 export type OnboardingStep =
   | 'plan_selection'
+  | 'welcome'
   | 'shop_info'
   | 'auto_fill_choice'
   | 'auto_fill_review'
   | 'hours'
   | 'services'
+  | 'notifications'
   | 'emergency'
   | 'calendar'
   | 'voice'

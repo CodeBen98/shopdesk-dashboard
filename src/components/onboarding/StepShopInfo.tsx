@@ -16,17 +16,24 @@ const VEHICLE_OPTIONS = [
 
 export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShopUpdate }: StepProps) {
   const [name, setName] = useState(shop?.name ?? '')
-  const [ownerName, setOwnerName] = useState('')
-  const [address, setAddress] = useState(shop?.address ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
+  const [address, setAddress] = useState(shop?.address ?? '')
+  const [ownerName, setOwnerName] = useState('')
+  const [ownerPhone, setOwnerPhone] = useState(shop?.owner_phone ?? '')
+  const [ownerSmsConsent, setOwnerSmsConsent] = useState(shop?.owner_phone_sms_consent ?? false)
   const [email, setEmail] = useState(shop?.email ?? '')
   const [vehicleTypes, setVehicleTypes] = useState<string[]>([])
-  const [nameError, setNameError] = useState('')
-  const [ownerNameError, setOwnerNameError] = useState('')
-  const [addressError, setAddressError] = useState('')
-  const [phoneError, setPhoneError] = useState('')
-  const [emailError, setEmailError] = useState('')
-  const [vehicleTypesError, setVehicleTypesError] = useState('')
+
+  const [errors, setErrors] = useState<{
+    name?: string
+    phone?: string
+    address?: string
+    ownerName?: string
+    ownerPhone?: string
+    ownerSmsConsent?: string
+    email?: string
+    vehicleTypes?: string
+  }>({})
   const [saveError, setSaveError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -34,22 +41,27 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
     setVehicleTypes(prev =>
       prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
     )
-    setVehicleTypesError('')
+    setErrors(p => ({ ...p, vehicleTypes: undefined }))
   }
 
   async function handleSubmit() {
-    let valid = true
-    if (!name.trim()) { setNameError('Shop name is required'); valid = false }
-    if (!ownerName.trim()) { setOwnerNameError('Owner name is required'); valid = false }
-    if (!address.trim()) { setAddressError('Address is required'); valid = false }
-    const digits = phone.replace(/\D/g, '')
-    if (!phone.trim()) { setPhoneError('Phone number is required'); valid = false }
-    else if (digits.length < 10) { setPhoneError('Please enter a valid phone number'); valid = false }
+    const errs: typeof errors = {}
+    if (!name.trim()) errs.name = 'Shop name is required'
+    const phoneDigits = phone.replace(/\D/g, '')
+    if (!phone.trim()) errs.phone = 'Business phone is required'
+    else if (phoneDigits.length < 10) errs.phone = 'Please enter a valid phone number'
+    if (!address.trim()) errs.address = 'Address is required'
+    if (!ownerName.trim()) errs.ownerName = 'Owner name is required'
+    const ownerPhoneDigits = ownerPhone.replace(/\D/g, '')
+    if (!ownerPhone.trim()) errs.ownerPhone = 'Owner mobile is required'
+    else if (ownerPhoneDigits.length < 10) errs.ownerPhone = 'Please enter a valid mobile number'
+    if (!ownerSmsConsent) errs.ownerSmsConsent = 'You must agree to receive SMS alerts to continue'
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setEmailError('Please enter a valid email address'); valid = false
+      errs.email = 'Please enter a valid email address'
     }
-    if (vehicleTypes.length === 0) { setVehicleTypesError('Please select at least one vehicle type'); valid = false }
-    if (!valid) return
+    if (vehicleTypes.length === 0) errs.vehicleTypes = 'Please select at least one vehicle type'
+
+    if (Object.keys(errs).length > 0) { setErrors(errs); return }
 
     setLoading(true)
     setSaveError('')
@@ -60,6 +72,9 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
       address: address.trim(),
       phone: phone.trim(),
       email: email.trim() || null,
+      owner_phone: ownerPhone.trim(),
+      owner_phone_sms_consent: true,
+      sms_consent: true,
       onboarding_step: 'auto_fill_choice',
     }
     if (!shop?.emergency_contact_name) {
@@ -78,11 +93,14 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
       ownerName: ownerName.trim(),
     }))
 
-    const shopUpdate: Partial<typeof shop> = {
+    const shopUpdate: Record<string, unknown> = {
       name: name.trim(),
       address: address.trim(),
       phone: phone.trim(),
       email: email.trim() || null,
+      owner_phone: ownerPhone.trim(),
+      owner_phone_sms_consent: true,
+      sms_consent: true,
     }
     if (!shop?.emergency_contact_name) {
       shopUpdate.emergency_contact_name = ownerName.trim()
@@ -94,164 +112,202 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
 
   return (
     <div style={card}>
-      {/* Welcome header */}
-      <div style={{ textAlign: 'center', marginBottom: 28 }}>
-        <div style={{
-          display: 'inline-flex',
-          alignItems: 'center',
-          gap: 6,
-          background: 'var(--accent-dim)',
-          border: '1px solid rgba(15,118,149,0.3)',
-          borderRadius: 9999,
-          padding: '3px 10px',
-          marginBottom: 16,
-        }}>
-          <span style={{ color: 'var(--accent)', fontSize: 10, fontWeight: 600, letterSpacing: '0.04em' }}>Welcome to ShopDesk</span>
-        </div>
-        <h1 style={{
-          fontFamily: 'var(--font-space)',
-          fontSize: 28,
-          fontWeight: 800,
-          color: 'var(--text)',
-          marginBottom: 10,
-          lineHeight: 1.2,
-        }}>
-          Set up your AI receptionist
-        </h1>
-        <p style={{ fontSize: 15, color: 'var(--muted)', lineHeight: 1.6, maxWidth: 440, margin: '0 auto', marginBottom: 32 }}>
-          Takes less than 5 minutes. Your AI will be answering calls today.
-        </p>
+      <h2 style={title}>Tell us about your shop</h2>
+      <p style={subtitle}>Your AI uses this to introduce your business on every call.</p>
+
+      {/* Shop Name */}
+      <div style={field}>
+        <label style={labelStyle}>Shop Name *</label>
+        <input
+          value={name}
+          onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: undefined })) }}
+          className="step-input"
+          style={errors.name ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
+          placeholder="e.g. Mike's Auto Repair"
+        />
+        {errors.name && <p style={errorStyle}>{errors.name}</p>}
       </div>
 
-        <h2 style={title}>Tell us about your shop</h2>
-        <p style={subtitle}>This helps your AI receptionist introduce your business correctly.</p>
-
-        {/* Shop Name + Phone side by side */}
-        <div className="form-grid-2" style={{ marginBottom: 20 }}>
-          <div>
-            <label style={labelStyle}>Shop Name *</label>
-            <input
-              value={name}
-              onChange={e => { setName(e.target.value); setNameError('') }}
-              className="step-input"
-              style={nameError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-              placeholder="e.g. Mike's Auto Repair"
-            />
-            {nameError && <p style={errorStyle}>{nameError}</p>}
+      {/* Business Phone */}
+      <div style={field}>
+        <label style={labelStyle}>Business Phone *</label>
+        <div style={{ display: 'flex', border: `1px solid ${errors.phone ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8, overflow: 'hidden', background: 'var(--card)' }}>
+          <div style={{ padding: '10px 12px', borderRight: '1px solid var(--border)', fontSize: 14, color: 'var(--text-mid)', background: 'var(--card-raised)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+            🇺🇸 +1
           </div>
-          <div>
-            <label style={labelStyle}>Phone Number *</label>
-            <div style={{ display: 'flex', border: `1px solid ${phoneError ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8, overflow: 'hidden', background: 'var(--card)' }}>
-              <div style={{ padding: '10px 12px', borderRight: '1px solid var(--border)', fontSize: 14, color: 'var(--text-mid)', background: 'var(--card-raised)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
-                🇺🇸 +1
-              </div>
-              <input
-                value={phone}
-                onChange={e => { setPhone(e.target.value); setPhoneError('') }}
-                style={{ border: 'none', background: 'transparent', flex: 1, padding: '10px 14px', color: 'var(--text)', outline: 'none', fontSize: 14, fontFamily: 'inherit' }}
-                placeholder="(407) 555-1234"
-              />
-            </div>
-            {phoneError && <p style={errorStyle}>{phoneError}</p>}
-          </div>
-        </div>
-
-        <div style={field}>
-          <label style={labelStyle}>Address *</label>
           <input
-            value={address}
-            onChange={e => { setAddress(e.target.value); setAddressError('') }}
-            className="step-input"
-            style={addressError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-            placeholder="Street address, City, State ZIP"
-            autoComplete="street-address"
-            data-1p-ignore
+            value={phone}
+            onChange={e => { setPhone(e.target.value); setErrors(p => ({ ...p, phone: undefined })) }}
+            style={{ border: 'none', background: 'transparent', flex: 1, padding: '10px 14px', color: 'var(--text)', outline: 'none', fontSize: 14, fontFamily: 'inherit' }}
+            placeholder="(407) 555-1234"
+            type="tel"
           />
-          {addressError && <p style={errorStyle}>{addressError}</p>}
         </div>
+        <p style={helperStyle}>This is your shop's main number — the one customers call.</p>
+        {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
+      </div>
 
-        {/* Owner Name + Email side by side */}
-        <div className="form-grid-2" style={{ marginBottom: 20 }}>
-          <div>
-            <label style={labelStyle}>Owner / Manager Name *</label>
-            <input
-              value={ownerName}
-              onChange={e => { setOwnerName(e.target.value); setOwnerNameError('') }}
-              className="step-input"
-              style={ownerNameError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-              placeholder="e.g. Bill, Mike, Sarah"
-            />
-            {ownerNameError && <p style={errorStyle}>{ownerNameError}</p>}
+      {/* Address */}
+      <div style={field}>
+        <label style={labelStyle}>Address *</label>
+        <input
+          value={address}
+          onChange={e => { setAddress(e.target.value); setErrors(p => ({ ...p, address: undefined })) }}
+          className="step-input"
+          style={errors.address ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
+          placeholder="Street address, City, State ZIP"
+          autoComplete="street-address"
+          data-1p-ignore
+        />
+        {errors.address && <p style={errorStyle}>{errors.address}</p>}
+      </div>
+
+      {/* Owner / Manager Name */}
+      <div style={field}>
+        <label style={labelStyle}>Owner / Manager Name *</label>
+        <input
+          value={ownerName}
+          onChange={e => { setOwnerName(e.target.value); setErrors(p => ({ ...p, ownerName: undefined })) }}
+          className="step-input"
+          style={errors.ownerName ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
+          placeholder="e.g. Bill, Mike, Sarah"
+          autoCapitalize="words"
+        />
+        <p style={helperStyle}>Your AI will mention this when appropriate.</p>
+        {errors.ownerName && <p style={errorStyle}>{errors.ownerName}</p>}
+      </div>
+
+      {/* Owner Mobile */}
+      <div style={field}>
+        <label style={labelStyle}>Owner Mobile *</label>
+        <div style={{ display: 'flex', border: `1px solid ${errors.ownerPhone ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8, overflow: 'hidden', background: 'var(--card)' }}>
+          <div style={{ padding: '10px 12px', borderRight: '1px solid var(--border)', fontSize: 14, color: 'var(--text-mid)', background: 'var(--card-raised)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
+            🇺🇸 +1
           </div>
-          <div>
-            <label style={labelStyle}>Email</label>
-            <input
-              value={email}
-              onChange={e => { setEmail(e.target.value); setEmailError('') }}
-              className="step-input"
-              style={emailError ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-              placeholder="shop@example.com"
-              type="email"
-            />
-            {emailError && <p style={errorStyle}>{emailError}</p>}
-          </div>
+          <input
+            value={ownerPhone}
+            onChange={e => { setOwnerPhone(e.target.value); setErrors(p => ({ ...p, ownerPhone: undefined })) }}
+            style={{ border: 'none', background: 'transparent', flex: 1, padding: '10px 14px', color: 'var(--text)', outline: 'none', fontSize: 14, fontFamily: 'inherit' }}
+            placeholder="(407) 555-1234"
+            type="tel"
+          />
         </div>
+        <p style={helperStyle}>We text you here when someone books. Different from your shop number.</p>
+        {errors.ownerPhone && <p style={errorStyle}>{errors.ownerPhone}</p>}
+      </div>
 
-        <div style={{ ...field, marginBottom: 28 }}>
-          <label style={labelStyle}>What vehicles do you work on? *</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-            {VEHICLE_OPTIONS.map(type => {
-              const selected = vehicleTypes.includes(type)
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggleVehicleType(type)}
-                  style={{
-                    position: 'relative',
-                    padding: '6px 14px',
-                    borderRadius: 9999,
-                    border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
-                    background: selected ? 'var(--accent-dim)' : 'var(--card)',
-                    color: selected ? 'var(--accent)' : 'var(--text-mid)',
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    fontWeight: selected ? 600 : 400,
-                    transition: 'border-color 0.15s, background 0.15s',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  {selected && (
-                    <span style={{
-                      position: 'absolute',
-                      top: -5,
-                      right: -5,
-                      width: 16,
-                      height: 16,
-                      borderRadius: '50%',
-                      background: 'var(--accent)',
-                      color: '#fff',
-                      fontSize: 9,
-                      fontWeight: 700,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      lineHeight: 1,
-                    }}>✓</span>
-                  )}
-                  {type}
-                </button>
-              )
-            })}
+      {/* SMS Opt-in */}
+      <div style={{ marginBottom: 24 }}>
+        <label style={{ display: 'flex', alignItems: 'flex-start', gap: 12, cursor: 'pointer' }}>
+          <div
+            onClick={() => { setOwnerSmsConsent(v => !v); setErrors(p => ({ ...p, ownerSmsConsent: undefined })) }}
+            style={{
+              width: 18,
+              height: 18,
+              borderRadius: 4,
+              border: `2px solid ${errors.ownerSmsConsent ? 'var(--danger)' : ownerSmsConsent ? 'var(--accent)' : 'var(--border)'}`,
+              background: ownerSmsConsent ? 'var(--accent)' : 'var(--card)',
+              flexShrink: 0,
+              marginTop: 2,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              transition: 'background 0.15s, border-color 0.15s',
+            }}
+          >
+            {ownerSmsConsent && (
+              <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                <path d="M1 4L3.5 6.5L9 1" stroke="#fff" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            )}
           </div>
-          {vehicleTypesError && <p style={errorStyle}>{vehicleTypesError}</p>}
+          <span style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.6 }}>
+            I agree to receive SMS booking alerts and notifications at this number. Msg &amp; data rates may apply. Reply STOP to opt out.{' '}
+            <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
+              View SMS Policy
+            </a>
+          </span>
+        </label>
+        {errors.ownerSmsConsent && <p style={{ ...errorStyle, marginTop: 8 }}>{errors.ownerSmsConsent}</p>}
+      </div>
+
+      {/* Email */}
+      <div style={field}>
+        <label style={labelStyle}>Email</label>
+        <input
+          value={email}
+          onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: undefined })) }}
+          className="step-input"
+          style={errors.email ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
+          placeholder="shop@example.com"
+          type="email"
+        />
+        <p style={helperStyle}>For booking confirmations and account updates.</p>
+        {errors.email && <p style={errorStyle}>{errors.email}</p>}
+      </div>
+
+      {/* Vehicle Types */}
+      <div style={{ ...field, marginBottom: 28 }}>
+        <label style={labelStyle}>What vehicles do you work on? *</label>
+        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+          {VEHICLE_OPTIONS.map(type => {
+            const selected = vehicleTypes.includes(type)
+            return (
+              <button
+                key={type}
+                type="button"
+                onClick={() => toggleVehicleType(type)}
+                style={{
+                  position: 'relative',
+                  padding: '6px 14px',
+                  borderRadius: 9999,
+                  border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                  background: selected ? 'var(--accent-dim)' : 'var(--card)',
+                  color: selected ? 'var(--accent)' : 'var(--text-mid)',
+                  fontSize: 13,
+                  cursor: 'pointer',
+                  fontWeight: selected ? 600 : 400,
+                  transition: 'border-color 0.15s, background 0.15s',
+                  fontFamily: 'inherit',
+                }}
+              >
+                {selected && (
+                  <span style={{
+                    position: 'absolute',
+                    top: -5,
+                    right: -5,
+                    width: 16,
+                    height: 16,
+                    borderRadius: '50%',
+                    background: 'var(--accent)',
+                    color: '#fff',
+                    fontSize: 9,
+                    fontWeight: 700,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    lineHeight: 1,
+                  }}>✓</span>
+                )}
+                {type}
+              </button>
+            )
+          })}
         </div>
+        {errors.vehicleTypes && <p style={errorStyle}>{errors.vehicleTypes}</p>}
+      </div>
 
-        {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
+      {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
 
-        <button onClick={handleSubmit} disabled={loading} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}>
-          {loading ? 'Saving...' : 'Continue →'}
-        </button>
+      <button
+        onClick={handleSubmit}
+        disabled={loading}
+        className="step-btn-primary"
+        style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto', marginTop: 8 }}
+      >
+        {loading ? 'Saving...' : 'Continue →'}
+      </button>
     </div>
   )
 }
@@ -288,5 +344,11 @@ const labelStyle: React.CSSProperties = {
   letterSpacing: '0.06em',
   color: 'var(--muted)',
   marginBottom: 8,
+}
+const helperStyle: React.CSSProperties = {
+  fontSize: 12,
+  color: 'var(--muted)',
+  marginTop: 6,
+  lineHeight: 1.5,
 }
 const errorStyle: React.CSSProperties = { fontSize: 12, color: 'var(--danger)', marginTop: 4 }
