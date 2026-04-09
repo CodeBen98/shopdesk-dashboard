@@ -3,6 +3,9 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import type { Call, Booking } from '@/types'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = { title: 'Overview | ShopDesk' }
 
 function OutcomeBadge({ outcome }: { outcome: string }) {
   const styles: Record<string, { bg: string; color: string; label: string }> = {
@@ -29,9 +32,16 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
   )
 }
 
-// formatDuration imported from @/lib/utils
-
-// formatDateTime imported from @/lib/utils
+function timeAgo(dateStr: string): string {
+  const diffMs = Date.now() - new Date(dateStr).getTime()
+  const diffMins = Math.floor(diffMs / 60000)
+  if (diffMins < 60) return 'just now'
+  const diffHours = Math.floor(diffMins / 60)
+  if (diffHours === 1) return '1 hour ago'
+  if (diffHours < 24) return `${diffHours} hours ago`
+  const diffDays = Math.floor(diffHours / 24)
+  return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`
+}
 
 export default async function DashboardPage() {
   const supabase = await createClient()
@@ -45,7 +55,6 @@ export default async function DashboardPage() {
     .single()
 
   if (!shop) {
-    // Trigger failed — create shop row and send to onboarding
     await supabase.from('shops').insert({ owner_id: user.id, name: '', hours: {
       monday:    { open: true,  from: '09:00', to: '17:00' },
       tuesday:   { open: true,  from: '09:00', to: '17:00' },
@@ -59,7 +68,9 @@ export default async function DashboardPage() {
   }
   if (!shop.onboarding_complete) redirect('/onboard')
 
-  const [callsResult, bookingsResult, missedResult, recentCallsResult, upcomingResult] = await Promise.all([
+  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+
+  const [callsResult, bookingsResult, missedResult, recentCallsResult, upcomingResult, monthBookingsResult, lastCallResult] = await Promise.all([
     supabase.from('calls').select('id', { count: 'exact' }).eq('shop_id', shop.id),
     supabase.from('bookings').select('id', { count: 'exact' }).eq('shop_id', shop.id),
     supabase.from('calls').select('id', { count: 'exact' }).eq('shop_id', shop.id).eq('outcome', 'missed'),
@@ -68,14 +79,32 @@ export default async function DashboardPage() {
       .gte('appointment_at', new Date().toISOString())
       .order('appointment_at', { ascending: true })
       .limit(5),
+    supabase.from('bookings').select('id', { count: 'exact' }).eq('shop_id', shop.id).gte('created_at', thirtyDaysAgo),
+    supabase.from('calls').select('started_at').eq('shop_id', shop.id).order('started_at', { ascending: false }).limit(1),
   ])
 
   const totalCalls = callsResult.count ?? 0
   const totalBookings = bookingsResult.count ?? 0
   const missedCalls = missedResult.count ?? 0
-  const revenueRecovered = totalBookings * 650
+  const monthBookings = monthBookingsResult.count ?? 0
+  const allTimeRevenue = totalBookings * 650
+  const monthRevenue = monthBookings * 650
   const recentCalls: Call[] = recentCallsResult.data ?? []
   const upcomingBookings: Booking[] = upcomingResult.data ?? []
+
+  const lastCallRow = lastCallResult.data?.[0]
+  const lastCallText = lastCallRow
+    ? `Last call: ${timeAgo(lastCallRow.started_at)}`
+    : 'Waiting for first call'
+
+  let headerSub: string
+  if (totalCalls === 0) {
+    headerSub = "You're live! Make a test call to confirm everything works."
+  } else if (totalBookings === 0) {
+    headerSub = "Your AI is handling calls. No bookings yet — check your forwarding setup."
+  } else {
+    headerSub = "Your AI receptionist is live. Here's what's happening."
+  }
 
   return (
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -85,7 +114,7 @@ export default async function DashboardPage() {
           Overview
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 14 }}>
-          Your AI receptionist is live. Here&apos;s what&apos;s happening.
+          {headerSub}
         </p>
       </div>
 
@@ -102,7 +131,7 @@ export default async function DashboardPage() {
         gap: 12,
         marginBottom: 28,
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <span style={{
             width: 10, height: 10, borderRadius: '50%',
             background: 'var(--success)',
@@ -113,6 +142,7 @@ export default async function DashboardPage() {
           {shop.twilio_number && (
             <span style={{ fontSize: 14, color: 'var(--muted)' }}>· {shop.twilio_number}</span>
           )}
+          <span style={{ fontSize: 13, color: 'var(--muted)' }}>· {lastCallText}</span>
         </div>
         {shop.twilio_number && (
           <a
@@ -139,34 +169,82 @@ export default async function DashboardPage() {
         gap: 16,
         marginBottom: 32,
       }}>
-        {[
-          { label: 'Calls Handled', value: totalCalls.toLocaleString(), sub: 'all time' },
-          { label: 'Bookings Made', value: totalBookings.toLocaleString(), sub: 'all time' },
-          { label: 'No Booking', value: missedCalls.toLocaleString(), sub: 'caller didn\'t book' },
-          { label: 'Revenue Recovered', value: `$${revenueRecovered.toLocaleString()}`, sub: 'est. at $650/booking' },
-        ].map(stat => (
-          <div key={stat.label} style={{
-            background: 'var(--surface)',
-            border: '1px solid var(--border)',
-            borderRadius: 12,
-            padding: '20px 24px',
-          }}>
-            <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-              {stat.label}
-            </div>
-            <div style={{
-              fontSize: 30,
-              fontWeight: 700,
-              color: 'var(--text)',
-              fontFamily: 'var(--font-space)',
-              lineHeight: 1,
-              marginBottom: 6,
-            }}>
-              {stat.value}
-            </div>
-            <div style={{ fontSize: 12, color: 'var(--muted)' }}>{stat.sub}</div>
+        {/* Calls Handled */}
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Calls Handled
           </div>
-        ))}
+          <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+            {totalCalls.toLocaleString()}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>(this month)</div>
+        </div>
+
+        {/* Bookings Made */}
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Bookings Made
+          </div>
+          <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+            {totalBookings.toLocaleString()}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>(this month)</div>
+        </div>
+
+        {/* Missed Opportunities */}
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Missed Opportunities
+          </div>
+          <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+            {missedCalls.toLocaleString()}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>callers who did not book</div>
+        </div>
+
+        {/* Revenue Recovered */}
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 5 }}>
+            Revenue Recovered
+            <span
+              title="Estimated at $650 average repair order (AAPEX 2024 industry average). Actual results vary."
+              style={{
+                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
+                width: 14, height: 14, borderRadius: '50%',
+                border: '1px solid var(--muted)',
+                fontSize: 10, fontWeight: 700,
+                cursor: 'help', flexShrink: 0, lineHeight: 1,
+              }}
+            >
+              i
+            </span>
+          </div>
+          <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+            ${monthRevenue.toLocaleString()}
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>
+            est. at $650/booking — industry avg · all time: ${allTimeRevenue.toLocaleString()}
+          </div>
+        </div>
+
+        {/* AI Status */}
+        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px' }}>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            AI Status
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
+            <span style={{
+              width: 10, height: 10, borderRadius: '50%',
+              background: 'var(--success)',
+              boxShadow: '0 0 0 3px var(--success-dim)',
+              flexShrink: 0,
+            }} />
+            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1 }}>
+              Live 24/7
+            </div>
+          </div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>always on</div>
+        </div>
       </div>
 
       {/* Two column layout: recent calls + upcoming bookings */}
@@ -238,7 +316,7 @@ export default async function DashboardPage() {
                       <OutcomeBadge outcome={call.outcome ?? 'info_only'} />
                     </td>
                     <td style={{ padding: '12px 0', textAlign: 'right' }}>
-                      <Link href="/dashboard/calls" style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+                      <Link href={`/dashboard/calls?expand=${call.id}`} style={{ fontSize: 12, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
                         View
                       </Link>
                     </td>
@@ -300,7 +378,7 @@ export default async function DashboardPage() {
       </div>
 
       <style>{`
-        @media (max-width: 1100px) {
+        @media (max-width: 1200px) {
           .dashboard-grid { grid-template-columns: 1fr !important; }
         }
       `}</style>

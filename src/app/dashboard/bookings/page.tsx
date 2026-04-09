@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { formatDateTime, formatDuration } from '@/lib/utils'
+import { formatDateTime } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { SkeletonRow } from '@/components/Skeleton'
 import { useToast } from '@/components/Toast'
@@ -30,14 +30,33 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-// formatDateTime imported from @/lib/utils
+function isTodayNY(dateStr: string): boolean {
+  const now = new Date()
+  const nyNow = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(now)
+  const nyAppt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(dateStr))
+  return nyNow === nyAppt
+}
+
+function isTodayOrPast(dateStr: string): boolean {
+  const now = new Date()
+  const startOfTomorrow = new Date(
+    new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(now) + 'T00:00:00-05:00'
+  )
+  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1)
+  return new Date(dateStr) < startOfTomorrow
+}
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
   const [tab, setTab] = useState<Tab>('upcoming')
-  const [shopId, setShopId] = useState<string | null>(null)
+  const [expandedId, setExpandedId] = useState<string | null>(null)
+  const [pendingCancelId, setPendingCancelId] = useState<string | null>(null)
   const { show } = useToast()
+
+  useEffect(() => {
+    document.title = 'Bookings | ShopDesk'
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -47,7 +66,6 @@ export default function BookingsPage() {
       const { data: shop } = await supabase
         .from('shops').select('id').eq('owner_id', user.id).single()
       if (shop) {
-        setShopId(shop.id)
         const { data } = await supabase
           .from('bookings')
           .select('*')
@@ -74,6 +92,7 @@ export default function BookingsPage() {
       show('Failed to update booking', 'error')
     } else {
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: status as Booking['status'] } : b))
+      setPendingCancelId(null)
       show(status === 'completed' ? 'Marked as complete' : 'Booking cancelled', 'success')
     }
   }
@@ -138,10 +157,10 @@ export default function BookingsPage() {
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 760 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Date / Time', 'Customer', 'Phone', 'Vehicle', 'Service', 'Status', 'SMS', ''].map(h => (
+                  {['Date / Time', 'Customer', 'Vehicle', 'Service', 'Status', 'Confirmation Sent', ''].map(h => (
                     <th key={h} style={{
                       textAlign: 'left', padding: '12px 16px',
                       fontSize: 11, color: 'var(--muted)',
@@ -153,72 +172,187 @@ export default function BookingsPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((booking: Booking) => (
-                  <tr
-                    key={booking.id}
-                    style={{ borderBottom: '1px solid var(--border)', transition: 'background 0.1s' }}
-                    onMouseEnter={e => (e.currentTarget as HTMLTableRowElement).style.background = 'var(--card-raised)'}
-                    onMouseLeave={e => (e.currentTarget as HTMLTableRowElement).style.background = 'transparent'}
-                  >
-                    <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                      {formatDateTime(booking.appointment_at)}
-                    </td>
-                    <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text)', fontWeight: 500 }}>
-                      {booking.customer_name ?? '—'}
-                    </td>
-                    <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)', fontFamily: 'monospace' }}>
-                      {booking.customer_phone ?? '—'}
-                    </td>
-                    <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)' }}>
-                      {booking.vehicle ?? '—'}
-                    </td>
-                    <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {booking.service ?? '—'}
-                    </td>
-                    <td style={{ padding: '13px 16px' }}>
-                      <StatusBadge status={booking.status ?? 'scheduled'} />
-                    </td>
-                    <td style={{ padding: '13px 16px', fontSize: 18, textAlign: 'center' }}>
-                      {booking.sms_sent ? (
-                        <span style={{ color: 'var(--success)' }}>✓</span>
-                      ) : (
-                        <span style={{ color: 'var(--muted)', fontSize: 13 }}>—</span>
-                      )}
-                    </td>
-                    <td style={{ padding: '13px 16px' }}>
-                      {booking.status !== 'completed' && booking.status !== 'cancelled' && (
-                        <div style={{ display: 'flex', gap: 6, whiteSpace: 'nowrap' }}>
-                          <button
-                            onClick={() => updateStatus(booking.id, 'completed')}
-                            style={{
-                              padding: '5px 10px', borderRadius: 6,
-                              border: '1px solid var(--success)',
-                              background: 'transparent',
-                              color: 'var(--success)', fontSize: 12,
-                              fontWeight: 500, cursor: 'pointer',
-                              transition: 'background 0.15s',
-                            }}
+                {filtered.map((booking: Booking) => {
+                  const isToday = isTodayNY(booking.appointment_at)
+                  const todayOrPast = isTodayOrPast(booking.appointment_at)
+                  const isExpanded = expandedId === booking.id
+                  const isPendingCancel = pendingCancelId === booking.id
+                  const isDone = booking.status === 'completed' || booking.status === 'cancelled'
+
+                  return (
+                    <>
+                      <tr
+                        key={booking.id}
+                        onClick={() => { if (!isPendingCancel) setExpandedId(isExpanded ? null : booking.id) }}
+                        style={{
+                          borderBottom: isExpanded ? 'none' : '1px solid var(--border)',
+                          transition: 'background 0.1s',
+                          cursor: 'pointer',
+                          background: isExpanded ? 'var(--card-raised)' : 'transparent',
+                        }}
+                        onMouseEnter={e => { if (!isExpanded) (e.currentTarget as HTMLTableRowElement).style.background = 'var(--card-raised)' }}
+                        onMouseLeave={e => { if (!isExpanded) (e.currentTarget as HTMLTableRowElement).style.background = 'transparent' }}
+                      >
+                        <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
+                          <span>{formatDateTime(booking.appointment_at)}</span>
+                          {isToday && (
+                            <span style={{
+                              marginLeft: 8,
+                              display: 'inline-block',
+                              background: 'var(--accent)',
+                              color: '#fff',
+                              fontSize: 10,
+                              fontWeight: 700,
+                              padding: '2px 7px',
+                              borderRadius: 20,
+                              verticalAlign: 'middle',
+                            }}>
+                              Today
+                            </span>
+                          )}
+                        </td>
+                        <td style={{ padding: '13px 16px' }}>
+                          <div style={{ fontSize: 13, fontWeight: 500, color: 'var(--text)' }}>{booking.customer_name ?? '—'}</div>
+                          {booking.customer_phone && (
+                            <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'monospace' }}>{booking.customer_phone}</div>
+                          )}
+                        </td>
+                        <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)' }}>
+                          {booking.vehicle ?? '—'}
+                        </td>
+                        <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {booking.service ?? '—'}
+                        </td>
+                        <td style={{ padding: '13px 16px' }}>
+                          <StatusBadge status={booking.status ?? 'scheduled'} />
+                        </td>
+                        <td style={{ padding: '13px 16px', fontSize: 18, textAlign: 'center' }}>
+                          {booking.sms_sent ? (
+                            <span style={{ color: 'var(--success)' }}>✓</span>
+                          ) : (
+                            <span style={{ color: 'var(--muted)', fontSize: 13 }}>—</span>
+                          )}
+                        </td>
+                        <td style={{ padding: '13px 16px' }} onClick={e => e.stopPropagation()}>
+                          {isPendingCancel ? (
+                            <div style={{ display: 'flex', alignItems: 'center', gap: 8, whiteSpace: 'nowrap', flexWrap: 'wrap' }}>
+                              <span style={{ fontSize: 12, color: 'var(--text-mid)' }}>Cancel this booking?</span>
+                              <button
+                                onClick={() => updateStatus(booking.id, 'cancelled')}
+                                style={{
+                                  padding: '4px 10px', borderRadius: 6,
+                                  border: '1px solid var(--danger)',
+                                  background: 'transparent',
+                                  color: 'var(--danger)', fontSize: 12,
+                                  fontWeight: 500, cursor: 'pointer',
+                                }}
+                              >
+                                Confirm Cancel
+                              </button>
+                              <button
+                                onClick={() => setPendingCancelId(null)}
+                                style={{
+                                  padding: '4px 10px', borderRadius: 6,
+                                  border: '1px solid var(--border)',
+                                  background: 'transparent',
+                                  color: 'var(--muted)', fontSize: 12,
+                                  fontWeight: 500, cursor: 'pointer',
+                                }}
+                              >
+                                Never mind
+                              </button>
+                            </div>
+                          ) : !isDone ? (
+                            <div style={{ display: 'flex', gap: 6, whiteSpace: 'nowrap' }}>
+                              {todayOrPast && (
+                                <button
+                                  onClick={() => updateStatus(booking.id, 'completed')}
+                                  style={{
+                                    padding: '5px 10px', borderRadius: 6,
+                                    border: '1px solid var(--success)',
+                                    background: 'transparent',
+                                    color: 'var(--success)', fontSize: 12,
+                                    fontWeight: 500, cursor: 'pointer',
+                                    transition: 'background 0.15s',
+                                  }}
+                                >
+                                  Complete
+                                </button>
+                              )}
+                              <button
+                                onClick={() => setPendingCancelId(booking.id)}
+                                style={{
+                                  padding: '5px 10px', borderRadius: 6,
+                                  border: '1px solid var(--border)',
+                                  background: 'transparent',
+                                  color: 'var(--muted)', fontSize: 12,
+                                  fontWeight: 500, cursor: 'pointer',
+                                  transition: 'background 0.15s',
+                                }}
+                              >
+                                Cancel
+                              </button>
+                            </div>
+                          ) : null}
+                          {/* Expand chevron */}
+                          <span style={{
+                            fontSize: 11, color: 'var(--muted)', marginLeft: 8,
+                            display: 'inline-block', cursor: 'pointer',
+                          }}
+                            onClick={() => setExpandedId(isExpanded ? null : booking.id)}
                           >
-                            Complete
-                          </button>
-                          <button
-                            onClick={() => updateStatus(booking.id, 'cancelled')}
-                            style={{
-                              padding: '5px 10px', borderRadius: 6,
+                            {isExpanded ? '▲' : '▼'}
+                          </span>
+                        </td>
+                      </tr>
+
+                      {isExpanded && (
+                        <tr key={`${booking.id}-details`} style={{ borderBottom: '1px solid var(--border)' }}>
+                          <td colSpan={7} style={{ padding: '0 16px 16px', background: 'var(--card-raised)' }}>
+                            <div style={{
+                              background: 'var(--surface)',
                               border: '1px solid var(--border)',
-                              background: 'transparent',
-                              color: 'var(--muted)', fontSize: 12,
-                              fontWeight: 500, cursor: 'pointer',
-                              transition: 'background 0.15s',
-                            }}
-                          >
-                            Cancel
-                          </button>
-                        </div>
+                              borderRadius: 8,
+                              padding: '14px 16px',
+                              display: 'grid',
+                              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+                              gap: 16,
+                            }}>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', marginBottom: 4 }}>Service</div>
+                                <div style={{ fontSize: 13, color: 'var(--text)' }}>{booking.service ?? '—'}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', marginBottom: 4 }}>Vehicle</div>
+                                <div style={{ fontSize: 13, color: 'var(--text)' }}>{booking.vehicle ?? '—'}</div>
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', marginBottom: 4 }}>Phone</div>
+                                {booking.customer_phone ? (
+                                  <a href={`tel:${booking.customer_phone}`} style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', fontFamily: 'monospace' }}>
+                                    {booking.customer_phone}
+                                  </a>
+                                ) : <div style={{ fontSize: 13, color: 'var(--muted)' }}>—</div>}
+                              </div>
+                              <div>
+                                <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', marginBottom: 4 }}>Confirmation</div>
+                                <div style={{ fontSize: 13, color: booking.sms_sent ? 'var(--success)' : 'var(--muted)' }}>
+                                  {booking.sms_sent ? 'SMS sent' : 'Not sent'}
+                                </div>
+                              </div>
+                              {booking.notes && (
+                                <div style={{ gridColumn: '1 / -1' }}>
+                                  <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--muted)', marginBottom: 4 }}>Notes</div>
+                                  <div style={{ fontSize: 13, color: 'var(--text-mid)' }}>{booking.notes}</div>
+                                </div>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                  </tr>
-                ))}
+                    </>
+                  )
+                })}
               </tbody>
             </table>
           </div>

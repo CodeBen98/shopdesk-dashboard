@@ -140,8 +140,16 @@ export default function SettingsPage() {
   const [loadingAutofill, setLoadingAutofill] = useState(false)
   const [autofillError, setAutofillError] = useState<string | null>(null)
 
+  // Owner mobile
+  const [ownerPhone, setOwnerPhone] = useState('')
+  const [ownerPhoneSmsConsent, setOwnerPhoneSmsConsent] = useState(false)
+
   // Phone copy state
   const [phoneCopied, setPhoneCopied] = useState(false)
+
+  useEffect(() => {
+    document.title = 'Settings | ShopDesk'
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -156,6 +164,8 @@ export default function SettingsPage() {
         setAddress(data.address ?? '')
         setPhone(data.phone ?? '')
         setEmail(data.email ?? '')
+        setOwnerPhone(data.owner_phone ?? '')
+        setOwnerPhoneSmsConsent(data.owner_phone_sms_consent ?? false)
         setHours(data.hours ?? {})
         setServices(data.services ?? [])
         setVoice(data.ai_voice ?? 'patricia')
@@ -423,8 +433,38 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* Owner Mobile + SMS consent */}
+            <div>
+              <label style={labelStyle}>Your Mobile Number</label>
+              <input
+                type="tel"
+                value={ownerPhone}
+                onChange={e => setOwnerPhone(e.target.value)}
+                placeholder="(407) 555-0100"
+                onFocus={() => setFocused('owner-phone')}
+                onBlur={() => setFocused(null)}
+                style={inputStyle(focused === 'owner-phone')}
+              />
+              <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
+                Where we text you when someone books. Different from your shop phone.
+              </p>
+              <label style={{
+                display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 10, cursor: 'pointer',
+              }}>
+                <input
+                  type="checkbox"
+                  checked={ownerPhoneSmsConsent}
+                  onChange={e => setOwnerPhoneSmsConsent(e.target.checked)}
+                  style={{ marginTop: 2, accentColor: 'var(--accent)', flexShrink: 0 }}
+                />
+                <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
+                  I agree to receive SMS booking alerts at this number. Msg and data rates may apply. Reply STOP to opt out.
+                </span>
+              </label>
+            </div>
+
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-              <SaveButton onClick={() => save({ name, address, phone, email }, true)} status={saveStatus} />
+              <SaveButton onClick={() => save({ name, address, phone, email, owner_phone: ownerPhone, owner_phone_sms_consent: ownerPhoneSmsConsent }, true)} status={saveStatus} />
             </div>
           </div>
         )}
@@ -771,8 +811,11 @@ export default function SettingsPage() {
 
             <div style={{ height: 1, background: 'var(--border)', marginBottom: 20 }} />
 
-            <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 16 }}>
-              Emergency Contact
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 4 }}>
+              Breakdown Escalation Contact
+            </p>
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
+              Who gets a text if a caller reports a breakdown or emergency.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
@@ -800,7 +843,7 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
-            <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
+            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
               <SaveButton
                 onClick={() => save({
                   ai_voice: voice,
@@ -811,6 +854,9 @@ export default function SettingsPage() {
                 savingText="Updating AI..."
                 savedText="✓ AI updated"
               />
+              <p style={{ fontSize: 12, color: 'var(--muted)', textAlign: 'right' }}>
+                Saving will automatically update your AI receptionist within 30 seconds.
+              </p>
             </div>
           </div>
         )}

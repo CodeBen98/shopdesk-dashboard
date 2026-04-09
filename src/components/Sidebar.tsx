@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
+import { useState, useEffect } from 'react'
 
 interface SidebarProps {
   shopName: string | null
@@ -49,7 +50,17 @@ const navItems = [
       </svg>
     ),
   },
-  // Customers — Phase 2 feature, hidden until built
+  {
+    label: 'Customers',
+    href: '/dashboard/customers',
+    exact: false,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="9" cy="6" r="3" stroke="currentColor" strokeWidth="1.5"/>
+        <path d="M2 16c0-3.314 3.134-6 7-6s7 2.686 7 6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
   {
     label: 'Settings',
     href: '/dashboard/settings',
@@ -66,6 +77,26 @@ const navItems = [
 export function Sidebar({ shopName, userEmail, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
+  const [emergencyCount, setEmergencyCount] = useState(0)
+
+  useEffect(() => {
+    async function checkEmergencies() {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) return
+      const { data: shop } = await supabase.from('shops').select('id').eq('owner_id', user.id).single()
+      if (!shop) return
+      const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()
+      const { count } = await supabase
+        .from('calls')
+        .select('id', { count: 'exact' })
+        .eq('shop_id', shop.id)
+        .eq('outcome', 'emergency')
+        .gte('started_at', since)
+      setEmergencyCount(count ?? 0)
+    }
+    checkEmergencies()
+  }, [])
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -121,7 +152,7 @@ export function Sidebar({ shopName, userEmail, mobileOpen, onClose }: SidebarPro
             </span>
           </div>
           {shopName && (
-            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6, marginLeft: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <p style={{ fontSize: 13, color: 'var(--text-mid)', fontWeight: 500, marginTop: 6, marginLeft: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {shopName}
             </p>
           )}
@@ -150,10 +181,20 @@ export function Sidebar({ shopName, userEmail, mobileOpen, onClose }: SidebarPro
                   background: active ? 'rgba(15,118,149,0.08)' : 'transparent',
                   borderLeft: active ? '3px solid var(--accent)' : '3px solid transparent',
                   transition: 'background 0.15s, color 0.15s',
+                  position: 'relative',
                 }}
               >
-                <span style={{ color: active ? 'var(--accent)' : 'var(--muted)', flexShrink: 0, opacity: active ? 1 : 0.7 }}>
+                <span style={{ color: active ? 'var(--accent)' : 'var(--muted)', flexShrink: 0, opacity: active ? 1 : 0.7, position: 'relative' }}>
                   {item.icon}
+                  {item.label === 'Calls' && emergencyCount > 0 && (
+                    <span style={{
+                      position: 'absolute',
+                      top: -3, right: -3,
+                      width: 8, height: 8,
+                      borderRadius: '50%',
+                      background: '#ef4444',
+                    }} />
+                  )}
                 </span>
                 {item.label}
               </Link>

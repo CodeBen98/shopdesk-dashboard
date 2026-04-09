@@ -17,6 +17,10 @@ export default function CustomersPage() {
   const [focused, setFocused] = useState(false)
 
   useEffect(() => {
+    document.title = 'Customers | ShopDesk'
+  }, [])
+
+  useEffect(() => {
     async function load() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()

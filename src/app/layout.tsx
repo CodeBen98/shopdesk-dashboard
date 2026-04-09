@@ -17,6 +17,7 @@ const spaceGrotesk = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'ShopDesk | AI Receptionist Dashboard',
   description: 'Manage your AI receptionist, call log, bookings, and shop settings.',
+  icons: { icon: '/favicon.svg' },
 }
 
 export default function RootLayout({

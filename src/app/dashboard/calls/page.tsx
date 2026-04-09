@@ -1,12 +1,14 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { formatDateTime, formatDuration } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 import { SkeletonRow } from '@/components/Skeleton'
 import type { Call } from '@/types'
 
 type OutcomeFilter = 'all' | 'booked' | 'info_only' | 'missed' | 'emergency'
+type DateFilter = 'today' | 'week' | 'month' | 'all'
 
 function OutcomeBadge({ outcome }: { outcome: string }) {
   const map: Record<string, { bg: string; color: string; label: string }> = {
@@ -28,15 +30,68 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
   )
 }
 
+function renderTranscript(transcript: string) {
+  const speakerRe = /^(AI|assistant|Agent|User|Caller):\s*/i
+  const hasLabels = transcript.split('\n').some(l => speakerRe.test(l.trim()))
+
+  if (!hasLabels) {
+    return transcript.split('\n').filter(l => l.trim()).map((line, i) => (
+      <p key={i} style={{ margin: '0 0 6px', color: 'var(--text-mid)', fontSize: 13 }}>{line}</p>
+    ))
+  }
+
+  return transcript.split('\n').map((line, i) => {
+    const match = line.match(/^(AI|assistant|Agent|User|Caller):\s*(.*)$/i)
+    if (!match) {
+      if (!line.trim()) return null
+      return <div key={i} style={{ color: 'var(--text-mid)', fontSize: 13, marginBottom: 4 }}>{line}</div>
+    }
+    const [, speaker, text] = match
+    const isAI = /^(AI|assistant|Agent)$/i.test(speaker)
+    return (
+      <div key={i} style={{ marginBottom: 6, display: 'flex', gap: 8, alignItems: 'flex-start' }}>
+        <span style={{
+          fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em',
+          color: isAI ? 'var(--accent)' : 'var(--text-mid)',
+          minWidth: 44, paddingTop: 2, flexShrink: 0,
+        }}>
+          {isAI ? 'AI' : 'Caller'}
+        </span>
+        <span style={{ color: isAI ? 'var(--accent)' : 'var(--text-mid)', fontSize: 13, lineHeight: 1.5 }}>{text}</span>
+      </div>
+    )
+  })
+}
+
+function getDateBoundary(filter: DateFilter): string | null {
+  const now = new Date()
+  if (filter === 'today') {
+    const start = new Date(now); start.setHours(0, 0, 0, 0); return start.toISOString()
+  }
+  if (filter === 'week') {
+    return new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000).toISOString()
+  }
+  if (filter === 'month') {
+    return new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000).toISOString()
+  }
+  return null
+}
+
 const PAGE_SIZE = 20
 
-export default function CallsPage() {
+function CallsContent() {
+  const searchParams = useSearchParams()
   const [calls, setCalls] = useState<Call[]>([])
   const [loading, setLoading] = useState(true)
   const [outcomeFilter, setOutcomeFilter] = useState<OutcomeFilter>('all')
+  const [dateFilter, setDateFilter] = useState<DateFilter>('month')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [page, setPage] = useState(1)
-  const [shopId, setShopId] = useState<string | null>(null)
+  const rowRefs = useRef<Record<string, HTMLTableRowElement | null>>({})
+
+  useEffect(() => {
+    document.title = 'Calls | ShopDesk'
+  }, [])
 
   useEffect(() => {
     async function load() {
@@ -46,7 +101,6 @@ export default function CallsPage() {
       const { data: shop } = await supabase
         .from('shops').select('id').eq('owner_id', user.id).single()
       if (shop) {
-        setShopId(shop.id)
         const { data } = await supabase
           .from('calls')
           .select('*')
@@ -59,9 +113,30 @@ export default function CallsPage() {
     load()
   }, [])
 
-  const filtered = calls.filter(c =>
-    outcomeFilter === 'all' ? true : c.outcome === outcomeFilter
-  )
+  // Auto-expand from query param
+  useEffect(() => {
+    const expandParam = searchParams.get('expand')
+    if (expandParam) {
+      setExpandedId(expandParam)
+      setDateFilter('all') // ensure the call is visible
+    }
+  }, [searchParams])
+
+  // Scroll to expanded row
+  useEffect(() => {
+    if (expandedId && rowRefs.current[expandedId]) {
+      setTimeout(() => {
+        rowRefs.current[expandedId]?.scrollIntoView({ behavior: 'smooth', block: 'center' })
+      }, 100)
+    }
+  }, [expandedId])
+
+  const dateBoundary = getDateBoundary(dateFilter)
+  const filtered = calls.filter(c => {
+    if (outcomeFilter !== 'all' && c.outcome !== outcomeFilter) return false
+    if (dateBoundary && c.started_at < dateBoundary) return false
+    return true
+  })
   const displayed = filtered.slice(0, page * PAGE_SIZE)
   const hasMore = displayed.length < filtered.length
 
@@ -69,8 +144,15 @@ export default function CallsPage() {
     { value: 'all',       label: 'All' },
     { value: 'booked',    label: 'Booked' },
     { value: 'info_only', label: 'Info Only' },
-    { value: 'missed',    label: 'No Booking' },
+    { value: 'missed',    label: 'Missed' },
     { value: 'emergency', label: 'Emergency' },
+  ]
+
+  const dateFilters: { value: DateFilter; label: string }[] = [
+    { value: 'today', label: 'Today' },
+    { value: 'week',  label: 'This Week' },
+    { value: 'month', label: 'This Month' },
+    { value: 'all',   label: 'All Time' },
   ]
 
   return (
@@ -85,7 +167,31 @@ export default function CallsPage() {
         </p>
       </div>
 
-      {/* Filter bar */}
+      {/* Date filter row */}
+      <div style={{ display: 'flex', gap: 5, marginBottom: 8, flexWrap: 'wrap' }}>
+        {dateFilters.map(d => (
+          <button
+            key={d.value}
+            onClick={() => { setDateFilter(d.value); setPage(1) }}
+            style={{
+              padding: '5px 12px',
+              borderRadius: 7,
+              border: '1px solid',
+              borderColor: dateFilter === d.value ? 'var(--accent)' : 'var(--border)',
+              background: dateFilter === d.value ? 'var(--accent-dim)' : 'transparent',
+              color: dateFilter === d.value ? 'var(--accent)' : 'var(--text-mid)',
+              fontSize: 12,
+              fontWeight: dateFilter === d.value ? 600 : 400,
+              cursor: 'pointer',
+              transition: 'all 0.15s',
+            }}
+          >
+            {d.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Outcome filter bar */}
       <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
         {outcomes.map(o => (
           <button
@@ -128,17 +234,17 @@ export default function CallsPage() {
             </svg>
             <div style={{ fontSize: 15, fontWeight: 600, color: 'var(--text-mid)', marginBottom: 8 }}>No calls found</div>
             <div style={{ fontSize: 13 }}>
-              {outcomeFilter === 'all'
-                ? 'Your AI receptionist is ready. Make a test call to (407) 555-0123.'
+              {outcomeFilter === 'all' && dateFilter === 'all'
+                ? 'Your AI receptionist is ready. Make a test call to get started.'
                 : 'Try selecting a different filter above.'}
             </div>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
-            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 680 }}>
+            <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 640 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Date / Time', 'Caller Phone', 'Caller Name', 'Duration', 'Outcome', 'Details'].map(h => (
+                  {['Date / Time', 'Caller', 'Duration', 'Outcome', 'Details'].map(h => (
                     <th key={h} style={{
                       textAlign: 'left', padding: '12px 16px',
                       fontSize: 11, color: 'var(--muted)',
@@ -154,6 +260,7 @@ export default function CallsPage() {
                   <>
                     <tr
                       key={call.id}
+                      ref={el => { rowRefs.current[call.id] = el }}
                       onClick={() => setExpandedId(expandedId === call.id ? null : call.id)}
                       style={{
                         borderBottom: expandedId === call.id ? 'none' : '1px solid var(--border)',
@@ -167,11 +274,15 @@ export default function CallsPage() {
                       <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
                         {formatDateTime(call.started_at)}
                       </td>
-                      <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)', fontFamily: 'monospace' }}>
-                        {call.caller_phone ?? '—'}
-                      </td>
-                      <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text)' }}>
-                        {call.caller_name ?? '—'}
+                      <td style={{ padding: '13px 16px' }}>
+                        {call.caller_name ? (
+                          <>
+                            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text)' }}>{call.caller_name}</div>
+                            <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'monospace' }}>{call.caller_phone ?? ''}</div>
+                          </>
+                        ) : (
+                          <div style={{ fontSize: 13, color: 'var(--text)', fontFamily: 'monospace' }}>{call.caller_phone ?? '—'}</div>
+                        )}
                       </td>
                       <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--muted)' }}>
                         {formatDuration(call.duration_seconds)}
@@ -190,7 +301,28 @@ export default function CallsPage() {
                     </tr>
                     {expandedId === call.id && (
                       <tr key={`${call.id}-details`} style={{ borderBottom: '1px solid var(--border)' }}>
-                        <td colSpan={6} style={{ padding: '0 16px 16px', background: 'var(--card-raised)' }}>
+                        <td colSpan={5} style={{ padding: '0 16px 16px', background: 'var(--card-raised)' }}>
+                          {/* Call-back button for missed/info_only */}
+                          {(call.outcome === 'missed' || call.outcome === 'info_only') && call.caller_phone && (
+                            <div style={{ marginBottom: 12 }}>
+                              <a
+                                href={`tel:${call.caller_phone}`}
+                                style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: 6,
+                                  padding: '6px 14px', borderRadius: 7,
+                                  border: '1px solid var(--accent)',
+                                  color: 'var(--accent)', fontSize: 13, fontWeight: 500,
+                                  textDecoration: 'none', transition: 'background 0.15s',
+                                }}
+                              >
+                                <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+                                  <path d="M2.5 1.5h2.5l1 2.5-1.5 1A8 8 0 008 8.5l1-1.5 2.5 1v2.5a1 1 0 01-1 1C4.5 11.5 1.5 4.5 1.5 2.5a1 1 0 011-1z" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
+                                </svg>
+                                Call back: {call.caller_phone}
+                              </a>
+                            </div>
+                          )}
+
                           {/* Recording player */}
                           {call.recording_url && (
                             <div style={{
@@ -199,24 +331,18 @@ export default function CallsPage() {
                               borderRadius: 8,
                               padding: '12px 16px',
                               marginBottom: 12,
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: 12,
                             }}>
-                              <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                Recording
+                              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>
+                                🎙 Listen to recording
                               </div>
                               <audio
                                 controls
                                 src={call.recording_url}
-                                style={{
-                                  flex: 1,
-                                  height: 36,
-                                  borderRadius: 4,
-                                }}
+                                style={{ width: '100%', height: 36, borderRadius: 4, accentColor: 'var(--accent)' } as React.CSSProperties}
                               />
                             </div>
                           )}
+
                           {/* Transcript */}
                           <div style={{
                             background: 'var(--surface)',
@@ -228,14 +354,14 @@ export default function CallsPage() {
                               Transcript
                             </div>
                             <div style={{
-                              fontSize: 13,
-                              color: call.transcript ? 'var(--text-mid)' : 'var(--muted)',
-                              lineHeight: 1.7,
-                              whiteSpace: 'pre-wrap',
                               maxHeight: 240,
                               overflowY: 'auto',
+                              lineHeight: 1.7,
                             }}>
-                              {call.transcript ?? 'No transcript available.'}
+                              {call.transcript
+                                ? renderTranscript(call.transcript)
+                                : <span style={{ fontSize: 13, color: 'var(--muted)' }}>No transcript available.</span>
+                              }
                             </div>
                           </div>
                         </td>
@@ -270,5 +396,13 @@ export default function CallsPage() {
         )}
       </div>
     </div>
+  )
+}
+
+export default function CallsPage() {
+  return (
+    <Suspense>
+      <CallsContent />
+    </Suspense>
   )
 }
