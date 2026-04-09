@@ -15,15 +15,16 @@ import { StepProvision } from './StepProvision'
 import { StepForwarding } from './StepForwarding'
 import { StepTestCall } from './StepTestCall'
 import { StepGoLive } from './StepGoLive'
+import { PlanSelectionStep } from './PlanSelectionStep'
 
 const STEPS: OnboardingStep[] = [
-  'shop_info', 'auto_fill_choice', 'auto_fill_review', 'hours', 'services', 'emergency',
+  'plan_selection', 'shop_info', 'auto_fill_choice', 'auto_fill_review', 'hours', 'services', 'emergency',
   'calendar', 'voice', 'provision', 'forwarding', 'test_call', 'go_live',
 ]
 
-// Steps that count toward the visible progress (original 10)
+// Steps that count toward the visible progress
 const DISPLAY_STEPS: OnboardingStep[] = [
-  'shop_info', 'hours', 'services', 'emergency', 'calendar',
+  'plan_selection', 'shop_info', 'hours', 'services', 'emergency', 'calendar',
   'voice', 'provision', 'forwarding', 'test_call', 'go_live',
 ]
 
@@ -42,7 +43,7 @@ interface OnboardingWizardProps {
 }
 
 export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
-  const initialStep: OnboardingStep = shop?.onboarding_step ?? 'shop_info'
+  const initialStep: OnboardingStep = shop?.onboarding_step ?? 'plan_selection'
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep)
   const [shopData, setShopData] = useState<Shop | null>(shop)
 
@@ -84,8 +85,9 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <ProgressBar currentStep={displayStep} totalSteps={10} />
+      <ProgressBar currentStep={displayStep} totalSteps={11} />
       <div style={{ padding: '40px 16px' }}>
+        {currentStep === 'plan_selection' && <PlanSelectionStep {...commonProps} />}
         {currentStep === 'shop_info' && <StepShopInfo {...commonProps} />}
         {currentStep === 'auto_fill_choice' && <StepAutoFillChoice {...commonProps} />}
         {currentStep === 'auto_fill_review' && <StepAutoFillReview {...commonProps} />}

@@ -15,6 +15,9 @@ export type Shop = {
   ai_voice: string
   status: 'onboarding' | 'live' | 'paused'
   plan: 'trial' | 'starter' | 'professional' | 'growth'
+  plan_tier: 'starter' | 'pro' | 'growth'
+  is_founding_member: boolean
+  trial_started_at: string
   trial_ends_at: string | null
   onboarding_complete: boolean
   onboarding_step: OnboardingStep
@@ -97,6 +100,7 @@ export type JobStatus = {
 }
 
 export type OnboardingStep =
+  | 'plan_selection'
   | 'shop_info'
   | 'auto_fill_choice'
   | 'auto_fill_review'
