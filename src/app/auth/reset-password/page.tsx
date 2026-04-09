@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, Suspense, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
@@ -15,19 +15,28 @@ function ResetPasswordForm() {
   const [success, setSuccess] = useState(false)
   const [exchanging, setExchanging] = useState(true)
   const [focusedField, setFocusedField] = useState<string | null>(null)
+  const hasExchanged = useRef(false)
 
   useEffect(() => {
+    if (hasExchanged.current) return
+    hasExchanged.current = true
+    
     const code = searchParams.get('code')
     if (!code) {
-      setError('Invalid or expired reset link. Please request a new one.')
-      setExchanging(false)
+      queueMicrotask(() => {
+        setError('Invalid or expired reset link. Please request a new one.')
+        setExchanging(false)
+      })
       return
     }
     const supabase = createClient()
-    supabase.auth.exchangeCodeForSession(code).then(({ error }) => {
-      if (error) setError('This reset link has expired. Please request a new one.')
-      setExchanging(false)
+    supabase.auth.exchangeCodeForSession(code).then(({ error: authError }) => {
+      queueMicrotask(() => {
+        if (authError) setError('This reset link has expired. Please request a new one.')
+        setExchanging(false)
+      })
     })
+  }, [searchParams])
   }, [searchParams])
 
   async function handleSubmit(e: React.FormEvent) {
