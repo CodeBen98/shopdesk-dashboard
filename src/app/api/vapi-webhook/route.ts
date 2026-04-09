@@ -152,7 +152,7 @@ export async function POST(request: Request) {
           .gte('created_at', tenMinAgo)
           .order('created_at', { ascending: false })
           .limit(1)
-          .single()
+          .maybeSingle()
         console.log('[vapi-webhook] Booking query result:', booking, 'error:', bookingErr)
         if (booking?.customer_name) {
           // Update call with customer name AND link booking to call
