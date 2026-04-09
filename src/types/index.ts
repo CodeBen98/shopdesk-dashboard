@@ -21,6 +21,7 @@ export type Shop = {
   trial_ends_at: string | null
   onboarding_complete: boolean
   onboarding_step: OnboardingStep
+  sms_consent: boolean
   created_at: string
 }
 
