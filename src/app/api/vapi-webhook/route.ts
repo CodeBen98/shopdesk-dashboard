@@ -1,4 +1,14 @@
 import { NextResponse } from 'next/server'
+import crypto from 'crypto'
+
+function verifyVapiSignature(body: string, signature: string | null): boolean {
+  const secret = process.env.VAPI_WEBHOOK_SECRET
+  if (!secret) return true // Skip verification if no secret configured
+  if (!signature) return false
+  
+  const expected = crypto.createHmac('sha256', secret).update(body).digest('hex')
+  return crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(expected))
+}
 import { createClient } from '@supabase/supabase-js'
 
 function getSupabase() {
