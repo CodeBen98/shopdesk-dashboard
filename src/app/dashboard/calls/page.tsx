@@ -28,10 +28,6 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
   )
 }
 
-// formatDateTime imported from @/lib/utils
-
-// formatDuration imported from @/lib/utils
-
 const PAGE_SIZE = 20
 
 export default function CallsPage() {
@@ -142,7 +138,7 @@ export default function CallsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 680 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Date / Time', 'Caller Phone', 'Caller Name', 'Duration', 'Outcome', 'Transcript'].map(h => (
+                  {['Date / Time', 'Caller Phone', 'Caller Name', 'Duration', 'Outcome', 'Details'].map(h => (
                     <th key={h} style={{
                       textAlign: 'left', padding: '12px 16px',
                       fontSize: 11, color: 'var(--muted)',
@@ -193,21 +189,54 @@ export default function CallsPage() {
                       </td>
                     </tr>
                     {expandedId === call.id && (
-                      <tr key={`${call.id}-transcript`} style={{ borderBottom: '1px solid var(--border)' }}>
+                      <tr key={`${call.id}-details`} style={{ borderBottom: '1px solid var(--border)' }}>
                         <td colSpan={6} style={{ padding: '0 16px 16px', background: 'var(--card-raised)' }}>
+                          {/* Recording player */}
+                          {call.recording_url && (
+                            <div style={{
+                              background: 'var(--surface)',
+                              border: '1px solid var(--border)',
+                              borderRadius: 8,
+                              padding: '12px 16px',
+                              marginBottom: 12,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: 12,
+                            }}>
+                              <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                Recording
+                              </div>
+                              <audio
+                                controls
+                                src={call.recording_url}
+                                style={{
+                                  flex: 1,
+                                  height: 36,
+                                  borderRadius: 4,
+                                }}
+                              />
+                            </div>
+                          )}
+                          {/* Transcript */}
                           <div style={{
                             background: 'var(--surface)',
                             border: '1px solid var(--border)',
                             borderRadius: 8,
                             padding: '14px 16px',
-                            fontSize: 13,
-                            color: call.transcript ? 'var(--text-mid)' : 'var(--muted)',
-                            lineHeight: 1.7,
-                            whiteSpace: 'pre-wrap',
-                            maxHeight: 240,
-                            overflowY: 'auto',
                           }}>
-                            {call.transcript ?? 'No transcript available.'}
+                            <div style={{ fontSize: 12, color: 'var(--muted)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 10 }}>
+                              Transcript
+                            </div>
+                            <div style={{
+                              fontSize: 13,
+                              color: call.transcript ? 'var(--text-mid)' : 'var(--muted)',
+                              lineHeight: 1.7,
+                              whiteSpace: 'pre-wrap',
+                              maxHeight: 240,
+                              overflowY: 'auto',
+                            }}>
+                              {call.transcript ?? 'No transcript available.'}
+                            </div>
                           </div>
                         </td>
                       </tr>
