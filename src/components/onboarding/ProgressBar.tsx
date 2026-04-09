@@ -3,9 +3,10 @@
 interface ProgressBarProps {
   currentStep: number
   totalSteps: number
+  stepName?: string
 }
 
-export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
+export function ProgressBar({ currentStep, totalSteps, stepName }: ProgressBarProps) {
   const percent = (currentStep / totalSteps) * 100
 
   return (
@@ -161,7 +162,9 @@ export function ProgressBar({ currentStep, totalSteps }: ProgressBarProps) {
         </div>
 
         {/* Desktop: step label */}
-        <span className="progress-step-text">Step {currentStep} of {totalSteps}</span>
+        <span className="progress-step-text">
+          Step {currentStep} of {totalSteps}{stepName ? ` — ${stepName}` : ''}
+        </span>
       </div>
       {/* Spacer so content doesn't go under fixed bar */}
       <div style={{ height: 64 }} />

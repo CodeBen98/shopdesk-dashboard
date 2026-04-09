@@ -50,6 +50,24 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
   const [currentStep, setCurrentStep] = useState<OnboardingStep>(initialStep)
   const [shopData, setShopData] = useState<Shop | null>(shop)
 
+  const STEP_NAMES: Record<string, string> = {
+    plan_selection: 'Choose Your Plan',
+    welcome: 'Welcome',
+    shop_info: 'Your Shop',
+    auto_fill_choice: 'Auto-Fill',
+    auto_fill_review: 'Review Info',
+    hours: 'Business Hours',
+    services: 'Services',
+    notifications: 'Alert Number',
+    emergency: 'Breakdown Contact',
+    calendar: 'Google Calendar',
+    voice: 'AI Voice',
+    provision: 'Setting Up',
+    forwarding: 'Call Forwarding',
+    test_call: 'Test Call',
+    go_live: 'Go Live',
+  }
+
   const stepIndex = STEPS.indexOf(currentStep)
   const displayStepIndex = DISPLAY_STEPS.indexOf(currentStep)
   // For steps not in DISPLAY_STEPS (auto_fill_choice, auto_fill_review), show the
@@ -88,7 +106,7 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
-      <ProgressBar currentStep={displayStep} totalSteps={13} />
+      <ProgressBar currentStep={displayStep} totalSteps={13} stepName={STEP_NAMES[currentStep]} />
       <div style={{ padding: '40px 16px' }}>
         {currentStep === 'plan_selection' && <PlanSelectionStep {...commonProps} />}
         {currentStep === 'welcome' && <WelcomeStep {...commonProps} />}
