@@ -36,10 +36,11 @@ export async function POST(request: Request) {
     const msg = body.message
     const type = msg?.type
     // Log every event type for debugging
-    console.log(`vapi-webhook event: type=${type} callId=${msg?.call?.id ?? 'none'}`)
+    console.log(`vapi-webhook event: type=${type} status=${msg?.status ?? 'none'} callId=${msg?.call?.id ?? 'none'}`)
 
-    // call-started: create the call record with basic info
-    if (type === 'call-started') {
+    // status-update with status=in-progress: create the call record with basic info
+    // (Vapi sends "status-update" with status "in-progress", not "call-started")
+    if (type === 'status-update' && msg?.status === 'in-progress') {
       const call = msg.call
       if (!call?.id) return NextResponse.json({ received: true })
 
@@ -60,7 +61,7 @@ export async function POST(request: Request) {
         outcome: 'info_only',
         vapi_call_id: call.id,
       })
-      return NextResponse.json({ received: true, type: 'call-started' })
+      return NextResponse.json({ received: true, type: 'status-update-in-progress' })
     }
 
     // end-of-call-report: update with full details
