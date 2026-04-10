@@ -3,7 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!
 const REDIRECT_URI = 'https://app.shopdesk.site/api/auth/google-calendar/callback'
-const SCOPES = 'https://www.googleapis.com/auth/calendar'
+const SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 
 export async function GET() {
   const supabase = await createClient()
