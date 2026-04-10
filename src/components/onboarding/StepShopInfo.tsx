@@ -14,7 +14,7 @@ const VEHICLE_OPTIONS = [
   'Diesel',
 ]
 
-export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShopUpdate }: StepProps) {
+export function StepShopInfo({ shop, userId, onNext, onBack, onSkipTo: _onSkipTo, onShopUpdate }: StepProps) {
   const [name, setName] = useState(shop?.name ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
   const [address, setAddress] = useState(shop?.address ?? '')
@@ -74,7 +74,6 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
       email: email.trim() || null,
       owner_phone: ownerPhone.trim(),
       owner_phone_sms_consent: true,
-      sms_consent: true,
       onboarding_step: 'auto_fill_choice',
     }
     if (!shop?.emergency_contact_name) {
@@ -100,7 +99,6 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
       email: email.trim() || null,
       owner_phone: ownerPhone.trim(),
       owner_phone_sms_consent: true,
-      sms_consent: true,
     }
     if (!shop?.emergency_contact_name) {
       shopUpdate.emergency_contact_name = ownerName.trim()
@@ -112,6 +110,7 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
 
   return (
     <div style={card}>
+      <button onClick={onBack} style={backBtn}>← Back</button>
       <h2 style={title}>Tell us about your shop</h2>
       <p style={subtitle}>Your AI uses this to introduce your business on every call.</p>
 
@@ -143,7 +142,7 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
             type="tel"
           />
         </div>
-        <p style={helperStyle}>This is your shop's main number — the one customers call.</p>
+        <p style={helperStyle}>This is your shop's main number, the one customers call.</p>
         {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
       </div>
 
@@ -312,6 +311,17 @@ export function StepShopInfo({ shop, userId, onNext, onSkipTo: _onSkipTo, onShop
   )
 }
 
+const backBtn: React.CSSProperties = {
+  background: 'none',
+  border: 'none',
+  color: 'var(--muted)',
+  fontSize: 14,
+  cursor: 'pointer',
+  padding: 0,
+  marginBottom: 24,
+  display: 'block',
+  fontFamily: 'inherit',
+}
 const card: React.CSSProperties = {
   background: 'var(--surface)',
   border: '1px solid var(--border)',

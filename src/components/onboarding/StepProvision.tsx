@@ -8,7 +8,7 @@ const STAGES = [
   'Creating your AI receptionist...',
   'Teaching it your shop\'s name and hours...',
   'Setting up your dedicated phone number...',
-  'Almost done — final checks...',
+  'Almost done. Final checks...',
 ]
 
 export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProps) {
@@ -43,7 +43,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         const data = await res.json()
 
         if (!res.ok) {
-          if (!cancelled) setError(data.error ?? `Error ${res.status} — please try again.`)
+          if (!cancelled) setError(data.error ?? `Error ${res.status}. Please try again.`)
           return
         }
 

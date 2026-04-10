@@ -53,7 +53,7 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
 
       <h2 style={titleStyle}>Who handles urgent caller situations?</h2>
       <p style={subtitleStyle}>
-        If a caller says their car is overheating, their brakes failed, or they're stranded — who should we text immediately so someone can help them?
+        If a caller says their car is overheating, their brakes failed, or they're stranded. Who should we text immediately so someone can help them?
       </p>
 
       <div style={fieldStyle}>

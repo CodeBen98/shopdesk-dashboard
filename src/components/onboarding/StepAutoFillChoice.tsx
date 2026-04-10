@@ -50,13 +50,13 @@ export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onS
         })
         onSkipTo('auto_fill_review')
       } else {
-        setNotFoundMsg("We couldn't find your shop online. No worries — you can fill it in manually.")
+        setNotFoundMsg("We couldn't find your shop online. No worries, you can fill it in manually.")
         setTimeout(() => {
           onSkipTo('hours')
         }, 2000)
       }
     } catch {
-      setNotFoundMsg("We couldn't find your shop online. No worries — you can fill it in manually.")
+      setNotFoundMsg("We couldn't find your shop online. No worries, you can fill it in manually.")
       setTimeout(() => {
         onSkipTo('hours')
       }, 2000)

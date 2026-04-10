@@ -163,7 +163,7 @@ export function ProgressBar({ currentStep, totalSteps, stepName }: ProgressBarPr
 
         {/* Desktop: step label */}
         <span className="progress-step-text">
-          Step {currentStep} of {totalSteps}{stepName ? ` — ${stepName}` : ''}
+          Step {currentStep} of {totalSteps}{stepName ? `: ${stepName}` : ''}
         </span>
       </div>
       {/* Spacer so content doesn't go under fixed bar */}

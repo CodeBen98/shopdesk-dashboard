@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const HIGHLIGHTS = [
-  'Your AI learns your shop — name, hours, services',
+  'Your AI learns your shop: name, hours, services',
   'Customers call your number, AI answers when you\'re busy',
   'Appointments go straight to your Google Calendar',
   'You get a text every time someone books',

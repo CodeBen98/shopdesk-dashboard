@@ -113,7 +113,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
       {/* Carrier cards */}
       <div style={{ marginBottom: 24 }}>
         <p style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 12 }}>
-          Quick setup by carrier — takes 30 seconds:
+          Quick setup by carrier. Takes 30 seconds:
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {carriers.map(carrier => (
