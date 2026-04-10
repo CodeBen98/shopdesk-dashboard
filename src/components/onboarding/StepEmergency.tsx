@@ -13,7 +13,9 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
   async function handleSubmit() {
     const errs: { name?: string; phone?: string } = {}
     if (!contactName.trim()) errs.name = 'Contact name is required'
+    const contactPhoneDigits = contactPhone.replace(/\D/g, '')
     if (!contactPhone.trim()) errs.phone = 'Phone number is required'
+    else if (contactPhoneDigits.length < 10) errs.phone = 'Please enter a valid 10-digit phone number'
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
 
     setLoading(true)
