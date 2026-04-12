@@ -66,7 +66,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
 
       <h2 style={titleStyle}>Forward your shop's calls to ShopDesk</h2>
       <p style={subtitleStyle}>
-        When your shop phone rings and you don't answer, ShopDesk picks up. Here's how to set that up:
+        When your shop phone rings and you do not answer, ShopDesk picks up. These are the most common forwarding shortcuts, and we can walk you through it live if your carrier works differently.
       </p>
 
       {/* Phone number display */}
@@ -113,7 +113,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
       {/* Carrier cards */}
       <div style={{ marginBottom: 24 }}>
         <p style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 12 }}>
-          Quick setup by carrier. Takes 30 seconds:
+          Common carrier shortcuts:
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {carriers.map(carrier => (
@@ -172,7 +172,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
       </label>
 
       <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 24, lineHeight: 1.5 }}>
-        You can always change this later. Call forwarding works on any smartphone.
+        You can always change this later. If one of these shortcuts does not work, we will help you finish forwarding with your carrier before you go live.
       </p>
 
       <button

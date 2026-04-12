@@ -104,6 +104,24 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
           </div>
         </div>
 
+        <div style={{
+          background: 'var(--card)',
+          border: '1px solid var(--border)',
+          borderRadius: 12,
+          padding: 20,
+          marginBottom: 24,
+          textAlign: 'left',
+        }}>
+          <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
+            What happens now
+          </p>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <SummaryRow label="Calls" value="Your shop rings first, then ShopDesk answers missed calls" />
+            <SummaryRow label="Bookings" value="New appointments show up in your dashboard and calendar" />
+            <SummaryRow label="Updates" value="You can change hours, services, and voice anytime" />
+          </div>
+        </div>
+
         <button
           onClick={handleGoLive}
           disabled={loading}

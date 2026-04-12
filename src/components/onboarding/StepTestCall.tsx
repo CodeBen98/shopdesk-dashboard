@@ -30,8 +30,7 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
       </div>
       <h2 style={titleStyle}>Make a test call</h2>
       <p style={subtitleStyle}>
-        Call your shop number right now. Let it ring 4 times without answering.
-        Your AI receptionist should pick up.
+        Call your shop number right now and let it ring 4 times without answering. Your AI receptionist should pick up. During early setup, we usually verify this live with you before moving on.
       </p>
 
       <div style={{
@@ -51,7 +50,7 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
         <button onClick={handleSuccess} disabled={loading} className="step-btn-primary" style={{ marginTop: 8, width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
-          {loading ? 'Saving...' : 'It worked'}
+          {loading ? 'Saving...' : 'It worked, continue'}
         </button>
         <button
           onClick={() => setShowProblem(p => !p)}
@@ -71,9 +70,7 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
           textAlign: 'left',
         }}>
           <p style={{ fontSize: 14, color: 'var(--warning)', margin: 0 }}>
-            Email us at{' '}
-            <strong>support@shopdesk.site</strong>
-            {' '}and we will sort it out within the hour.
+            No problem. We will troubleshoot the forwarding and test call with you live before you finish setup. If needed, contact <strong>support@shopdesk.site</strong> and we will help immediately.
           </p>
         </div>
       )}

@@ -43,7 +43,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         const data = await res.json()
 
         if (!res.ok) {
-          if (!cancelled) setError(data.error ?? `Error ${res.status}. Please try again.`)
+          if (!cancelled) setError(data.error ?? `Setup hit an error (${res.status}). Please try again, and if it still fails we will finish it with you live.`)
           return
         }
 
@@ -67,7 +67,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
           setTimeout(() => { if (!cancelled) onNext() }, 1500)
         }
       } catch {
-        if (!cancelled) setError('Network error. Please check your connection and try again.')
+        if (!cancelled) setError('Network error. Please try again. If it still does not go through, we will finish setup with you live.')
       }
     }
 
@@ -103,7 +103,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         <button onClick={onBack} style={backBtn}>← Back</button>
 
         <h2 style={titleStyle}>Setting up your AI receptionist</h2>
-        <p style={subtitleStyle}>This takes about 30 seconds.</p>
+        <p style={subtitleStyle}>We are creating your setup now. This usually finishes in under a minute.</p>
 
         {error && (
           <div style={{
