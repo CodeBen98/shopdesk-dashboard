@@ -4,6 +4,7 @@ import { createClient } from '@supabase/supabase-js'
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!
 const REDIRECT_URI = 'https://app.shopdesk.site/api/auth/google-calendar/callback'
+const GOOGLE_CALENDAR_STATE_COOKIE = 'shopdesk_google_calendar_state'
 
 function getSupabase() {
   return createClient(
@@ -15,11 +16,22 @@ function getSupabase() {
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
   const code = searchParams.get('code')
-  const userId = searchParams.get('state')
+  const state = searchParams.get('state')
   const error = searchParams.get('error')
+  const stateCookie = request.headers.get('cookie')
+    ?.split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${GOOGLE_CALENDAR_STATE_COOKIE}=`))
+    ?.split('=')
+    .slice(1)
+    .join('=')
 
-  if (error || !code || !userId) {
-    return NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
+  const [userId, expectedState] = stateCookie ? decodeURIComponent(stateCookie).split(':') : []
+
+  if (error || !code || !state || !userId || !expectedState || state !== expectedState) {
+    const response = NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
+    response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
+    return response
   }
 
   try {
@@ -59,9 +71,13 @@ export async function GET(request: Request) {
       })
       .eq('owner_id', userId)
 
-    return NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=connected')
+    const response = NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=connected')
+    response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
+    return response
   } catch (err) {
     console.error('Google Calendar callback error:', err)
-    return NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
+    const response = NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
+    response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
+    return response
   }
 }

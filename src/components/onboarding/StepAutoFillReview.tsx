@@ -56,7 +56,7 @@ export function StepAutoFillReview({ shop, onBack, onSkipTo }: StepProps) {
       <button onClick={onBack} style={backBtn}>← Back</button>
 
       <h2 style={titleStyle}>Review your shop info</h2>
-      <p style={subtitleStyle}>We found this online. Fix anything that's wrong before your AI learns it.</p>
+      <p style={subtitleStyle}>We found this online. Fix anything that&apos;s wrong before your AI learns it.</p>
 
       <div style={infoList}>
         <InfoRow label="Shop name" value={shop?.name} />
@@ -160,7 +160,6 @@ const infoLabel: React.CSSProperties = {
   letterSpacing: '0.04em',
 }
 const infoValueWrap: React.CSSProperties = { display: 'flex', alignItems: 'flex-start', gap: 6, flex: 1 }
-const checkmark: React.CSSProperties = { color: 'var(--success)', fontWeight: 700, fontSize: 14, flexShrink: 0 }
 const infoValue: React.CSSProperties = { fontSize: 14, color: 'var(--text)', lineHeight: 1.5 }
 const notFound: React.CSSProperties = { fontSize: 14, color: 'var(--muted)' }
 const linkBtn: React.CSSProperties = {

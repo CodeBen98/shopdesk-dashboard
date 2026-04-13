@@ -142,7 +142,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onSkipTo: _onSkipTo
             type="tel"
           />
         </div>
-        <p style={helperStyle}>This is your shop's main number, the one customers call.</p>
+        <p style={helperStyle}>This is your shop&apos;s main number, the one customers call.</p>
         {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
       </div>
 

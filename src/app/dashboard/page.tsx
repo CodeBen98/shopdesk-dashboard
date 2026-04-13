@@ -32,17 +32,6 @@ function OutcomeBadge({ outcome }: { outcome: string }) {
   )
 }
 
-function timeAgo(dateStr: string): string {
-  const diffMs = Date.now() - new Date(dateStr).getTime()
-  const diffMins = Math.floor(diffMs / 60000)
-  if (diffMins < 60) return 'just now'
-  const diffHours = Math.floor(diffMins / 60)
-  if (diffHours === 1) return '1 hour ago'
-  if (diffHours < 24) return `${diffHours} hours ago`
-  const diffDays = Math.floor(diffHours / 24)
-  return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`
-}
-
 export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -68,33 +57,27 @@ export default async function DashboardPage() {
   }
   if (!shop.onboarding_complete) redirect('/onboard')
 
-  const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
-
-  const [callsResult, bookingsResult, missedResult, recentCallsResult, upcomingResult, monthBookingsResult, lastCallResult] = await Promise.all([
+  const [callsResult, bookingsResult, missedResult, recentCallsResult, upcomingResult, lastCallResult] = await Promise.all([
     supabase.from('calls').select('id', { count: 'exact' }).eq('shop_id', shop.id),
     supabase.from('bookings').select('id', { count: 'exact' }).eq('shop_id', shop.id),
     supabase.from('calls').select('id', { count: 'exact' }).eq('shop_id', shop.id).eq('outcome', 'missed'),
     supabase.from('calls').select('*').eq('shop_id', shop.id).order('started_at', { ascending: false }).limit(10),
-    supabase.from('bookings').select('*').eq('shop_id', shop.id)
-      .gte('appointment_at', new Date().toISOString())
+    supabase.from('bookings').select('*').eq('shop_id', shop.id).eq('status', 'scheduled')
       .order('appointment_at', { ascending: true })
       .limit(5),
-    supabase.from('bookings').select('id', { count: 'exact' }).eq('shop_id', shop.id).gte('created_at', thirtyDaysAgo),
     supabase.from('calls').select('started_at').eq('shop_id', shop.id).order('started_at', { ascending: false }).limit(1),
   ])
 
   const totalCalls = callsResult.count ?? 0
   const totalBookings = bookingsResult.count ?? 0
   const missedCalls = missedResult.count ?? 0
-  const monthBookings = monthBookingsResult.count ?? 0
   const allTimeRevenue = totalBookings * 650
-  const monthRevenue = monthBookings * 650
   const recentCalls: Call[] = recentCallsResult.data ?? []
   const upcomingBookings: Booking[] = upcomingResult.data ?? []
 
   const lastCallRow = lastCallResult.data?.[0]
   const lastCallText = lastCallRow
-    ? `Last call: ${timeAgo(lastCallRow.started_at)}`
+    ? `Last call: ${formatDateTime(lastCallRow.started_at)}`
     : 'Waiting for first call'
 
   let headerSub: string
@@ -177,7 +160,7 @@ export default async function DashboardPage() {
           <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
             {totalCalls.toLocaleString()}
           </div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>(this month)</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>(all time)</div>
         </div>
 
         {/* Bookings Made */}
@@ -188,7 +171,7 @@ export default async function DashboardPage() {
           <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
             {totalBookings.toLocaleString()}
           </div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>(this month)</div>
+          <div style={{ fontSize: 12, color: 'var(--muted)' }}>(all time)</div>
         </div>
 
         {/* Missed Opportunities */}
@@ -220,10 +203,10 @@ export default async function DashboardPage() {
             </span>
           </div>
           <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
-            ${monthRevenue.toLocaleString()}
+            ${allTimeRevenue.toLocaleString()}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-            est. at $650/booking — industry avg · all time: ${allTimeRevenue.toLocaleString()}
+            est. at $650/booking, industry avg
           </div>
         </div>
 

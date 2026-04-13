@@ -64,7 +64,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
     <div style={card}>
       <button onClick={onBack} style={backBtn}>← Back</button>
 
-      <h2 style={titleStyle}>Forward your shop's calls to ShopDesk</h2>
+      <h2 style={titleStyle}>Forward your shop&apos;s calls to ShopDesk</h2>
       <p style={subtitleStyle}>
         When your shop phone rings and you do not answer, ShopDesk picks up. These are the most common forwarding shortcuts, and we can walk you through it live if your carrier works differently.
       </p>

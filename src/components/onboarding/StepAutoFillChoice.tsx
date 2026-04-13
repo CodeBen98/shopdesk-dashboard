@@ -39,10 +39,10 @@ export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onS
         if (!shop?.phone && data.phone) {
           updates.phone = data.phone
         }
-        if (data.website !== null && data.website !== undefined) {
-          updates.website = data.website
+        const { error } = await supabase.from('shops').update(updates).eq('owner_id', userId)
+        if (error) {
+          throw error
         }
-        await supabase.from('shops').update(updates).eq('owner_id', userId)
         onShopUpdate({
           hours: data.hours as ShopHours,
           ...((!shop?.phone && data.phone) ? { phone: data.phone } : {}),
