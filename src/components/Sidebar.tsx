@@ -8,11 +8,12 @@ import { useState, useEffect } from 'react'
 interface SidebarProps {
   shopName: string | null
   userEmail: string | null
+  showDeveloperTools?: boolean
   mobileOpen: boolean
   onClose: () => void
 }
 
-const navItems = [
+const coreNavItems = [
   {
     label: 'Overview',
     href: '/dashboard',
@@ -62,17 +63,6 @@ const navItems = [
     ),
   },
   {
-    label: 'Monitoring',
-    href: '/dashboard/monitoring',
-    exact: false,
-    icon: (
-      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
-        <path d="M3 12.5h2.5l1.5-3 2.5 5 2-4H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
-        <rect x="1.75" y="2" width="14.5" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
-      </svg>
-    ),
-  },
-  {
     label: 'Settings',
     href: '/dashboard/settings',
     exact: false,
@@ -85,10 +75,25 @@ const navItems = [
   },
 ]
 
-export function Sidebar({ shopName, userEmail, mobileOpen, onClose }: SidebarProps) {
+const developerNavItems = [
+  {
+    label: 'Monitoring',
+    href: '/dashboard/monitoring',
+    exact: false,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 12.5h2.5l1.5-3 2.5 5 2-4H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <rect x="1.75" y="2" width="14.5" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+]
+
+export function Sidebar({ shopName, userEmail, showDeveloperTools = false, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
   const router = useRouter()
   const [emergencyCount, setEmergencyCount] = useState(0)
+  const navItems = showDeveloperTools ? [...coreNavItems, ...developerNavItems] : coreNavItems
 
   useEffect(() => {
     async function checkEmergencies() {

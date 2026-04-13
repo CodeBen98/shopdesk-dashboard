@@ -37,6 +37,10 @@ export default async function MonitoringPage() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
 
+  const allowedEmails = new Set(['slarve@shopdesk.site', 'admin@example.com'])
+  const email = (user.email ?? '').toLowerCase()
+  if (!allowedEmails.has(email)) redirect('/dashboard')
+
   const { data: shop } = await supabase
     .from('shops')
     .select('id, name, onboarding_complete')

@@ -9,13 +9,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [mobileOpen, setMobileOpen] = useState(false)
   const [shopName, setShopName] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [showDeveloperTools, setShowDeveloperTools] = useState(false)
 
   useEffect(() => {
     async function load() {
       const supabase = createClient()
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
-      setUserEmail(user.email ?? null)
+      const email = user.email ?? null
+      setUserEmail(email)
+      const allowedEmails = new Set(['slarve@shopdesk.site', 'admin@example.com'])
+      setShowDeveloperTools(Boolean(email && allowedEmails.has(email.toLowerCase())))
       const { data: shop } = await supabase
         .from('shops')
         .select('name')
@@ -48,6 +52,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         <Sidebar
           shopName={shopName}
           userEmail={userEmail}
+          showDeveloperTools={showDeveloperTools}
           mobileOpen={mobileOpen}
           onClose={() => setMobileOpen(false)}
         />
