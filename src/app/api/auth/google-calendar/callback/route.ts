@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { captureAndRecord, recordMonitoringEvent } from '@/lib/monitoring'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!
@@ -29,6 +30,14 @@ export async function GET(request: Request) {
   const [userId, expectedState] = stateCookie ? decodeURIComponent(stateCookie).split(':') : []
 
   if (error || !code || !state || !userId || !expectedState || state !== expectedState) {
+    await recordMonitoringEvent({
+      source: 'dashboard-api',
+      eventType: 'google_calendar_callback_state_error',
+      severity: 'critical',
+      shopId: null,
+      message: 'Google Calendar callback failed state validation',
+      payload: { hasCode: Boolean(code), hasState: Boolean(state), hasUserId: Boolean(userId), hasExpectedState: Boolean(expectedState), error },
+    })
     const response = NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
     response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
     return response
@@ -51,6 +60,14 @@ export async function GET(request: Request) {
     const tokens = await tokenRes.json()
     if (!tokenRes.ok || !tokens.refresh_token) {
       console.error('Token exchange failed:', tokens)
+      await recordMonitoringEvent({
+        source: 'dashboard-api',
+        eventType: 'google_calendar_token_exchange_failed',
+        severity: 'critical',
+        shopId: null,
+        message: 'Google Calendar token exchange failed',
+        payload: { tokenStatus: tokenRes.status, tokenBody: tokens },
+      })
       return NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
     }
 
@@ -76,6 +93,15 @@ export async function GET(request: Request) {
     return response
   } catch (err) {
     console.error('Google Calendar callback error:', err)
+    await captureAndRecord({
+      source: 'dashboard-api',
+      eventType: 'google_calendar_callback_error',
+      severity: 'critical',
+      shopId: null,
+      message: 'Google Calendar callback failed',
+      payload: {},
+      error: err,
+    })
     const response = NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
     response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
     return response

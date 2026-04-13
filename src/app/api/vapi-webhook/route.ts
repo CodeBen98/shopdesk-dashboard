@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { captureAndRecord } from '@/lib/monitoring'
 
 function getSupabase() {
   return createClient(
@@ -258,6 +259,14 @@ export async function POST(request: Request) {
 
   } catch (err) {
     console.error('vapi-webhook error:', err)
+    await captureAndRecord({
+      source: 'dashboard-api',
+      eventType: 'vapi_webhook_error',
+      severity: 'critical',
+      message: 'Vapi webhook route failed',
+      payload: {},
+      error: err,
+    })
     return NextResponse.json({ received: true })
   }
 }
