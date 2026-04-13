@@ -1,6 +1,5 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { captureAndRecord, recordMonitoringEvent } from '@/lib/monitoring'
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID!
@@ -224,14 +223,6 @@ export async function POST(request: Request) {
       .single()
 
     if (shopError || !shop) {
-      await recordMonitoringEvent({
-        source: 'dashboard-api',
-        shopId: null,
-        eventType: 'provision_shop_missing_shop',
-        severity: 'critical',
-        message: 'Provision failed because the shop record was missing',
-        payload: { userId: user.id },
-      })
       return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
     }
 
@@ -396,14 +387,6 @@ export async function POST(request: Request) {
     console.error('Provision error:', err)
     const msg = err instanceof Error ? err.message : String(err)
     console.error('Full provision error:', msg)
-    await captureAndRecord({
-      source: 'dashboard-api',
-      eventType: 'provision_shop_error',
-      severity: 'critical',
-      message: 'Provision-shop route failed',
-      payload: { errorMessage: msg },
-      error: err,
-    })
     return NextResponse.json({ error: msg.slice(0, 500) }, { status: 500 })
   }
 }

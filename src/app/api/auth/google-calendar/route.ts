@@ -1,7 +1,6 @@
 import { randomUUID } from 'crypto'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { captureAndRecord } from '@/lib/monitoring'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!
 const REDIRECT_URI = 'https://app.shopdesk.site/api/auth/google-calendar/callback'
@@ -9,46 +8,34 @@ const SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 const GOOGLE_CALENDAR_STATE_COOKIE = 'shopdesk_google_calendar_state'
 
 export async function GET() {
-  try {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.redirect(new URL('/auth/login', 'https://app.shopdesk.site'))
+  const supabase = await createClient()
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return NextResponse.redirect(new URL('/auth/login', 'https://app.shopdesk.site'))
 
-    const state = randomUUID()
-    const params = new URLSearchParams({
-      client_id: GOOGLE_CLIENT_ID,
-      redirect_uri: REDIRECT_URI,
-      response_type: 'code',
-      scope: SCOPES,
-      access_type: 'offline',
-      prompt: 'consent',
-      state,
-    })
+  const state = randomUUID()
+  const params = new URLSearchParams({
+    client_id: GOOGLE_CLIENT_ID,
+    redirect_uri: REDIRECT_URI,
+    response_type: 'code',
+    scope: SCOPES,
+    access_type: 'offline',
+    prompt: 'consent',
+    state,
+  })
 
-    const response = NextResponse.redirect(
-      `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
-    )
+  const response = NextResponse.redirect(
+    `https://accounts.google.com/o/oauth2/v2/auth?${params.toString()}`
+  )
 
-    response.cookies.set({
-      name: GOOGLE_CALENDAR_STATE_COOKIE,
-      value: `${user.id}:${state}`,
-      httpOnly: true,
-      secure: true,
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 10,
-    })
+  response.cookies.set({
+    name: GOOGLE_CALENDAR_STATE_COOKIE,
+    value: `${user.id}:${state}`,
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
+    path: '/',
+    maxAge: 60 * 10,
+  })
 
-    return response
-  } catch (err) {
-    await captureAndRecord({
-      source: 'dashboard-api',
-      eventType: 'google_calendar_auth_start_error',
-      severity: 'critical',
-      message: 'Google Calendar OAuth start failed',
-      payload: {},
-      error: err,
-    })
-    return NextResponse.redirect(new URL('/onboard?calendar=error', 'https://app.shopdesk.site'))
-  }
+  return response
 }
