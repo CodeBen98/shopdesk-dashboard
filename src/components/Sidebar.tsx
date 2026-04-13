@@ -62,6 +62,17 @@ const navItems = [
     ),
   },
   {
+    label: 'Monitoring',
+    href: '/dashboard/monitoring',
+    exact: false,
+    icon: (
+      <svg width="16" height="16" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 12.5h2.5l1.5-3 2.5 5 2-4H15" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+        <rect x="1.75" y="2" width="14.5" height="14" rx="2.5" stroke="currentColor" strokeWidth="1.5"/>
+      </svg>
+    ),
+  },
+  {
     label: 'Settings',
     href: '/dashboard/settings',
     exact: false,

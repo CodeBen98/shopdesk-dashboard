@@ -102,6 +102,18 @@ export type JobStatus = {
   created_at: string
 }
 
+export type MonitoringEvent = {
+  id: string
+  shop_id: string | null
+  source: string
+  event_type: string
+  severity: 'info' | 'warning' | 'critical'
+  message: string
+  payload: Record<string, unknown> | null
+  resolved_at: string | null
+  created_at: string
+}
+
 export type OnboardingStep =
   | 'plan_selection'
   | 'welcome'
