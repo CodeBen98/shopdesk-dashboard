@@ -15,20 +15,20 @@ const DEFAULT_AUTO_SERVICES = [
   { name: 'General Auto Repair', price: null, description: null },
 ]
 
-// Convert Google's {hour, minute} to HH:MM 24hr format for <input type="time">
 function toTimeInput(t: { hour: number; minute: number }): string {
   return `${String(t.hour).padStart(2, '0')}:${String(t.minute).padStart(2, '0')}`
 }
 
-// Also return human-readable for Vapi system prompt display
-function toHumanTime(t: { hour: number; minute: number }): string {
-  const h = t.hour; const m = t.minute
-  const suffix = h < 12 ? 'AM' : 'PM'
-  const h12 = h % 12 || 12
-  return `${h12}:${String(m).padStart(2, '0')} ${suffix}`
-}
-
 export async function GET(request: Request) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const { searchParams } = new URL(request.url)
   const q = searchParams.get('q')
   const save = searchParams.get('save') === 'true'
@@ -52,7 +52,7 @@ export async function GET(request: Request) {
 
   const dayMap: Record<number, string> = {
     0: 'sunday', 1: 'monday', 2: 'tuesday', 3: 'wednesday',
-    4: 'thursday', 5: 'friday', 6: 'saturday'
+    4: 'thursday', 5: 'friday', 6: 'saturday',
   }
   const hours: Record<string, { open: boolean; from: string; to: string }> = {}
   for (const d of Object.values(dayMap)) hours[d] = { open: false, from: '', to: '' }
@@ -60,7 +60,6 @@ export async function GET(request: Request) {
   const periods = place.regularOpeningHours?.periods ?? []
   let hasHours = false
 
-  // Detect 24/7 shops: single period on Sunday (day 0) with no close = open all week
   const is247 = periods.length === 1 && periods[0].open?.day === 0 && !periods[0].close
 
   if (is247) {
@@ -75,7 +74,6 @@ export async function GET(request: Request) {
       const dayName = dayMap[dayNum]
       if (!dayName || !period.open) continue
 
-      // Single day 24-hour (no close time)
       if (!period.close) {
         hours[dayName] = { open: true, from: '00:00', to: '23:59' }
         hasHours = true
@@ -92,12 +90,11 @@ export async function GET(request: Request) {
     }
   }
 
-  // Fallback hours if Google has none
   if (!hasHours) {
-    for (const d of ['monday','tuesday','wednesday','thursday','friday']) {
+    for (const d of ['monday', 'tuesday', 'wednesday', 'thursday', 'friday']) {
       hours[d] = { open: true, from: '08:00', to: '17:00' }
     }
-    hours['saturday'] = { open: true, from: '09:00', to: '14:00' }
+    hours.saturday = { open: true, from: '09:00', to: '14:00' }
   }
 
   const shopData = {
@@ -109,15 +106,15 @@ export async function GET(request: Request) {
   }
 
   if (save) {
-    const supabase = await createClient()
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-
     const { error } = await supabase.from('shops').update(shopData).eq('owner_id', user.id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
 
     const baseUrl = new URL(request.url).origin
-    fetch(`${baseUrl}/api/provision-shop`, { method: 'POST' }).catch(() => {})
+    const cookie = request.headers.get('cookie')
+    fetch(`${baseUrl}/api/provision-shop`, {
+      method: 'POST',
+      headers: cookie ? { cookie } : undefined,
+    }).catch(() => {})
 
     return NextResponse.json({ success: true, ...shopData })
   }

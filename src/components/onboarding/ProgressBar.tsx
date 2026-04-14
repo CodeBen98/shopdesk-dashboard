@@ -86,7 +86,6 @@ export function ProgressBar({ currentStep, totalSteps, stepName }: ProgressBarPr
             const stepNum = i + 1
             const isCompleted = stepNum < currentStep
             const isCurrent = stepNum === currentStep
-            const isFuture = stepNum > currentStep
 
             return (
               <div key={i} style={{ display: 'flex', alignItems: 'center' }}>

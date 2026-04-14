@@ -247,7 +247,7 @@ export default function SettingsPage() {
       const query = address ? `${name} ${address}` : name
       const res = await fetch(`/api/autofill-shop?q=${encodeURIComponent(query)}&save=true`)
       if (!res.ok) throw new Error('Not found')
-      const data = await res.json()
+      await res.json()
       // Reload the page so all tabs reflect the new data cleanly
       window.location.reload()
     } catch {
@@ -446,7 +446,7 @@ export default function SettingsPage() {
                 style={inputStyle(focused === 'owner-phone')}
               />
               <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
-                Where we text you when someone books. Different from your shop phone.
+                Where we text booking alerts and urgent shop notifications. Different from your shop phone.
               </p>
               <label style={{
                 display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 10, cursor: 'pointer',
@@ -458,7 +458,7 @@ export default function SettingsPage() {
                   style={{ marginTop: 2, accentColor: 'var(--accent)', flexShrink: 0 }}
                 />
                 <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-                  I agree to receive SMS booking alerts at this number. Msg and data rates may apply. Reply STOP to opt out.
+                  I agree to receive SMS booking alerts and urgent shop notifications at this number. Msg and data rates may apply. Reply STOP to opt out. Reply HELP for help.
                 </span>
               </label>
             </div>

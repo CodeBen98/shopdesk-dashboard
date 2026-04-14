@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ShopHours } from '@/types'
 import { StepProps } from './OnboardingWizard'
 
-export function StepAutoFillChoice({ shop, userId, onNext, onBack, onSkipTo, onShopUpdate }: StepProps) {
+export function StepAutoFillChoice({ shop, userId, onBack, onSkipTo, onShopUpdate }: StepProps) {
   const [selected, setSelected] = useState<'auto' | 'manual'>('auto')
   const [loading, setLoading] = useState(false)
   const [notFoundMsg, setNotFoundMsg] = useState('')
@@ -183,7 +183,6 @@ const optionCard: React.CSSProperties = {
   display: 'flex',
   flexDirection: 'column',
 }
-const optionIcon: React.CSSProperties = { fontSize: 28, marginBottom: 8 }
 const badge: React.CSSProperties = {
   background: 'var(--accent)',
   color: '#fff',

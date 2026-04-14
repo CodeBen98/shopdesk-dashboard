@@ -35,7 +35,6 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Exchange code for tokens
     const tokenRes = await fetch('https://oauth2.googleapis.com/token', {
       method: 'POST',
       headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
@@ -51,18 +50,18 @@ export async function GET(request: Request) {
     const tokens = await tokenRes.json()
     if (!tokenRes.ok || !tokens.refresh_token) {
       console.error('Token exchange failed:', tokens)
-      return NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
+      const response = NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
+      response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
+      return response
     }
 
-    // Get the Google Calendar ID (user's primary calendar email)
     const calRes = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
-      headers: { 'Authorization': `Bearer ${tokens.access_token}` }
+      headers: { Authorization: `Bearer ${tokens.access_token}` },
     })
     const calData = await calRes.json()
     const calendarId = calData.id || 'primary'
 
-    // Save refresh token + calendar ID to shop
-    await getSupabase()
+    const { error: updateError } = await getSupabase()
       .from('shops')
       .update({
         google_refresh_token: tokens.refresh_token,
@@ -70,6 +69,13 @@ export async function GET(request: Request) {
         onboarding_step: 'voice',
       })
       .eq('owner_id', userId)
+
+    if (updateError) {
+      console.error('Failed to save Google Calendar credentials:', updateError)
+      const response = NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=error')
+      response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
+      return response
+    }
 
     const response = NextResponse.redirect('https://app.shopdesk.site/onboard?calendar=connected')
     response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)

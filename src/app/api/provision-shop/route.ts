@@ -299,23 +299,9 @@ export async function POST(request: Request) {
       const updated = await vapiRequest(`/assistant/${shop.vapi_agent_id}`, 'PATCH', agentPayload)
       agentId = updated.id
     } else {
-      // No agent yet — check if one already exists in Vapi with this shop name
-      // This handles the case where the shop row was deleted and re-onboarded
-      const existingAgents = await vapiRequest('/assistant?limit=100', 'GET')
-      const agents = Array.isArray(existingAgents) ? existingAgents : existingAgents.results ?? []
-      const match = agents.find((a: { name?: string; id: string }) =>
-        a.name?.toLowerCase() === shop.name.toLowerCase()
-      )
-
-      if (match) {
-        // Found an existing agent with the same shop name — update it
-        const updated = await vapiRequest(`/assistant/${match.id}`, 'PATCH', agentPayload)
-        agentId = updated.id
-      } else {
-        // Truly new shop — create a fresh agent
-        const created = await vapiRequest('/assistant', 'POST', agentPayload)
-        agentId = created.id
-      }
+      // No saved agent ID for this shop — always create a fresh one to avoid cross-shop collisions.
+      const created = await vapiRequest('/assistant', 'POST', agentPayload)
+      agentId = created.id
     }
 
     // Assign phone number to agent

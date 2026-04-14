@@ -30,20 +30,18 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
+function nyDateKey(date: Date): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(date)
+}
+
 function isTodayNY(dateStr: string): boolean {
-  const now = new Date()
-  const nyNow = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(now)
-  const nyAppt = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(new Date(dateStr))
-  return nyNow === nyAppt
+  return nyDateKey(new Date()) === nyDateKey(new Date(dateStr))
 }
 
 function isTodayOrPast(dateStr: string): boolean {
-  const now = new Date()
-  const startOfTomorrow = new Date(
-    new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(now) + 'T00:00:00-05:00'
-  )
-  startOfTomorrow.setDate(startOfTomorrow.getDate() + 1)
-  return new Date(dateStr) < startOfTomorrow
+  const todayNy = nyDateKey(new Date())
+  const apptNy = nyDateKey(new Date(dateStr))
+  return apptNy <= todayNy
 }
 
 export default function BookingsPage() {

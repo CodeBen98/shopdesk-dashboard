@@ -1,22 +1,22 @@
 import { NextResponse } from 'next/server'
 import { ShopHours } from '@/types'
+import { createClient } from '@/lib/supabase/server'
 
 const DAYS: (keyof ShopHours)[] = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']
 
 function formatTime(t: string): string {
-  // "0800" → "08:00"
   return t.slice(0, 2) + ':' + t.slice(2, 4)
 }
 
 function buildHours(periods: Array<{ open: { day: number; time: string }; close?: { day: number; time: string } }>): ShopHours {
   const hours: ShopHours = {
-    sunday:    { open: false, from: '09:00', to: '17:00' },
-    monday:    { open: false, from: '09:00', to: '17:00' },
-    tuesday:   { open: false, from: '09:00', to: '17:00' },
+    sunday: { open: false, from: '09:00', to: '17:00' },
+    monday: { open: false, from: '09:00', to: '17:00' },
+    tuesday: { open: false, from: '09:00', to: '17:00' },
     wednesday: { open: false, from: '09:00', to: '17:00' },
-    thursday:  { open: false, from: '09:00', to: '17:00' },
-    friday:    { open: false, from: '09:00', to: '17:00' },
-    saturday:  { open: false, from: '09:00', to: '17:00' },
+    thursday: { open: false, from: '09:00', to: '17:00' },
+    friday: { open: false, from: '09:00', to: '17:00' },
+    saturday: { open: false, from: '09:00', to: '17:00' },
   }
   for (const period of periods) {
     const dayName = DAYS[period.open.day]
@@ -31,6 +31,15 @@ function buildHours(periods: Array<{ open: { day: number; time: string }; close?
 }
 
 export async function POST(request: Request) {
+  const supabase = await createClient()
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   const apiKey = process.env.GOOGLE_PLACES_API_KEY
   if (!apiKey) {
     return NextResponse.json({ found: false })

@@ -14,7 +14,7 @@ const VEHICLE_OPTIONS = [
   'Diesel',
 ]
 
-export function StepShopInfo({ shop, userId, onNext, onBack, onSkipTo: _onSkipTo, onShopUpdate }: StepProps) {
+export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [name, setName] = useState(shop?.name ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
   const [address, setAddress] = useState(shop?.address ?? '')
@@ -55,7 +55,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onSkipTo: _onSkipTo
     const ownerPhoneDigits = ownerPhone.replace(/\D/g, '')
     if (!ownerPhone.trim()) errs.ownerPhone = 'Owner mobile is required'
     else if (ownerPhoneDigits.length < 10) errs.ownerPhone = 'Please enter a valid mobile number'
-    if (!ownerSmsConsent) errs.ownerSmsConsent = 'You must agree to receive SMS alerts to continue'
+    if (!ownerSmsConsent) errs.ownerSmsConsent = 'To receive SMS booking alerts at this number, please agree to SMS notifications'
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       errs.email = 'Please enter a valid email address'
     }
@@ -191,7 +191,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onSkipTo: _onSkipTo
             type="tel"
           />
         </div>
-        <p style={helperStyle}>We text you here when someone books. Different from your shop number.</p>
+        <p style={helperStyle}>We text booking alerts and urgent shop notifications here. Different from your shop number.</p>
         {errors.ownerPhone && <p style={errorStyle}>{errors.ownerPhone}</p>}
       </div>
 
@@ -222,7 +222,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onSkipTo: _onSkipTo
             )}
           </div>
           <span style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.6 }}>
-            I agree to receive SMS booking alerts and notifications at this number. Msg &amp; data rates may apply. Reply STOP to opt out.{' '}
+            I agree to receive SMS booking alerts and urgent shop notifications at this number. Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help.{' '}
             <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
               View SMS Policy
             </a>
