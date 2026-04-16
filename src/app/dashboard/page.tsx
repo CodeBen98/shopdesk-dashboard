@@ -82,11 +82,11 @@ export default async function DashboardPage() {
 
   let headerSub: string
   if (totalCalls === 0) {
-    headerSub = 'You are live. Make one real test call now so you know the routing is working.'
+    headerSub = "You're live! Make a test call to confirm everything works."
   } else if (totalBookings === 0) {
-    headerSub = 'Calls are coming in. Review outcomes and tighten forwarding if callers are not converting.'
+    headerSub = "Your AI is handling calls. No bookings yet — check your forwarding setup."
   } else {
-    headerSub = 'This is the operating view for your phone coverage, bookings, and recovered revenue.'
+    headerSub = "Your AI receptionist is live. Here's what's happening."
   }
 
   return (
@@ -121,7 +121,7 @@ export default async function DashboardPage() {
             boxShadow: '0 0 0 3px var(--success-dim)',
             flexShrink: 0,
           }} />
-          <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>Missed-call coverage is live</span>
+          <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>AI Receptionist is Live</span>
           {shop.twilio_number && (
             <span style={{ fontSize: 14, color: 'var(--muted)' }}>· {shop.twilio_number}</span>
           )}
@@ -249,7 +249,7 @@ export default async function DashboardPage() {
               Recent Calls
             </h2>
             <Link href="/dashboard/calls" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
-              Review all →
+              View all →
             </Link>
           </div>
 
@@ -260,7 +260,7 @@ export default async function DashboardPage() {
                 <path d="M13 14h4l2.5 5-2.5 2c1.5 2.5 5 6 7.5 7.5l2-2.5 5 2.5v4a2 2 0 01-2 2C17.6 34.5 6 22.9 6 9a2 2 0 012-2h4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
               </svg>
               <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-mid)', marginBottom: 6 }}>No calls yet</div>
-              <div style={{ fontSize: 13 }}>Your setup is ready. Make a test call to</div>
+              <div style={{ fontSize: 13 }}>Your AI receptionist is ready. Make a test call to</div>
               {shop.twilio_number && (
                 <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--accent)', marginTop: 4 }}>
                   {shop.twilio_number}
@@ -322,7 +322,7 @@ export default async function DashboardPage() {
               Upcoming Bookings
             </h2>
             <Link href="/dashboard/bookings" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
-              Review all →
+              View all →
             </Link>
           </div>
 

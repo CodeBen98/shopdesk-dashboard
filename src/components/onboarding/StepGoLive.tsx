@@ -14,6 +14,17 @@ const VOICE_LABELS: Record<string, string> = {
   marcus: 'Marcus, Direct and Trustworthy',
 }
 
+const CONFETTI = [
+  { color: 'var(--accent)', left: '8%', delay: '0s', size: 8, duration: '1.4s' },
+  { color: '#22c55e', left: '20%', delay: '0.1s', size: 6, duration: '1.6s' },
+  { color: '#f59e0b', left: '35%', delay: '0.2s', size: 10, duration: '1.3s' },
+  { color: '#a855f7', left: '50%', delay: '0.05s', size: 7, duration: '1.5s' },
+  { color: '#ef4444', left: '65%', delay: '0.15s', size: 9, duration: '1.4s' },
+  { color: '#0ea5e9', left: '78%', delay: '0.25s', size: 6, duration: '1.6s' },
+  { color: '#f97316', left: '90%', delay: '0.3s', size: 8, duration: '1.3s' },
+  { color: 'var(--accent)', left: '45%', delay: '0.08s', size: 5, duration: '1.7s' },
+]
+
 export function StepGoLive({ shop, userId, onBack }: StepProps) {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
@@ -35,6 +46,22 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
 
   return (
     <div style={{ position: 'relative', maxWidth: 560, margin: '0 auto' }}>
+      {/* Confetti dots */}
+      {CONFETTI.map((c, i) => (
+        <div key={i} style={{
+          position: 'absolute',
+          bottom: '60%',
+          left: c.left,
+          width: c.size,
+          height: c.size,
+          borderRadius: '50%',
+          background: c.color,
+          animation: `confetti-fly ${c.duration} ${c.delay} ease-out forwards`,
+          pointerEvents: 'none',
+          zIndex: 10,
+        }} />
+      ))}
+
       <div style={{ ...card, textAlign: 'center' }}>
         <button onClick={onBack} style={{ ...backBtn, textAlign: 'left' }}>← Back</button>
 
@@ -52,10 +79,10 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
           color: 'var(--text)',
           marginBottom: 8,
         }}>
-          Your setup is ready
+          You&apos;re live!
         </h2>
         <p style={{ fontSize: 16, color: 'var(--muted)', marginBottom: 32, lineHeight: 1.6 }}>
-          ShopDesk is ready to take missed calls for <strong style={{ color: 'var(--text)' }}>{shopName}</strong>.
+          Your AI receptionist is ready to take calls for <strong style={{ color: 'var(--text)' }}>{shopName}</strong>.
         </p>
 
         {/* Summary card */}
@@ -68,7 +95,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
           textAlign: 'left',
         }}>
           <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
-            Your live setup
+            Your Setup Summary
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SummaryRow label="Shop" value={shopName} />
@@ -86,12 +113,12 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
           textAlign: 'left',
         }}>
           <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 12 }}>
-            What to expect now
+            What happens now
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <SummaryRow label="Calls" value="Your shop rings first, then ShopDesk answers missed calls" />
             <SummaryRow label="Bookings" value="New appointments show up in your dashboard and calendar" />
-            <SummaryRow label="Dashboard" value="You can review every call, transcript, and caller detail in one place" />
+            <SummaryRow label="Updates" value="You can change hours, services, and voice anytime" />
           </div>
         </div>
 
@@ -106,7 +133,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
             marginTop: 0,
           }}
         >
-          {loading ? 'Opening dashboard...' : 'Open Dashboard →'}
+          {loading ? 'Setting up...' : 'Go to Dashboard →'}
         </button>
       </div>
     </div>

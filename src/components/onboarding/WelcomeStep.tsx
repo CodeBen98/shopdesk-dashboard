@@ -5,10 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const HIGHLIGHTS = [
-  'We set up your shop details, hours, and services',
-  'We connect your calendar so bookings land in the right place',
-  'We give you a dedicated number for missed-call coverage',
-  'We verify forwarding and test a real call before you finish',
+  'Your AI learns your shop: name, hours, services',
+  'Customers call your number, AI answers when you\'re busy',
+  'Appointments go straight to your Google Calendar',
+  'You get a text every time someone books',
 ]
 
 export function WelcomeStep({ userId, onNext, onShopUpdate }: StepProps) {
@@ -52,7 +52,7 @@ export function WelcomeStep({ userId, onNext, onShopUpdate }: StepProps) {
           marginBottom: 10,
           lineHeight: 1.2,
         }}>
-          Set up your AI receptionist
+          Welcome to ShopDesk
         </h1>
         <p style={{
           fontSize: 16,
@@ -61,7 +61,7 @@ export function WelcomeStep({ userId, onNext, onShopUpdate }: StepProps) {
           maxWidth: 380,
           margin: '0 auto',
         }}>
-          This setup is quick and practical. In a few minutes, you will have your number, your calendar, and a real test call ready to verify.
+          Your AI receptionist will be answering calls for your shop in about 8 minutes.
         </p>
       </div>
 
@@ -104,7 +104,8 @@ export function WelcomeStep({ userId, onNext, onShopUpdate }: StepProps) {
         className="step-btn-primary"
         style={{ width: '100%', padding: '15px 32px', fontSize: 16 }}
       >
-        {loading ? 'Starting...' : 'Start setup →'}      </button>
+        {loading ? 'Starting...' : "Let's get started →"}
+      </button>
     </div>
   )
 }
