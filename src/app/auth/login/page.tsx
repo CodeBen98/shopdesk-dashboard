@@ -126,16 +126,16 @@ export default function LoginPage() {
             </div>
 
             {/* Tagline */}
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.2, marginBottom: 32 }}>
-              Never miss a call again
+            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.2, marginBottom: 20 }}>
+              See every saved call in one place
             </h2>
 
             {/* Proof points */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 48 }}>
               {[
-                '24/7 AI receptionist for your shop',
-                'Books appointments while you sleep',
-                'Set up in under 10 minutes',
+                'Review recordings, transcripts, and caller details',
+                'See which calls booked and which ones did not',
+                'Update hours, services, forwarding, and voice settings',
               ].map(point => (
                 <div key={point} style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{
@@ -153,8 +153,8 @@ export default function LoginPage() {
             </div>
 
             {/* Social proof */}
-            <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-              Built exclusively for independent auto repair shops
+            <p style={{ fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+              Built for independent auto repair shops that want a clear operational dashboard, not another generic SaaS inbox.
             </p>
           </div>
         </div>
@@ -182,7 +182,7 @@ export default function LoginPage() {
                 Welcome back
               </h1>
               <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 28 }}>
-                Sign in to your ShopDesk dashboard
+                Sign in to review calls, bookings, and your live setup
               </p>
 
               {error && (

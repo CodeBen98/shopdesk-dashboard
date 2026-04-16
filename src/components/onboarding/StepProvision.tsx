@@ -5,10 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const STAGES = [
-  'Creating your AI receptionist...',
-  'Teaching it your shop\'s name and hours...',
-  'Setting up your dedicated phone number...',
-  'Almost done. Final checks...',
+  'Creating your shop setup...',
+  'Saving your hours, services, and routing...',
+  'Assigning your dedicated phone number...',
+  'Running final checks before test call...',
 ]
 
 export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProps) {
@@ -43,7 +43,7 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         const data = await res.json()
 
         if (!res.ok) {
-          if (!cancelled) setError(data.error ?? `Setup hit an error (${res.status}). Please try again, and if it still fails we will finish it with you live.`)
+          if (!cancelled) setError(data.error ?? `Setup hit an error (${res.status}). Please try again. If it still fails, we will finish it with you live.`)
           return
         }
 
@@ -102,8 +102,8 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
       <div style={{ position: 'relative', zIndex: 1 }}>
         <button onClick={onBack} style={backBtn}>← Back</button>
 
-        <h2 style={titleStyle}>Setting up your AI receptionist</h2>
-        <p style={subtitleStyle}>We are creating your setup now. This usually finishes in under a minute.</p>
+        <h2 style={titleStyle}>Building your live setup</h2>
+        <p style={subtitleStyle}>We are setting up the real pieces now, your receptionist, number, and routing. This usually finishes in under a minute.</p>
 
         {error && (
           <div style={{

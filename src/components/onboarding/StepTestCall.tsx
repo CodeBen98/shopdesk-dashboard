@@ -28,9 +28,9 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
       <div style={{ width: 64, height: 64, borderRadius: 16, background: 'var(--accent-dim)', border: '1px solid rgba(15,118,149,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 16, marginLeft: 'auto', marginRight: 'auto' }}>
         <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><path d="M5 5h6l2.5 6L10 13c1.5 2.5 5 5.5 7.5 7l2.5-3.5 6 2.5v6a2 2 0 01-2 2C11.5 27 1 16.5 1 5a2 2 0 012-2h2z" stroke="var(--accent)" strokeWidth="1.5" strokeLinejoin="round"/></svg>
       </div>
-      <h2 style={titleStyle}>Make a test call</h2>
+      <h2 style={titleStyle}>Run one real test call</h2>
       <p style={subtitleStyle}>
-        Call your shop number right now and let it ring 4 times without answering. Your AI receptionist should pick up. During early setup, we usually verify this live with you before moving on.
+        Call your shop number now and let it ring four times without answering. ShopDesk should pick up like your backup front desk. This is the fastest way to know your setup is actually ready.
       </p>
 
       <div style={{
@@ -43,14 +43,14 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
         minWidth: 200,
       }}>
         <p style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>
-          Call this number
+          Test your live number
         </p>
         <p style={{ fontSize: 28, fontWeight: 800, color: 'var(--text)', fontFamily: 'monospace' }}>{displayNumber}</p>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
         <button onClick={handleSuccess} disabled={loading} className="step-btn-primary" style={{ marginTop: 8, width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
-          {loading ? 'Saving...' : 'It worked, continue'}
+          {loading ? 'Saving...' : 'It worked, continue →'}
         </button>
         <button
           onClick={() => setShowProblem(p => !p)}
@@ -70,7 +70,7 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
           textAlign: 'left',
         }}>
           <p style={{ fontSize: 14, color: 'var(--warning)', margin: 0 }}>
-            No problem. We will troubleshoot the forwarding and test call with you live before you finish setup. If needed, contact <strong>support@shopdesk.site</strong> and we will help immediately.
+            No problem. We will troubleshoot forwarding and the test call with you before you finish setup. If needed, contact <strong>support@shopdesk.site</strong> and we will help immediately.
           </p>
         </div>
       )}

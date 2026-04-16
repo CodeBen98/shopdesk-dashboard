@@ -64,9 +64,9 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
     <div style={card}>
       <button onClick={onBack} style={backBtn}>← Back</button>
 
-      <h2 style={titleStyle}>Forward your shop&apos;s calls to ShopDesk</h2>
+      <h2 style={titleStyle}>Send missed calls to ShopDesk</h2>
       <p style={subtitleStyle}>
-        When your shop phone rings and you do not answer, ShopDesk picks up. These are the most common forwarding shortcuts, and we can walk you through it live if your carrier works differently.
+        Your shop phone should still ring first. If nobody answers, ShopDesk picks up. Use the shortcut that fits your carrier, then we will verify it with a real test call.
       </p>
 
       {/* Phone number display */}
@@ -79,7 +79,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
         marginBottom: 28,
       }}>
         <p style={{ fontSize: 12, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 10 }}>
-          Your dedicated ShopDesk number
+          Your ShopDesk backup line
         </p>
         <p style={{
           fontSize: 30,
@@ -113,7 +113,7 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
       {/* Carrier cards */}
       <div style={{ marginBottom: 24 }}>
         <p style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 12 }}>
-          Common carrier shortcuts:
+          Common forwarding shortcuts
         </p>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
           {carriers.map(carrier => (
@@ -167,12 +167,12 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
           style={{ width: 18, height: 18, accentColor: 'var(--accent)', cursor: 'pointer' }}
         />
         <span style={{ fontSize: 14, color: 'var(--text-mid)', fontWeight: 500 }}>
-          I have set up call forwarding
+          I set up missed-call forwarding
         </span>
       </label>
 
       <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 24, lineHeight: 1.5 }}>
-        You can always change this later. If one of these shortcuts does not work, we will help you finish forwarding with your carrier before you go live.
+        You can change this later. If one of these shortcuts does not work, we will help you finish forwarding with your carrier before you go live.
       </p>
 
       <button
