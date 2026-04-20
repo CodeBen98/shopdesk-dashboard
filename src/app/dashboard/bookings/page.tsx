@@ -99,7 +99,7 @@ export default function BookingsPage() {
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
       {/* Header */}
       <div style={{ marginBottom: 28 }}>
-        <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+        <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 'clamp(1.5rem, 3vw, 1.9rem)', fontWeight: 800, color: 'var(--text)', marginBottom: 4, letterSpacing: '-0.5px' }}>
           Bookings
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 14 }}>

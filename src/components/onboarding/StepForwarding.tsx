@@ -115,7 +115,8 @@ export function StepForwarding({ shop, userId, onNext, onBack }: StepProps) {
         <p style={{ fontSize: 13, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 12 }}>
           Common carrier shortcuts:
         </p>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+        <style>{`.carrier-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; } @media (max-width: 540px) { .carrier-grid { grid-template-columns: 1fr; } }`}</style>
+        <div className="carrier-grid">
           {carriers.map(carrier => (
             <div key={carrier.name} style={{
               background: 'var(--card)',
@@ -210,8 +211,9 @@ const backBtn: React.CSSProperties = {
 }
 const titleStyle: React.CSSProperties = {
   fontFamily: 'var(--font-space)',
-  fontSize: 24,
-  fontWeight: 700,
+  fontSize: 'clamp(1.4rem, 3vw, 1.8rem)',
+  fontWeight: 800,
+  letterSpacing: '-0.3px',
   color: 'var(--text)',
   marginBottom: 8,
 }

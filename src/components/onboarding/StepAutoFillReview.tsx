@@ -129,8 +129,9 @@ const backBtn: React.CSSProperties = {
 }
 const titleStyle: React.CSSProperties = {
   fontFamily: 'var(--font-space)',
-  fontSize: 24,
-  fontWeight: 700,
+  fontSize: 'clamp(1.4rem, 3vw, 1.8rem)',
+  fontWeight: 800,
+  letterSpacing: '-0.3px',
   color: 'var(--text)',
   marginBottom: 8,
 }
