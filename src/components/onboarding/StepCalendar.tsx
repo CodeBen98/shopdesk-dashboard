@@ -97,11 +97,18 @@ export function StepCalendar({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       </p>
 
       {!connected && (
-        <ul style={{ margin: '0 0 24px', paddingLeft: 20, fontSize: 14, color: 'var(--text-mid)', lineHeight: 1.8 }}>
-          <li>Automatically block off booked time slots</li>
-          <li>Customers get calendar invites</li>
-          <li>See all appointments in one place</li>
-        </ul>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 24 }}>
+          {['Automatically block off booked time slots', 'Customers get calendar invites', 'See all appointments in one place'].map(text => (
+            <div key={text} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div style={{ width: 20, height: 20, borderRadius: '50%', background: 'rgba(15,118,149,0.12)', border: '1.5px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                <svg width="10" height="8" viewBox="0 0 10 8" fill="none">
+                  <path d="M1 4L3.5 6.5L9 1" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
+              </div>
+              <span style={{ fontSize: 14, color: 'var(--text-mid)' }}>{text}</span>
+            </div>
+          ))}
+        </div>
       )}
 
       {saveError && (

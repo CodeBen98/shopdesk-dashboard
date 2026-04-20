@@ -55,10 +55,13 @@ export default function ForgotPasswordPage() {
         <div className="auth-left">
           <div style={{ maxWidth: 320, width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40 }}>
-              <div style={{ width: 5, height: 32, background: 'var(--accent)', borderRadius: 3 }} />
-              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 26, color: 'var(--text)' }}>ShopDesk</span>
+              <div style={{ width: 4, height: 32, background: 'var(--accent)', borderRadius: 2 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, gap: 2 }}>
+                <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
+                <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.88rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
+              </div>
             </div>
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.2, marginBottom: 32 }}>
+            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.15, letterSpacing: '-0.5px', marginBottom: 32 }}>
               We&apos;ve got you covered
             </h2>
             <p style={{ fontSize: 15, color: 'var(--text-mid)', lineHeight: 1.6 }}>
@@ -70,12 +73,15 @@ export default function ForgotPasswordPage() {
         <div className="auth-right">
           <div style={{ width: '100%', maxWidth: 420 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 40, justifyContent: 'center' }}>
-              <div style={{ width: 4, height: 24, background: 'var(--accent)', borderRadius: 2 }} />
-              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 22, color: 'var(--text)' }}>ShopDesk</span>
+              <div style={{ width: 4, height: 28, background: 'var(--accent)', borderRadius: 2 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, gap: 2 }}>
+                <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
+                <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.78rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
+              </div>
             </div>
 
             <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 16, padding: '32px' }}>
-              <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 22, fontWeight: 700, marginBottom: 6, color: 'var(--text)' }}>
+              <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 24, fontWeight: 800, marginBottom: 6, color: 'var(--text)', letterSpacing: '-0.3px' }}>
                 Reset your password
               </h1>
               <p style={{ fontSize: 14, color: 'var(--muted)', marginBottom: 28 }}>
