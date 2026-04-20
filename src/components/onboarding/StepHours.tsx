@@ -93,9 +93,27 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
       <button
         type="button"
         onClick={copyWeekdaysFromMonday}
-        style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--accent)', fontSize: 12, fontWeight: 600, padding: 0, marginBottom: 16, fontFamily: 'inherit', textDecoration: 'underline' }}
+        style={{
+          background: 'var(--accent-dim)',
+          border: '1px solid rgba(15,118,149,0.3)',
+          borderRadius: 7,
+          cursor: 'pointer',
+          color: 'var(--accent)',
+          fontSize: 12,
+          fontWeight: 600,
+          padding: '5px 12px',
+          marginBottom: 20,
+          fontFamily: 'inherit',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: 6,
+          transition: 'background 0.15s',
+        }}
       >
-        Copy Monday hours to all weekdays
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+          <path d="M2 6h8M6 2v8" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+        </svg>
+        Copy Monday to weekdays
       </button>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 24 }}>
@@ -220,7 +238,7 @@ const subtitleStyle: React.CSSProperties = {
   fontSize: 15,
   color: 'var(--muted)',
   lineHeight: 1.6,
-  marginBottom: 8,
+  marginBottom: 20,
 }
 const timeInput: React.CSSProperties = {
   padding: '7px 10px',

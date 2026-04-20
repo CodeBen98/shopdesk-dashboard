@@ -68,7 +68,8 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
       <p style={subtitleStyle}>
         Preview each voice and select the one your customers will hear.
       </p>
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
+      <style>{`@media (max-width: 480px) { .voice-grid { grid-template-columns: 1fr !important; } }`}</style>
+      <div className="voice-grid" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 28 }}>
         {VOICES.map(voice => {
           const isSelected = selected === voice.id
           const isPlaying = playingId === voice.id

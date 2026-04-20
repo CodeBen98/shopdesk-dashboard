@@ -167,38 +167,37 @@ function CallsContent() {
         </p>
       </div>
 
-      {/* Date filter row */}
-      <div style={{ display: 'flex', gap: 5, marginBottom: 8, flexWrap: 'wrap' }}>
+      {/* Filters */}
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 8 }}>
         {dateFilters.map(d => (
           <button
             key={d.value}
             onClick={() => { setDateFilter(d.value); setPage(1) }}
             style={{
-              padding: '5px 12px',
-              borderRadius: 7,
+              padding: '6px 13px',
+              borderRadius: 8,
               border: '1px solid',
               borderColor: dateFilter === d.value ? 'var(--accent)' : 'var(--border)',
               background: dateFilter === d.value ? 'var(--accent-dim)' : 'transparent',
               color: dateFilter === d.value ? 'var(--accent)' : 'var(--text-mid)',
-              fontSize: 12,
+              fontSize: 13,
               fontWeight: dateFilter === d.value ? 600 : 400,
               cursor: 'pointer',
-              transition: 'all 0.15s',
+              transition: 'border-color 0.15s, background 0.15s, color 0.15s',
+              fontFamily: 'inherit',
             }}
           >
             {d.label}
           </button>
         ))}
       </div>
-
-      {/* Outcome filter bar */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 20, flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 20 }}>
         {outcomes.map(o => (
           <button
             key={o.value}
             onClick={() => { setOutcomeFilter(o.value); setPage(1) }}
             style={{
-              padding: '7px 14px',
+              padding: '6px 13px',
               borderRadius: 8,
               border: '1px solid',
               borderColor: outcomeFilter === o.value ? 'var(--accent)' : 'var(--border)',
@@ -207,7 +206,8 @@ function CallsContent() {
               fontSize: 13,
               fontWeight: outcomeFilter === o.value ? 600 : 400,
               cursor: 'pointer',
-              transition: 'all 0.15s',
+              transition: 'border-color 0.15s, background 0.15s, color 0.15s',
+              fontFamily: 'inherit',
             }}
           >
             {o.label}
@@ -295,7 +295,21 @@ function CallsContent() {
                           fontSize: 12, color: 'var(--accent)', fontWeight: 500,
                           display: 'flex', alignItems: 'center', gap: 4,
                         }}>
-                          {expandedId === call.id ? '▲ Hide' : '▼ View'}
+                          {expandedId === call.id ? (
+                            <>
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                <path d="M2 7l3-3 3 3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                              Hide
+                            </>
+                          ) : (
+                            <>
+                              <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
+                                <path d="M2 3l3 3 3-3" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/>
+                              </svg>
+                              View
+                            </>
+                          )}
                         </span>
                       </td>
                     </tr>
@@ -332,8 +346,13 @@ function CallsContent() {
                               padding: '12px 16px',
                               marginBottom: 12,
                             }}>
-                              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8 }}>
-                                🎙 Listen to recording
+                              <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <svg width="12" height="12" viewBox="0 0 12 12" fill="none">
+                                  <rect x="4" y="1" width="4" height="6" rx="2" stroke="currentColor" strokeWidth="1.2"/>
+                                  <path d="M2 6a4 4 0 008 0" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                  <path d="M6 10v1.5" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round"/>
+                                </svg>
+                                Listen to recording
                               </div>
                               <audio
                                 controls

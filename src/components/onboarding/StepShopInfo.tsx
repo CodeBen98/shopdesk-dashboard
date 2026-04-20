@@ -280,24 +280,6 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
                   fontFamily: 'inherit',
                 }}
               >
-                {selected && (
-                  <span style={{
-                    position: 'absolute',
-                    top: -5,
-                    right: -5,
-                    width: 16,
-                    height: 16,
-                    borderRadius: '50%',
-                    background: 'var(--accent)',
-                    color: '#fff',
-                    fontSize: 9,
-                    fontWeight: 700,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    lineHeight: 1,
-                  }}>✓</span>
-                )}
                 {type}
               </button>
             )

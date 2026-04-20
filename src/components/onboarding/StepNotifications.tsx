@@ -57,7 +57,7 @@ export function StepNotifications({ userId, onNext, onBack }: StepProps) {
 
       <h2 style={titleStyle}>Alerts: how we keep you in the loop</h2>
       <p style={subtitleStyle}>
-        We send texts to the mobile number you gave us. Here&apos;s exactly what to expect:
+        ShopDesk texts you at the mobile number you provided. Here is exactly what to expect:
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 32 }}>

@@ -76,8 +76,8 @@ export function ProgressBar({ currentStep, totalSteps, stepName }: ProgressBarPr
         <div className="progress-logo">
           <div style={{ width: 4, height: 28, background: 'var(--accent)', borderRadius: 2, flexShrink: 0 }} />
           <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, gap: 2 }}>
-            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '0.9rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
-            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.72rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
+            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
+            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.78rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
           </div>
         </div>
 

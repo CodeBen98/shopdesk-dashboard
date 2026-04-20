@@ -44,7 +44,7 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: 4,
+          marginBottom: 16,
         }}>
           <svg width="22" height="22" viewBox="0 0 22 22" fill="none">
             <path d="M11 2L2 19h18L11 2z" stroke="var(--danger)" strokeWidth="1.5" strokeLinejoin="round"/>

@@ -202,7 +202,7 @@ export default async function DashboardPage() {
               i
             </span>
           </div>
-          <div style={{ fontSize: 30, fontWeight: 700, color: allTimeRevenue > 0 ? 'var(--text)' : 'var(--muted)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+          <div style={{ fontSize: 36, fontWeight: 800, color: allTimeRevenue > 0 ? 'var(--text)' : 'var(--muted)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6, letterSpacing: '-0.5px' }}>
             {allTimeRevenue > 0 ? `$${allTimeRevenue.toLocaleString()}` : '—'}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>

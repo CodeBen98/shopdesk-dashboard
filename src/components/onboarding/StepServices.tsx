@@ -157,8 +157,8 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
                 style={{
                   width: 130,
                   flexShrink: 0,
-                  color: 'var(--accent)',
-                  fontWeight: 600,
+                  color: 'var(--text)',
+                  fontWeight: 400,
                 }}
                 placeholder="Price"
               />

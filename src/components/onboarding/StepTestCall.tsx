@@ -49,7 +49,7 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 12, alignItems: 'center' }}>
-        <button onClick={handleSuccess} disabled={loading} className="step-btn-primary" style={{ marginTop: 8, width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
+        <button onClick={handleSuccess} disabled={loading} className="step-btn-primary" style={{ marginTop: 8, width: 'auto', minWidth: 200, padding: '13px 32px' }}>
           {loading ? 'Saving...' : 'It worked, continue'}
         </button>
         <button

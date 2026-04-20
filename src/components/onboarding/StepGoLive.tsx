@@ -8,10 +8,10 @@ import { StepProps } from './OnboardingWizard'
 const DEMO_NUMBER = '(407) 555-0123'
 
 const VOICE_LABELS: Record<string, string> = {
-  patricia: 'Patricia, Warm and Professional',
-  james: 'James, Calm and Authoritative',
-  sofia: 'Sofia, Friendly and Energetic',
-  marcus: 'Marcus, Direct and Trustworthy',
+  cindy:      'Cindy, Smooth and Welcoming',
+  jacqueline: 'Jacqueline, Confident and Warm',
+  james:      'James, Calm and Authoritative',
+  marcus:     'Marcus, Direct and Trustworthy',
 }
 
 const CONFETTI = [
@@ -42,7 +42,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
 
   const shopName = shop?.name ?? 'Your Shop'
   const phoneNumber = shop?.twilio_number ?? DEMO_NUMBER
-  const voiceLabel = VOICE_LABELS[shop?.ai_voice ?? 'patricia'] ?? shop?.ai_voice ?? 'Patricia'
+  const voiceLabel = VOICE_LABELS[shop?.ai_voice ?? ''] ?? shop?.ai_voice ?? 'Not selected'
 
   return (
     <div style={{ position: 'relative', maxWidth: 560, margin: '0 auto' }}>
