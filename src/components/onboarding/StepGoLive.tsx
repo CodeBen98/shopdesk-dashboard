@@ -74,10 +74,11 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
         </div>
         <h2 style={{
           fontFamily: 'var(--font-space)',
-          fontSize: 32,
+          fontSize: 'clamp(1.8rem, 4vw, 2.2rem)',
           fontWeight: 800,
           color: 'var(--text)',
           marginBottom: 8,
+          letterSpacing: '-0.5px',
         }}>
           You&apos;re live!
         </h2>

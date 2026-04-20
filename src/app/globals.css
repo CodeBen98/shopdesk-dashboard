@@ -275,3 +275,16 @@ input[type="checkbox"]:checked::after {
   from { stroke-dashoffset: 40; }
   to { stroke-dashoffset: 0; }
 }
+
+/* Reduce onboarding card horizontal padding on small screens */
+@media (max-width: 540px) {
+  .step-btn-primary { font-size: 14px; }
+}
+@media (max-width: 480px) {
+  /* Cards use inline padding: 40px 48px — override on very small screens */
+  /* Applied via a wrapper class on the onboard page */
+  .onboard-content > div {
+    padding-left: 20px !important;
+    padding-right: 20px !important;
+  }
+}

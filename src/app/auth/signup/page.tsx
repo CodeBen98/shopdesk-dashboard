@@ -157,7 +157,7 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.2, marginBottom: 32 }}>
+            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.15, marginBottom: 32, letterSpacing: '-0.5px' }}>
               Never miss a call again
             </h2>
 

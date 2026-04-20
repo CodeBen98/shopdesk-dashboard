@@ -107,7 +107,7 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)' }}>
       <ProgressBar currentStep={displayStep} totalSteps={13} stepName={STEP_NAMES[currentStep]} />
-      <div style={{ padding: '40px 16px' }}>
+      <div className="onboard-content" style={{ padding: '40px 16px' }}>
         {currentStep === 'plan_selection' && <PlanSelectionStep {...commonProps} />}
         {currentStep === 'welcome' && <WelcomeStep {...commonProps} />}
         {currentStep === 'shop_info' && <StepShopInfo {...commonProps} />}

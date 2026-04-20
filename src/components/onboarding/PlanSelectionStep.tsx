@@ -109,7 +109,10 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
       `}</style>
       {/* Founding member banner */}
       <div style={banner}>
-        <span style={{ fontSize: 16 }}>🔒</span>
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
+            <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="#f59e0b" strokeWidth="1.4"/>
+            <path d="M5 7V5a3 3 0 016 0v2" stroke="#f59e0b" strokeWidth="1.4" strokeLinecap="round"/>
+          </svg>
         <span style={bannerText}>
           <strong>Founding Member Pricing, Limited Spots.</strong> Lock in these rates forever. Prices increase when early access ends.
         </span>
