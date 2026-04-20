@@ -12,6 +12,7 @@ export type Shop = {
   twilio_number: string | null
   vapi_agent_id: string | null
   google_calendar_id: string | null
+  google_refresh_token: string | null
   ai_voice: string
   status: 'onboarding' | 'live' | 'paused'
   plan: 'trial' | 'starter' | 'professional' | 'growth'

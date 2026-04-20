@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
 import type { Shop, ShopHours, Service } from '@/types'
 
-type Tab = 'shop' | 'hours' | 'services' | 'ai' | 'phone'
+type Tab = 'shop' | 'hours' | 'services' | 'ai' | 'phone' | 'integrations'
 type SaveStatus = 'idle' | 'saving' | 'saved'
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
@@ -232,6 +232,7 @@ export default function SettingsPage() {
     { value: 'services', label: 'Services' },
     { value: 'ai',       label: 'AI & Voice' },
     { value: 'phone',    label: 'Phone Setup' },
+    { value: 'integrations', label: 'Integrations' },
   ]
 
   if (loading) {
@@ -982,6 +983,63 @@ export default function SettingsPage() {
                   </span>
                 </div>
               ))}
+            </div>
+          </div>
+        )}
+
+        {/* ── Integrations Tab ── */}
+        {tab === 'integrations' && (
+          <div>
+            <div style={{ marginBottom: 20 }}>
+              <h2 className="section-header">Integrations</h2>
+              <p className="section-desc">Manage your connected services.</p>
+            </div>
+
+            {/* Google Calendar */}
+            <div style={{
+              background: 'var(--card)',
+              border: '1px solid var(--border)',
+              borderRadius: 10,
+              padding: '20px 24px',
+              marginBottom: 16,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12 }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+                  <div style={{
+                    width: 40, height: 40, borderRadius: 10,
+                    background: 'var(--surface)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: 20,
+                  }}>📅</div>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: 15, color: 'var(--text)', marginBottom: 2 }}>Google Calendar</div>
+                    <div style={{ fontSize: 13, color: shop?.google_refresh_token ? '#22c55e' : 'var(--muted)' }}>
+                      {shop?.google_refresh_token ? '✓ Connected' : 'Not connected'}
+                    </div>
+                  </div>
+                </div>
+                <a
+                  href="/api/auth/google-calendar?from=settings"
+                  style={{
+                    background: 'var(--card-raised)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 8,
+                    padding: '8px 16px',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: 'var(--text)',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {shop?.google_refresh_token ? 'Reconnect' : 'Connect'}
+                </a>
+              </div>
+              <p style={{ marginTop: 14, fontSize: 13, color: 'var(--muted)', lineHeight: 1.6 }}>
+                When connected, ShopDesk automatically adds every booking to your Google Calendar and checks availability in real time.
+              </p>
             </div>
           </div>
         )}

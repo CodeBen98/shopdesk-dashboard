@@ -7,7 +7,10 @@ const REDIRECT_URI = 'https://app.shopdesk.site/api/auth/google-calendar/callbac
 const SCOPES = 'https://www.googleapis.com/auth/calendar.events'
 const GOOGLE_CALENDAR_STATE_COOKIE = 'shopdesk_google_calendar_state'
 
-export async function GET() {
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const from = searchParams.get('from') ?? 'onboard'
+
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.redirect(new URL('/auth/login', 'https://app.shopdesk.site'))
@@ -29,7 +32,7 @@ export async function GET() {
 
   response.cookies.set({
     name: GOOGLE_CALENDAR_STATE_COOKIE,
-    value: `${user.id}:${state}`,
+    value: `${user.id}:${state}:${from}`,
     httpOnly: true,
     secure: true,
     sameSite: 'lax',
