@@ -202,11 +202,11 @@ export default async function DashboardPage() {
               i
             </span>
           </div>
-          <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
-            ${allTimeRevenue.toLocaleString()}
+          <div style={{ fontSize: 30, fontWeight: 700, color: allTimeRevenue > 0 ? 'var(--text)' : 'var(--muted)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+            {allTimeRevenue > 0 ? `$${allTimeRevenue.toLocaleString()}` : '—'}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-            est. at $650/booking, industry avg
+            {allTimeRevenue > 0 ? 'est. at $650/booking, industry avg' : 'updates after first booking'}
           </div>
         </div>
 
