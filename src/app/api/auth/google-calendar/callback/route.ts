@@ -55,11 +55,10 @@ export async function GET(request: Request) {
       return response
     }
 
-    const calRes = await fetch('https://www.googleapis.com/calendar/v3/calendars/primary', {
-      headers: { Authorization: `Bearer ${tokens.access_token}` },
-    })
-    const calData = await calRes.json()
-    const calendarId = calData.id || 'primary'
+    // Use 'primary' directly — fetching /calendars/primary requires the full
+    // calendar scope (sensitive), which triggers Google's unverified app warning.
+    // The 'primary' alias works reliably for all personal and Workspace accounts.
+    const calendarId = 'primary'
 
     const { error: updateError } = await getSupabase()
       .from('shops')

@@ -52,10 +52,10 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     else if (phoneDigits.length < 10) errs.phone = 'Please enter a valid phone number'
     if (!address.trim()) errs.address = 'Address is required'
     if (!ownerName.trim()) errs.ownerName = 'Owner name is required'
-    const ownerPhoneDigits = ownerPhone.replace(/\D/g, '')
-    if (!ownerPhone.trim()) errs.ownerPhone = 'Owner mobile is required'
-    else if (ownerPhoneDigits.length < 10) errs.ownerPhone = 'Please enter a valid mobile number'
-    if (!ownerSmsConsent) errs.ownerSmsConsent = 'To receive SMS booking alerts at this number, please agree to SMS notifications'
+    const normalizedOwnerPhone = ownerPhone.trim()
+    const ownerPhoneDigits = normalizedOwnerPhone.replace(/\D/g, '')
+    if (normalizedOwnerPhone && ownerPhoneDigits.length < 10) errs.ownerPhone = 'Please enter a valid mobile number'
+    if (ownerSmsConsent && !normalizedOwnerPhone) errs.ownerSmsConsent = 'Enter a mobile number if you want SMS alerts'
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       errs.email = 'Please enter a valid email address'
     }
@@ -66,14 +66,15 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     setLoading(true)
     setSaveError('')
     const supabase = createClient()
+    const smsOptIn = !!normalizedOwnerPhone && ownerSmsConsent
 
     const patch: Record<string, unknown> = {
       name: name.trim(),
       address: address.trim(),
       phone: phone.trim(),
       email: email.trim() || null,
-      owner_phone: ownerPhone.trim(),
-      owner_phone_sms_consent: true,
+      owner_phone: normalizedOwnerPhone || null,
+      owner_phone_sms_consent: smsOptIn,
       onboarding_step: 'auto_fill_choice',
     }
     if (!shop?.emergency_contact_name) {
@@ -97,8 +98,8 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       address: address.trim(),
       phone: phone.trim(),
       email: email.trim() || null,
-      owner_phone: ownerPhone.trim(),
-      owner_phone_sms_consent: true,
+      owner_phone: normalizedOwnerPhone || null,
+      owner_phone_sms_consent: smsOptIn,
     }
     if (!shop?.emergency_contact_name) {
       shopUpdate.emergency_contact_name = ownerName.trim()
@@ -178,7 +179,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
 
       {/* Owner Mobile */}
       <div style={field}>
-        <label style={labelStyle}>Owner Mobile *</label>
+        <label style={labelStyle}>Owner Mobile (optional)</label>
         <div style={{ display: 'flex', border: `1px solid ${errors.ownerPhone ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8, overflow: 'hidden', background: 'var(--card)' }}>
           <div style={{ padding: '10px 12px', borderRight: '1px solid var(--border)', fontSize: 14, color: 'var(--text-mid)', background: 'var(--card-raised)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
             🇺🇸 +1
@@ -191,7 +192,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
             type="tel"
           />
         </div>
-        <p style={helperStyle}>We text booking alerts and urgent shop notifications here. Different from your shop number.</p>
+        <p style={helperStyle}>Add this if you want booking alerts and urgent shop notifications by text. Different from your shop number.</p>
         {errors.ownerPhone && <p style={errorStyle}>{errors.ownerPhone}</p>}
       </div>
 
@@ -222,9 +223,17 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
             )}
           </div>
           <span style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.6 }}>
-            I agree to receive SMS booking alerts and urgent shop notifications at this number. Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help.{' '}
+            I agree to receive SMS booking alerts and urgent shop notifications at this number. Consent is optional. Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help.{' '}
             <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
-              View SMS Policy
+              SMS Policy
+            </a>
+            {' '}·{' '}
+            <a href="https://shopdesk.site/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
+              Terms
+            </a>
+            {' '}·{' '}
+            <a href="https://shopdesk.site/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
+              Privacy
             </a>
           </span>
         </label>

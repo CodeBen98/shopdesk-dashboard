@@ -2,14 +2,10 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
-const VAPI_PHONE_NUMBER_ID = process.env.VAPI_PHONE_NUMBER_ID!
 const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID!
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN!
-const SHARED_TWILIO_NUMBER = process.env.TWILIO_PHONE_NUMBER || '(407) 555-0123'
-const DEMO_TWILIO_NUMBER = process.env.DEMO_TWILIO_NUMBER || '(407) 555-0123'
-const DEMO_VAPI_PHONE_NUMBER_ID = process.env.DEMO_VAPI_PHONE_NUMBER_ID || 'd667edd7-197e-495c-8936-ffcc17d9e38f'
-const TEST_MODE = process.env.SHOPDESK_TEST_MODE === 'true'
+
 
 // Extract area code from a phone number string
 function extractAreaCode(phone: string): string {
@@ -54,6 +50,24 @@ async function buyTwilioNumber(areaCode: string): Promise<{ sid: string; phoneNu
     })
     const buyData = await buyRes.json()
     if (!buyRes.ok) throw new Error(`Twilio buy failed: ${JSON.stringify(buyData)}`)
+
+    // Register number with A2P messaging service for SMS compliance
+    const messagingServiceSid = process.env.TWILIO_MESSAGING_SERVICE_SID
+    if (messagingServiceSid && buyData.sid) {
+      try {
+        await fetch(`https://messaging.twilio.com/v1/Services/${messagingServiceSid}/PhoneNumbers`, {
+          method: 'POST',
+          headers: {
+            'Authorization': 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64'),
+            'Content-Type': 'application/x-www-form-urlencoded',
+          },
+          body: new URLSearchParams({ PhoneNumberSid: buyData.sid }).toString(),
+        })
+        console.log('Number registered to A2P messaging service:', buyData.phone_number)
+      } catch (smsErr) {
+        console.error('Failed to register number to messaging service (non-fatal):', smsErr)
+      }
+    }
 
     return { sid: buyData.sid, phoneNumber: buyData.phone_number }
   } catch (err) {
@@ -164,11 +178,12 @@ Safe to drive: if you're hearing grinding, seeing smoke, or the car is overheati
 1. Find out what they need help with.
 2. Collect: name, vehicle (year/make/model), service needed, preferred day and time — ONE question at a time.
 3. Ask: "What is the best phone number to send your confirmation to?" Wait for the customer to give their number.
-4. After they give their number, say EXACTLY: "You will receive a confirmation text at that number. By providing your number you agree to receive appointment texts from ${shop.name}. Message and data rates may apply. Reply STOP at any time to opt out."
-5. Once you have all required info, call the bookAppointment function.
-6. After the function returns success, confirm the booking details back to the customer.
-7. Ask if there is anything else.
-8. When done, say a warm goodbye and call the endCall function.
+4. Repeat the number back digit by digit to confirm it, e.g. "Let me confirm — that's 4-0-7-5-5-5-1-2-3-4, is that right?" Wait for confirmation. If they correct you, update the number and confirm again.
+5. After they confirm the number, say EXACTLY: "You will receive a confirmation text at that number. By providing your number you agree to receive appointment texts from ${shop.name}. Message and data rates may apply. Reply STOP at any time to opt out."
+6. Once you have all required info, call the bookAppointment function.
+7. After the function returns success, confirm the booking details back to the customer.
+8. Ask if there is anything else.
+9. When done, say a warm goodbye and call the endCall function.
 
 Do NOT call endCall until the customer says they are done.
 Do NOT say goodbye until you are ready to call endCall immediately after.
@@ -241,10 +256,12 @@ export async function POST(request: Request) {
     const voice = voiceMap[shop.ai_voice] ?? voiceMap.patricia
 
     const webhookUrl = 'https://app.shopdesk.site/api/vapi-webhook'
+    const webhookSecret = process.env.VAPI_WEBHOOK_SECRET ?? ''
 
     const agentPayload = {
       name: shop.name,
       serverUrl: webhookUrl,
+      serverUrlSecret: webhookSecret,
       model: {
         provider: 'anthropic',
         model: 'claude-sonnet-4-6',
@@ -260,7 +277,7 @@ export async function POST(request: Request) {
               description: 'Book a confirmed appointment. Call this once you have ALL required fields. Do not call with empty or missing fields.',
               parameters: {
                 type: 'object',
-                required: ['customer_name', 'customer_phone', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'service', 'appointment_time', 'assistant_id'],
+                required: ['customer_name', 'customer_phone', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'service', 'appointment_time'],
                 properties: {
                   customer_name:    { type: 'string', description: 'Customer full name as spoken' },
                   customer_phone:   { type: 'string', description: 'Customer phone number as spoken' },
@@ -269,7 +286,7 @@ export async function POST(request: Request) {
                   vehicle_model:    { type: 'string', description: 'Vehicle model, e.g. Accord' },
                   service:          { type: 'string', description: 'Service requested or issue description' },
                   appointment_time: { type: 'string', description: 'Day and time confirmed by customer, e.g. Thursday April 3 at 10am' },
-                  assistant_id:     { type: 'string', description: 'Your Vapi assistant ID — use the exact value from your identity instructions' },
+
                 },
               },
             },
@@ -304,59 +321,40 @@ export async function POST(request: Request) {
       agentId = created.id
     }
 
-    // Assign phone number to agent
-    let assignedNumber = SHARED_TWILIO_NUMBER
+    // Assign phone number to agent — always production mode, one dedicated number per shop
+    let assignedNumber = ''
 
-    if (shop.is_demo) {
-      // DEMO MODE: always use the designated demo number, never buy a new one
-      console.log('DEMO MODE: using demo number', DEMO_TWILIO_NUMBER)
-      assignedNumber = DEMO_TWILIO_NUMBER
-      await vapiRequest(`/phone-number/${DEMO_VAPI_PHONE_NUMBER_ID}`, 'PATCH', {
-        assistantId: agentId,
-        serverUrl: webhookUrl,
-      })
-    } else if (TEST_MODE) {
-      // TEST MODE: use shared number, just point it to this agent
-      console.log('TEST MODE: using shared number', SHARED_TWILIO_NUMBER)
-      await vapiRequest(`/phone-number/${VAPI_PHONE_NUMBER_ID}`, 'PATCH', {
-        assistantId: agentId,
-      })
+    if (shop.twilio_number) {
+      // Shop already has a dedicated number — reuse it, just update the agent assignment
+      console.log('Reusing existing shop number:', shop.twilio_number)
+      assignedNumber = shop.twilio_number
+      const vapiNumbers = await vapiRequest('/phone-number?limit=100', 'GET')
+      const numList = Array.isArray(vapiNumbers) ? vapiNumbers : vapiNumbers.results ?? []
+      const match = numList.find((n: { number?: string; id: string }) => n.number === shop.twilio_number)
+      if (match) {
+        await vapiRequest(`/phone-number/${match.id}`, 'PATCH', { assistantId: agentId, serverUrl: webhookUrl })
+      }
     } else {
-      // PRODUCTION MODE: provision a dedicated number per shop
-      if (shop.twilio_number && shop.twilio_number !== SHARED_TWILIO_NUMBER) {
-        // Shop already has their own number — reuse it, just update the agent assignment
-        console.log('Reusing existing shop number:', shop.twilio_number)
-        assignedNumber = shop.twilio_number
-        // Find the Vapi phone number ID for this number and update it
-        const vapiNumbers = await vapiRequest('/phone-number?limit=100', 'GET')
-        const numList = Array.isArray(vapiNumbers) ? vapiNumbers : vapiNumbers.results ?? []
-        const match = numList.find((n: { number?: string; id: string }) => n.number === shop.twilio_number)
-        if (match) {
-          await vapiRequest(`/phone-number/${match.id}`, 'PATCH', { assistantId: agentId, serverUrl: webhookUrl })
-        }
-      } else {
-        // Buy a new dedicated number for this shop
-        const areaCode = extractAreaCode(shop.phone || '')
-        console.log('PRODUCTION MODE: buying new number for area code', areaCode)
-        const purchased = await buyTwilioNumber(areaCode)
+      // Buy a new dedicated number for this shop
+      const areaCode = extractAreaCode(shop.phone || '')
+      console.log('Buying new number for area code', areaCode)
+      const purchased = await buyTwilioNumber(areaCode)
 
-        if (purchased) {
-          assignedNumber = purchased.phoneNumber
-          console.log('Bought number:', assignedNumber, 'SID:', purchased.sid)
-          // Register with Vapi
-          await vapiRequest('/phone-number', 'POST', {
-            provider: 'twilio',
-            twilioAccountSid: TWILIO_ACCOUNT_SID,
-            twilioAuthToken: TWILIO_AUTH_TOKEN,
-            number: purchased.phoneNumber,
-            assistantId: agentId,
-            serverUrl: webhookUrl,
-          })
-        } else {
-          // Fallback to shared number if purchase failed
-          console.error('Number purchase failed, falling back to shared number')
-          await vapiRequest(`/phone-number/${VAPI_PHONE_NUMBER_ID}`, 'PATCH', { assistantId: agentId })
-        }
+      if (purchased) {
+        assignedNumber = purchased.phoneNumber
+        console.log('Bought number:', assignedNumber, 'SID:', purchased.sid)
+        // Register with Vapi
+        await vapiRequest('/phone-number', 'POST', {
+          provider: 'twilio',
+          twilioAccountSid: TWILIO_ACCOUNT_SID,
+          twilioAuthToken: TWILIO_AUTH_TOKEN,
+          number: purchased.phoneNumber,
+          assistantId: agentId,
+          serverUrl: webhookUrl,
+        })
+      } else {
+        console.error('Number purchase failed — shop provisioning incomplete')
+        return NextResponse.json({ error: 'Failed to purchase phone number. Please try again.' }, { status: 500 })
       }
     }
 

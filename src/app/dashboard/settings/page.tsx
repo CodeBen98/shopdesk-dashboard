@@ -185,15 +185,23 @@ export default function SettingsPage() {
 
   async function save(fields: Partial<Shop>, reprovision = false) {
     if (!shop) return
+    const normalizedFields: Partial<Shop> = { ...fields }
+    if ('owner_phone' in normalizedFields || 'owner_phone_sms_consent' in normalizedFields) {
+      const ownerPhoneValue = typeof normalizedFields.owner_phone === 'string'
+        ? normalizedFields.owner_phone.trim()
+        : (typeof shop.owner_phone === 'string' ? shop.owner_phone.trim() : '')
+      normalizedFields.owner_phone = ownerPhoneValue || null
+      normalizedFields.owner_phone_sms_consent = !!ownerPhoneValue && !!normalizedFields.owner_phone_sms_consent
+    }
     setSaveStatus('saving')
     const supabase = createClient()
-    const { error } = await supabase.from('shops').update(fields).eq('id', shop.id)
+    const { error } = await supabase.from('shops').update(normalizedFields).eq('id', shop.id)
     if (error) {
       setSaveStatus('idle')
       show('Failed to save changes', 'error')
     } else {
       setSaveStatus('saved')
-      setShop(prev => prev ? { ...prev, ...fields } : prev)
+      setShop(prev => prev ? { ...prev, ...normalizedFields } : prev)
       if (reprovision) reprovisionAgent()
       setTimeout(() => setSaveStatus('idle'), 2000)
     }
@@ -435,7 +443,7 @@ export default function SettingsPage() {
 
             {/* Owner Mobile + SMS consent */}
             <div>
-              <label style={labelStyle}>Your Mobile Number</label>
+              <label style={labelStyle}>Your Mobile Number (optional)</label>
               <input
                 type="tel"
                 value={ownerPhone}
@@ -446,7 +454,7 @@ export default function SettingsPage() {
                 style={inputStyle(focused === 'owner-phone')}
               />
               <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
-                Where we text booking alerts and urgent shop notifications. Different from your shop phone.
+                Add this if you want booking alerts and urgent shop notifications by text. Different from your shop phone.
               </p>
               <label style={{
                 display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 10, cursor: 'pointer',
@@ -458,13 +466,13 @@ export default function SettingsPage() {
                   style={{ marginTop: 2, accentColor: 'var(--accent)', flexShrink: 0 }}
                 />
                 <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-                  I agree to receive SMS booking alerts and urgent shop notifications at this number. Msg and data rates may apply. Reply STOP to opt out. Reply HELP for help.
+                  I agree to receive SMS booking alerts and urgent shop notifications at this number. Consent is optional. Msg and data rates may apply. Reply STOP to opt out. Reply HELP for help. <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>SMS Policy</a> · <a href="https://shopdesk.site/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Terms</a> · <a href="https://shopdesk.site/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Privacy</a>
                 </span>
               </label>
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-              <SaveButton onClick={() => save({ name, address, phone, email, owner_phone: ownerPhone, owner_phone_sms_consent: ownerPhoneSmsConsent }, true)} status={saveStatus} />
+              <SaveButton onClick={() => save({ name, address, phone, email, owner_phone: ownerPhone, owner_phone_sms_consent: !!ownerPhone.trim() && ownerPhoneSmsConsent }, true)} status={saveStatus} />
             </div>
           </div>
         )}
