@@ -39,18 +39,19 @@ export function WelcomeStep({ userId, onNext, onShopUpdate }: StepProps) {
           justifyContent: 'center',
           marginBottom: 20,
         }}>
-          <svg width="30" height="30" viewBox="0 0 30 30" fill="none">
-            <path d="M5 5h8l3 7-4 2.5c1.8 3 5.5 6.5 8.5 8.5L23 19l7 3v8a2.5 2.5 0 01-2.5 2.5C11 32.5 -2.5 19 -2.5 2.5A2.5 2.5 0 015 0v5z" stroke="var(--accent)" strokeWidth="1.6" strokeLinejoin="round"/>
+          <svg width="30" height="30" viewBox="0 0 24 24" fill="none">
+            <path d="M6.6 10.8c1.4 2.8 3.8 5.1 6.6 6.6l2.2-2.2c.3-.3.7-.4 1-.2 1.1.4 2.3.6 3.6.6.6 0 1 .4 1 1V20c0 .6-.4 1-1 1-9.4 0-17-7.6-17-17 0-.6.4-1 1-1h3.5c.6 0 1 .4 1 1 0 1.3.2 2.5.6 3.6.1.3 0 .7-.2 1L6.6 10.8z" stroke="var(--accent)" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round"/>
           </svg>
         </div>
 
         <h1 style={{
           fontFamily: 'var(--font-space)',
-          fontSize: 30,
+          fontSize: 'clamp(1.9rem, 4vw, 2.4rem)',
           fontWeight: 800,
           color: 'var(--text)',
           marginBottom: 10,
-          lineHeight: 1.2,
+          lineHeight: 1.15,
+          letterSpacing: '-0.5px',
         }}>
           Welcome to ShopDesk
         </h1>

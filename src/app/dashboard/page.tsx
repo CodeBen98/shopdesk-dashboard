@@ -93,7 +93,7 @@ export default async function DashboardPage() {
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
       {/* Page header */}
       <div style={{ marginBottom: 32 }}>
-        <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 26, fontWeight: 700, color: 'var(--text)', marginBottom: 4 }}>
+        <h1 style={{ fontFamily: 'var(--font-space)', fontSize: 'clamp(1.5rem, 3vw, 1.9rem)', fontWeight: 800, color: 'var(--text)', marginBottom: 4, letterSpacing: '-0.5px' }}>
           Overview
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 14 }}>
@@ -157,7 +157,7 @@ export default async function DashboardPage() {
           <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Calls Handled
           </div>
-          <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+          <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6, letterSpacing: '-0.5px' }}>
             {totalCalls.toLocaleString()}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>(all time)</div>
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
           <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Bookings Made
           </div>
-          <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+          <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6, letterSpacing: '-0.5px' }}>
             {totalBookings.toLocaleString()}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>(all time)</div>
@@ -179,7 +179,7 @@ export default async function DashboardPage() {
           <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
             Missed Opportunities
           </div>
-          <div style={{ fontSize: 30, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6 }}>
+          <div style={{ fontSize: 36, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6, letterSpacing: '-0.5px' }}>
             {missedCalls.toLocaleString()}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>callers who did not book</div>
@@ -222,7 +222,7 @@ export default async function DashboardPage() {
               boxShadow: '0 0 0 3px var(--success-dim)',
               flexShrink: 0,
             }} />
-            <div style={{ fontSize: 24, fontWeight: 700, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1 }}>
+            <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, letterSpacing: '-0.5px' }}>
               Live 24/7
             </div>
           </div>

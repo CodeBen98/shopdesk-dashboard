@@ -122,11 +122,12 @@ export default function SignupPage() {
           justifyContent: 'center',
           gap: 20,
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 4, height: 26, background: 'var(--accent)', borderRadius: 2 }} />
-            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 24, color: 'var(--text)' }}>
-              ShopDesk
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 4, height: 30, background: 'var(--accent)', borderRadius: 2 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, gap: 2 }}>
+              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
+              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.78rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
+            </div>
           </div>
           <p style={{ fontSize: 15, color: 'var(--muted)', display: 'flex', alignItems: 'center', gap: 4 }}>
             Taking you to your dashboard
@@ -149,10 +150,11 @@ export default function SignupPage() {
           <div style={{ maxWidth: 320, width: '100%' }}>
             {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40 }}>
-              <div style={{ width: 5, height: 32, background: 'var(--accent)', borderRadius: 3 }} />
-              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 26, color: 'var(--text)' }}>
-                ShopDesk
-              </span>
+              <div style={{ width: 4, height: 32, background: 'var(--accent)', borderRadius: 2 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, gap: 2 }}>
+                <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '1.1rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
+                <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.88rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
+              </div>
             </div>
 
             <h2 style={{ fontFamily: 'var(--font-space)', fontSize: 32, fontWeight: 800, color: 'var(--text)', lineHeight: 1.2, marginBottom: 32 }}>
@@ -191,11 +193,12 @@ export default function SignupPage() {
           <div style={{ width: '100%', maxWidth: 420, animation: 'fadeIn 0.3s ease' }}>
 
             {/* Mobile-only logo */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 40, justifyContent: 'center' }}>
-              <div style={{ width: 4, height: 24, background: 'var(--accent)', borderRadius: 2 }} />
-              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 22, color: 'var(--text)' }}>
-                ShopDesk
-              </span>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 40, justifyContent: 'center' }}>
+              <div style={{ width: 4, height: 28, background: 'var(--accent)', borderRadius: 2 }} />
+              <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, gap: 2 }}>
+                <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
+                <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.78rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
+              </div>
             </div>
 
             {/* Card */}

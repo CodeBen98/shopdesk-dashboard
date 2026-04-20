@@ -103,6 +103,10 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
 
   return (
     <div style={outerWrap}>
+      <style>{`
+        .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
+        @media (max-width: 860px) { .plan-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; } }
+      `}</style>
       {/* Founding member banner */}
       <div style={banner}>
         <span style={{ fontSize: 16 }}>🔒</span>
@@ -117,7 +121,7 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
       </div>
 
       {/* Plan cards */}
-      <div style={gridWrap}>
+      <div className="plan-grid">
         {PLANS.map((plan) => {
           const isSelected = selected === plan.tier
           const isPro = plan.popular
@@ -212,10 +216,12 @@ const bannerText: React.CSSProperties = {
 
 const heading: React.CSSProperties = {
   fontFamily: 'var(--font-space)',
-  fontSize: 28,
+  fontSize: 'clamp(1.8rem, 4vw, 2.4rem)' as string,
   fontWeight: 800,
   color: 'var(--text)',
   marginBottom: 8,
+  letterSpacing: '-0.5px',
+  lineHeight: 1.15,
 }
 
 const subheading: React.CSSProperties = {
@@ -223,12 +229,6 @@ const subheading: React.CSSProperties = {
   color: 'var(--muted)',
 }
 
-const gridWrap: React.CSSProperties = {
-  display: 'grid',
-  gridTemplateColumns: 'repeat(3, 1fr)',
-  gap: 20,
-  marginBottom: 24,
-}
 
 const card: React.CSSProperties = {
   borderRadius: 14,

@@ -145,11 +145,12 @@ export function Sidebar({ shopName, userEmail, mobileOpen, onClose }: SidebarPro
           padding: '24px 20px 20px',
           borderBottom: '1px solid var(--border)',
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <div style={{ width: 4, height: 22, background: 'var(--accent)', borderRadius: 2, flexShrink: 0 }} />
-            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: 18, color: 'var(--text)' }}>
-              ShopDesk
-            </span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <div style={{ width: 4, height: 30, background: 'var(--accent)', borderRadius: 2, flexShrink: 0 }} />
+            <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, gap: 2 }}>
+              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
+              <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.78rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
+            </div>
           </div>
           {shopName && (
             <p style={{ fontSize: 13, color: 'var(--text-mid)', fontWeight: 500, marginTop: 6, marginLeft: 12, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
