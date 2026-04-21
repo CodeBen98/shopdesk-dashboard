@@ -45,8 +45,12 @@ export default function AdminPage() {
 
   async function loadShops() {
     const res = await fetch('/api/admin/shops')
+    if (res.status === 401 || res.status === 403) {
+      window.location.href = '/auth/login'
+      return
+    }
     if (!res.ok) {
-      setError(res.status === 403 ? 'Access denied.' : 'Failed to load shops.')
+      setError('Failed to load shops.')
       setLoading(false)
       return
     }
