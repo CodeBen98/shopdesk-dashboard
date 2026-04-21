@@ -37,9 +37,8 @@ function safeEqual(a: string, b: string): boolean {
 
 function verifySignature(request: Request, rawBody: string): boolean {
   if (!WEBHOOK_SECRET) {
-    // No secret configured — accept all requests.
-    // Vapi is the only caller; the webhook URL is not publicly guessable.
-    return true
+    console.error('CRITICAL: VAPI_WEBHOOK_SECRET is not set — rejecting all webhook requests')
+    return false
   }
 
   const receivedRaw = [

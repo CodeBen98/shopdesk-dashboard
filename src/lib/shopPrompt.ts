@@ -41,6 +41,16 @@ export function formatHours(hours: Record<string, { open: boolean; from: string;
   }).join('\n')
 }
 
+// Strip content that could be used for prompt injection before embedding in Claude's context
+function sanitize(value: string | null | undefined, maxLen = 200): string {
+  if (!value) return ''
+  return value
+    .slice(0, maxLen)
+    .replace(/\[system\]|\[identity\]|\[instructions\]/gi, '')
+    .replace(/ignore (all |previous |prior )?(instructions|rules|context)/gi, '')
+    .trim()
+}
+
 export function buildSystemPrompt(shop: {
   name: string
   address: string
@@ -52,20 +62,23 @@ export function buildSystemPrompt(shop: {
   ai_voice: string
 }, extras?: { vehicleTypes?: string[]; ownerName?: string }): string {
   const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
+  const shopName = sanitize(shop.name, 100)
+  const shopAddress = sanitize(shop.address, 200)
+  const shopPhone = sanitize(shop.phone, 20)
   const serviceList = shop.services.map(s =>
-    `  - ${s.name}${s.price ? ` ($${s.price})` : ''}${s.description ? ` — ${s.description}` : ''}`
+    `  - ${sanitize(s.name, 80)}${s.price ? ` ($${sanitize(s.price, 20)})` : ''}${s.description ? ` — ${sanitize(s.description, 150)}` : ''}`
   ).join('\n')
   const hoursText = formatHours(shop.hours)
   const now = new Date()
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })
-  const ownerName = extras?.ownerName || shop.emergency_contact_name || 'the shop owner'
+  const ownerName = sanitize(extras?.ownerName || shop.emergency_contact_name || 'the shop owner', 80)
   const vehicleTypes = extras?.vehicleTypes && extras.vehicleTypes.length > 0 ? extras.vehicleTypes : null
 
   return `[Identity]
-You are ${receptionistName}, the virtual receptionist at ${shop.name}.
+You are ${receptionistName}, the virtual receptionist at ${shopName}.
 You know this shop inside and out. You are warm, helpful, and professional.
-${extras?.ownerName ? `The owner/manager is ${extras.ownerName}. When customers ask to speak to someone, say you'll have ${extras.ownerName} call them back.` : ''}
-Never say you are an AI. If asked, say you are the virtual receptionist for ${shop.name}.
+${ownerName !== 'the shop owner' ? `The owner/manager is ${ownerName}. When customers ask to speak to someone, say you'll have ${ownerName} call them back.` : ''}
+Never say you are an AI. If asked, say you are the virtual receptionist for ${shopName}.
 Today's date is ${dateStr}. Use this to calculate exact dates when customers say "tomorrow", "Thursday", "next week", etc.
 
 [Style]
@@ -79,7 +92,7 @@ Today's date is ${dateStr}. Use this to calculate exact dates when customers say
 - Never assume or invent the customer's name, phone, or vehicle. Always ask. Never use a name until the customer gives it to you.
 
 [Shop Info]
-${shop.name} | ${shop.address}${shop.phone ? ` | ${shop.phone}` : ''}
+${shopName} | ${shopAddress}${shopPhone ? ` | ${shopPhone}` : ''}
 Hours:
 ${hoursText}
 ${vehicleTypes ? `Vehicle types serviced: ${vehicleTypes.join(', ')}` : ''}
@@ -96,7 +109,7 @@ Safe to drive: if you're hearing grinding, seeing smoke, or the car is overheati
 2. Collect: name, vehicle (year/make/model), service needed, preferred day and time — ONE question at a time.
 3. Ask: "What is the best phone number to send your confirmation to?" Wait for the customer to give their number.
 4. Repeat the number back digit by digit to confirm it, e.g. "Let me confirm — that's 4-0-7-5-5-5-1-2-3-4, is that right?" Wait for confirmation. If they correct you, update the number and confirm again.
-5. After they confirm the number, say EXACTLY: "You will receive a confirmation text at that number. By providing your number you agree to receive appointment texts from ${shop.name}. Message and data rates may apply. Reply STOP at any time to opt out."
+5. After they confirm the number, say EXACTLY: "You will receive a confirmation text at that number. By providing your number you agree to receive appointment texts from ${shopName}. Message and data rates may apply. Reply STOP at any time to opt out."
 6. Once you have all required info, call the bookAppointment function.
 7. After the function returns success, confirm the booking details back to the customer.
 8. Ask if there is anything else.
@@ -111,7 +124,7 @@ Urgent (warning lights, unusual sounds): acknowledge urgency, try to get them in
 
 [Escalation]
 Wants to speak to someone: take their name and phone number, call bookAppointment as a callback request, then say goodbye and call endCall.
-Emergency contact: ${ownerName} at ${shop.emergency_contact || 'the shop'}.
+Emergency contact: ${ownerName} at ${sanitize(shop.emergency_contact, 30) || 'the shop'}.
 
 [Error Handling]
 Booking fails: take their number, promise a callback within the hour.

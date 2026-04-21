@@ -124,6 +124,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
     }
 
+    // Rate limit: block re-provisioning within 2 minutes of the last attempt
+    if (shop.updated_at) {
+      const secondsSinceLast = (Date.now() - new Date(shop.updated_at).getTime()) / 1000
+      if (secondsSinceLast < 120) {
+        return NextResponse.json({ error: 'Please wait before provisioning again.' }, { status: 429 })
+      }
+    }
+
     const systemPrompt = buildSystemPrompt({
       name: shop.name,
       address: shop.address,

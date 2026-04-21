@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS } from '@/lib/shopPrompt'
 
 const ADMIN_EMAIL = 'slarve@shopdesk.site'
@@ -47,7 +48,8 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Invalid request' }, { status: 400 })
     }
 
-    const { data: shop, error: shopError } = await supabase
+    const admin = createAdminClient()
+    const { data: shop, error: shopError } = await admin
       .from('shops')
       .select('*')
       .eq('id', shopId)
@@ -71,7 +73,7 @@ export async function POST(request: Request) {
           tools: [],
         },
       })
-      await supabase.from('shops').update({ status: 'paused' }).eq('id', shopId)
+      await admin.from('shops').update({ status: 'paused' }).eq('id', shopId)
       return NextResponse.json({ success: true, status: 'paused' })
     }
 
@@ -106,7 +108,7 @@ export async function POST(request: Request) {
       firstMessage: `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`,
     })
 
-    await supabase.from('shops').update({ status: 'live' }).eq('id', shopId)
+    await admin.from('shops').update({ status: 'live' }).eq('id', shopId)
     return NextResponse.json({ success: true, status: 'live' })
 
   } catch (err) {
