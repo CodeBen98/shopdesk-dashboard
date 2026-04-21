@@ -11,7 +11,8 @@ const PLANS: {
   name: string
   foundingPrice: number
   regularPrice: number
-  calls: string
+  minutes: string
+  overage: string
   features: string[]
   popular?: boolean
 }[] = [
@@ -20,7 +21,8 @@ const PLANS: {
     name: 'Starter',
     foundingPrice: 79,
     regularPrice: 99,
-    calls: '200 calls/month',
+    minutes: '150 min/month',
+    overage: '$0.50/min overage',
     features: [
       'AI answers every unanswered call 24/7',
       'Google Calendar booking',
@@ -34,11 +36,12 @@ const PLANS: {
     name: 'Pro',
     foundingPrice: 159,
     regularPrice: 199,
-    calls: '500 calls/month',
+    minutes: '400 min/month',
+    overage: '$0.45/min overage',
     popular: true,
     features: [
       'Everything in Starter',
-      'SMS confirmations',
+      'SMS confirmations to customers',
       'Missed call text-back',
       'Review request automation',
       'Morning summary email',
@@ -50,7 +53,8 @@ const PLANS: {
     name: 'Growth',
     foundingPrice: 319,
     regularPrice: 399,
-    calls: 'Unlimited calls',
+    minutes: '1,000 min/month',
+    overage: '$0.40/min overage',
     features: [
       'Everything in Pro',
       'Multi-location (up to 3 shops)',
@@ -154,7 +158,8 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
                 <span style={regularPrice}>${plan.regularPrice}/mo</span>
               </div>
 
-              <div style={callsLabel}>{plan.calls}</div>
+              <div style={callsLabel}>{plan.minutes}</div>
+              <div style={overageLabel}>{plan.overage}</div>
 
               <div style={divider} />
 
@@ -296,6 +301,12 @@ const callsLabel: React.CSSProperties = {
   fontSize: 13,
   color: 'var(--text-mid)',
   fontWeight: 500,
+  marginBottom: 4,
+}
+
+const overageLabel: React.CSSProperties = {
+  fontSize: 12,
+  color: 'var(--muted)',
   marginBottom: 16,
 }
 
