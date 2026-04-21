@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
+import { sendDeletionConfirmation } from '@/lib/email'
 
 const ADMIN_EMAIL = 'slarve@shopdesk.site'
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
@@ -89,7 +90,22 @@ export async function POST(request: Request) {
       deleted_at: new Date().toISOString(),
     }).eq('id', shopId)
 
-    // 4. Delete Supabase auth account
+    // 4. Capture email + send confirmation BEFORE deleting auth user
+    let ownerEmail: string | undefined
+    try {
+      const { data: ownerUser } = await admin.auth.admin.getUserById(shop.owner_id)
+      ownerEmail = ownerUser?.user?.email
+    } catch { /* non-fatal */ }
+
+    if (ownerEmail) {
+      try {
+        await sendDeletionConfirmation({ to: ownerEmail, shopName: shop.name })
+      } catch (emailErr) {
+        console.error('Deletion email failed (non-fatal):', emailErr)
+      }
+    }
+
+    // 5. Delete Supabase auth account
     try {
       await admin.auth.admin.deleteUser(shop.owner_id)
       console.log('Deleted auth user:', shop.owner_id)

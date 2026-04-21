@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS } from '@/lib/shopPrompt'
+import { sendCancellationNotice } from '@/lib/email'
 
 const ADMIN_EMAIL = 'slarve@shopdesk.site'
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
@@ -58,6 +59,20 @@ export async function POST(request: Request) {
       status: 'cancelling',
       cancelled_at: cancelledAt,
     }).eq('id', shopId)
+
+    // Send cancellation notice email
+    try {
+      const { data: ownerUser } = await admin.auth.admin.getUserById(shop.owner_id)
+      if (ownerUser?.user?.email) {
+        await sendCancellationNotice({
+          to: ownerUser.user.email,
+          shopName: shop.name,
+          deleteDate: cancelledAt,
+        })
+      }
+    } catch (emailErr) {
+      console.error('Cancellation email failed (non-fatal):', emailErr)
+    }
 
     return NextResponse.json({ success: true, cancelled_at: cancelledAt })
   } catch (err) {
