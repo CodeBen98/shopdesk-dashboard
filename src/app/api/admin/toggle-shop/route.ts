@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS } from '@/lib/shopPrompt'
 
-const ADMIN_EMAIL = 'admin@example.com'
+const ADMIN_EMAIL = 'slarve@shopdesk.site'
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
 
