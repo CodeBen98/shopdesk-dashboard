@@ -17,34 +17,48 @@ export default async function AdminPage() {
 
   const admin = createAdminClient()
 
-  // Use service role client to bypass RLS and see all shops
+  // All shops via service role (bypasses RLS)
   const { data: allShops } = await admin
     .from('shops')
     .select('id, owner_id, name, address, phone, status, vapi_agent_id, twilio_number, onboarding_step, created_at')
     .order('created_at', { ascending: false })
 
-  // Fetch all user emails via admin API
+  // All user emails
   const { data: usersData } = await admin.auth.admin.listUsers({ perPage: 1000 })
   const emailMap: Record<string, string> = {}
-  for (const u of usersData?.users ?? []) {
-    emailMap[u.id] = u.email ?? ''
+  for (const u of usersData?.users ?? []) emailMap[u.id] = u.email ?? ''
+
+  // Exclude admin's own account
+  const shops = (allShops ?? []).filter(s => emailMap[s.owner_id] !== ADMIN_EMAIL)
+  const shopIds = shops.map(s => s.id)
+
+  // Last call per shop
+  const lastCallMap: Record<string, string> = {}
+  if (shopIds.length > 0) {
+    const { data: calls } = await admin
+      .from('calls')
+      .select('shop_id, started_at')
+      .in('shop_id', shopIds)
+      .order('started_at', { ascending: false })
+
+    for (const c of calls ?? []) {
+      if (!lastCallMap[c.shop_id]) lastCallMap[c.shop_id] = c.started_at
+    }
   }
 
-  // Exclude shops owned by the admin account itself
-  const shops = (allShops ?? []).filter(s => emailMap[s.owner_id] !== ADMIN_EMAIL)
-
-  const shopsWithEmail = shops.map(s => ({
+  const shopsWithMeta = shops.map(s => ({
     ...s,
     owner_email: emailMap[s.owner_id] ?? '',
+    last_call_at: lastCallMap[s.id] ?? null,
   }))
 
-  const liveCount = shopsWithEmail.filter(s => s.status === 'live').length
-  const pausedCount = shopsWithEmail.filter(s => s.status === 'paused').length
-  const totalCount = shopsWithEmail.length
+  const liveCount = shopsWithMeta.filter(s => s.status === 'live').length
+  const pausedCount = shopsWithMeta.filter(s => s.status === 'paused').length
+  const totalCount = shopsWithMeta.length
 
   return (
     <div style={{ minHeight: '100vh', background: 'var(--bg)', padding: '40px 24px' }}>
-      <div style={{ maxWidth: 940, margin: '0 auto' }}>
+      <div style={{ maxWidth: 960, margin: '0 auto' }}>
 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 32, flexWrap: 'wrap', gap: 16 }}>
@@ -61,9 +75,9 @@ export default async function AdminPage() {
           </div>
 
           {/* Stats */}
-          <div style={{ display: 'flex', gap: 12 }}>
+          <div style={{ display: 'flex', gap: 10, alignItems: 'flex-start' }}>
             {[
-              { label: 'Total', value: totalCount, color: 'var(--text)' },
+              { label: 'Total shops', value: totalCount, color: 'var(--text)' },
               { label: 'Live', value: liveCount, color: 'var(--success)' },
               { label: 'Paused', value: pausedCount, color: 'var(--warning)' },
             ].map(stat => (
@@ -73,16 +87,16 @@ export default async function AdminPage() {
                 borderRadius: 10,
                 padding: '12px 20px',
                 textAlign: 'center',
-                minWidth: 70,
+                minWidth: 72,
               }}>
-                <div style={{ fontSize: 22, fontWeight: 800, color: stat.color, letterSpacing: '-0.5px' }}>{stat.value}</div>
+                <div style={{ fontSize: 24, fontWeight: 800, color: stat.color, letterSpacing: '-0.5px' }}>{stat.value}</div>
                 <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2, fontWeight: 500 }}>{stat.label}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <AdminShopList initialShops={shopsWithEmail} />
+        <AdminShopList initialShops={shopsWithMeta} />
       </div>
     </div>
   )
