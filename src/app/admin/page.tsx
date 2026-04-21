@@ -17,23 +17,23 @@ export default async function AdminPage() {
 
   const admin = createAdminClient()
 
-  const { data: shops } = await supabase
+  // Use service role client to bypass RLS and see all shops
+  const { data: allShops } = await admin
     .from('shops')
     .select('id, owner_id, name, address, phone, status, vapi_agent_id, twilio_number, onboarding_step, created_at')
     .order('created_at', { ascending: false })
 
-  // Fetch owner emails for all shops
-  const ownerIds = [...new Set((shops ?? []).map(s => s.owner_id).filter(Boolean))]
+  // Fetch all user emails via admin API
+  const { data: usersData } = await admin.auth.admin.listUsers({ perPage: 1000 })
   const emailMap: Record<string, string> = {}
-
-  if (ownerIds.length > 0) {
-    const { data: users } = await admin.auth.admin.listUsers({ perPage: 1000 })
-    for (const u of users?.users ?? []) {
-      if (ownerIds.includes(u.id)) emailMap[u.id] = u.email ?? ''
-    }
+  for (const u of usersData?.users ?? []) {
+    emailMap[u.id] = u.email ?? ''
   }
 
-  const shopsWithEmail = (shops ?? []).map(s => ({
+  // Exclude shops owned by the admin account itself
+  const shops = (allShops ?? []).filter(s => emailMap[s.owner_id] !== ADMIN_EMAIL)
+
+  const shopsWithEmail = shops.map(s => ({
     ...s,
     owner_email: emailMap[s.owner_id] ?? '',
   }))
