@@ -16,26 +16,35 @@ function extractAreaCode(phone: string): string {
   return local.slice(0, 3) || '407' // default to Orlando
 }
 
-// Buy a new Twilio number matching the shop's area code
-async function buyTwilioNumber(areaCode: string): Promise<{ sid: string; phoneNumber: string } | null> {
+// Buy a new Twilio number matching the shop's area code, with geographic fallback
+async function buyTwilioNumber(areaCode: string, shopPhone?: string): Promise<{ sid: string; phoneNumber: string } | null> {
   try {
-    // Search for available numbers in area code
-    const searchUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/AvailablePhoneNumbers/US/Local.json?AreaCode=${areaCode}&SmsEnabled=true&VoiceEnabled=true`
-    const searchRes = await fetch(searchUrl, {
-      headers: { 'Authorization': 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64') }
-    })
-    const searchData = await searchRes.json()
-    const available = searchData.available_phone_numbers ?? []
+    const auth = 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64')
+    const base = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/AvailablePhoneNumbers/US/Local.json`
 
-    // If no numbers in area code, try any US number
-    let numberToBuy = available[0]?.phone_number
+    async function searchNumbers(params: Record<string, string>): Promise<string | null> {
+      const qs = new URLSearchParams({ SmsEnabled: 'true', VoiceEnabled: 'true', ...params }).toString()
+      const res = await fetch(`${base}?${qs}`, { headers: { Authorization: auth } })
+      const data = await res.json()
+      return data.available_phone_numbers?.[0]?.phone_number ?? null
+    }
+
+    // 1. Exact area code match (e.g. 407 for Orlando)
+    let numberToBuy = await searchNumbers({ AreaCode: areaCode })
+    if (numberToBuy) console.log(`Found exact area code match: ${areaCode}`)
+
+    // 2. Geographically near the shop's number (finds adjacent area codes in same metro)
+    if (!numberToBuy && shopPhone) {
+      const digits = shopPhone.replace(/\D/g, '')
+      const e164 = digits.startsWith('1') && digits.length === 11 ? `+${digits}` : `+1${digits}`
+      numberToBuy = await searchNumbers({ NearNumber: e164, Distance: '50' })
+      if (numberToBuy) console.log(`Found nearby number for ${areaCode} using NearNumber`)
+    }
+
+    // 3. Last resort: any available US number
     if (!numberToBuy) {
-      const fallbackUrl = `https://api.twilio.com/2010-04-01/Accounts/${TWILIO_ACCOUNT_SID}/AvailablePhoneNumbers/US/Local.json?SmsEnabled=true&VoiceEnabled=true`
-      const fallbackRes = await fetch(fallbackUrl, {
-        headers: { 'Authorization': 'Basic ' + Buffer.from(`${TWILIO_ACCOUNT_SID}:${TWILIO_AUTH_TOKEN}`).toString('base64') }
-      })
-      const fallbackData = await fallbackRes.json()
-      numberToBuy = fallbackData.available_phone_numbers?.[0]?.phone_number
+      numberToBuy = await searchNumbers({})
+      if (numberToBuy) console.log(`Warning: no local number found for ${areaCode}, using any US number`)
     }
 
     if (!numberToBuy) return null
@@ -180,7 +189,7 @@ export async function POST(request: Request) {
       // Buy a new dedicated number for this shop
       const areaCode = extractAreaCode(shop.phone || '')
       console.log('Buying new number for area code', areaCode)
-      const purchased = await buyTwilioNumber(areaCode)
+      const purchased = await buyTwilioNumber(areaCode, shop.phone)
 
       if (purchased) {
         assignedNumber = purchased.phoneNumber
