@@ -1,8 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
-import { useRouter } from 'next/navigation'
+import { signOutAction } from './actions'
 
 type Shop = {
   id: string
@@ -192,13 +191,6 @@ export function AdminShopList({ initialShops }: { initialShops: Shop[] }) {
   const [deleteTarget, setDeleteTarget] = useState<Shop | null>(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
-
-  async function handleSignOut() {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    router.push('/auth/login')
-  }
 
   async function callApi(url: string, method: string, body: object) {
     const res = await fetch(url, {
@@ -275,7 +267,7 @@ export function AdminShopList({ initialShops }: { initialShops: Shop[] }) {
   return (
     <>
       <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 24 }}>
-        <button onClick={handleSignOut} style={{
+        <button onClick={() => signOutAction()} style={{
           background: 'transparent', border: '1px solid var(--border)', borderRadius: 8,
           padding: '7px 14px', fontSize: 13, color: 'var(--muted)', cursor: 'pointer',
           display: 'flex', alignItems: 'center', gap: 7, fontFamily: 'inherit',

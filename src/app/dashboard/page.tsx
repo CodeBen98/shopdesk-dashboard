@@ -2,6 +2,7 @@ import { formatDateTime, formatDuration } from '@/lib/utils'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { isAdmin } from '@/lib/admin'
 import type { Call, Booking } from '@/types'
 import type { Metadata } from 'next'
 
@@ -36,7 +37,7 @@ export default async function DashboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/auth/login')
-  if (user.email === 'slarve@shopdesk.site') redirect('/admin')
+  if (isAdmin(user)) redirect('/admin')
 
   const { data: shop } = await supabase
     .from('shops')

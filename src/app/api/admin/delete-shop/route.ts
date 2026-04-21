@@ -2,8 +2,7 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { sendDeletionConfirmation } from '@/lib/email'
-
-const ADMIN_EMAIL = 'slarve@shopdesk.site'
+import { isAdmin } from '@/lib/admin'
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const TWILIO_ACCOUNT_SID = process.env.TWILIO_ACCOUNT_SID!
 const TWILIO_AUTH_TOKEN = process.env.TWILIO_AUTH_TOKEN!
@@ -46,7 +45,7 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.email !== ADMIN_EMAIL) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!isAdmin(user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { shopId } = await request.json() as { shopId: string }
     if (!shopId) return NextResponse.json({ error: 'Missing shopId' }, { status: 400 })
@@ -56,21 +55,41 @@ export async function POST(request: Request) {
     if (!shop) return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
     if (shop.status === 'deleted') return NextResponse.json({ error: 'Already deleted' }, { status: 400 })
 
+    // 1. Capture owner email before anything is destroyed
+    let ownerEmail: string | undefined
+    try {
+      const { data: ownerUser } = await admin.auth.admin.getUserById(shop.owner_id)
+      ownerEmail = ownerUser?.user?.email
+    } catch { /* non-fatal */ }
+
+    // 2. Delete auth account FIRST -- if this fails, abort entirely so the user can still log in
+    await admin.auth.admin.deleteUser(shop.owner_id)
+    console.log('Deleted auth user:', shop.owner_id)
+
+    // Send confirmation email now that we know auth is gone
+    if (ownerEmail) {
+      try {
+        await sendDeletionConfirmation({ to: ownerEmail, shopName: shop.name })
+      } catch (emailErr) {
+        console.error('Deletion email failed (non-fatal):', emailErr)
+      }
+    }
+
     const errors: string[] = []
 
-    // 1. Release Twilio number
+    // 3. Release Twilio number
     if (shop.twilio_number) {
       try { await releaseTwilioNumber(shop.twilio_number) }
       catch (e) { errors.push(`Twilio: ${e instanceof Error ? e.message : e}`) }
     }
 
-    // 2. Delete Vapi assistant
+    // 4. Delete Vapi assistant
     if (shop.vapi_agent_id) {
       try { await deleteVapiAssistant(shop.vapi_agent_id) }
       catch (e) { errors.push(`Vapi: ${e instanceof Error ? e.message : e}`) }
     }
 
-    // 3. Anonymize shop row (GDPR -- clear all personal data, keep record for accounting)
+    // 5. Anonymize shop row (GDPR -- clear all personal data, keep record for accounting)
     await admin.from('shops').update({
       name: '[deleted]',
       address: null,
@@ -89,29 +108,6 @@ export async function POST(request: Request) {
       status: 'deleted',
       deleted_at: new Date().toISOString(),
     }).eq('id', shopId)
-
-    // 4. Capture email + send confirmation BEFORE deleting auth user
-    let ownerEmail: string | undefined
-    try {
-      const { data: ownerUser } = await admin.auth.admin.getUserById(shop.owner_id)
-      ownerEmail = ownerUser?.user?.email
-    } catch { /* non-fatal */ }
-
-    if (ownerEmail) {
-      try {
-        await sendDeletionConfirmation({ to: ownerEmail, shopName: shop.name })
-      } catch (emailErr) {
-        console.error('Deletion email failed (non-fatal):', emailErr)
-      }
-    }
-
-    // 5. Delete Supabase auth account
-    try {
-      await admin.auth.admin.deleteUser(shop.owner_id)
-      console.log('Deleted auth user:', shop.owner_id)
-    } catch (e) {
-      errors.push(`Auth delete: ${e instanceof Error ? e.message : e}`)
-    }
 
     return NextResponse.json({
       success: true,

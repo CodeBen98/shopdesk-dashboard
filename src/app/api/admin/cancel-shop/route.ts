@@ -3,8 +3,7 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS } from '@/lib/shopPrompt'
 import { sendCancellationNotice } from '@/lib/email'
-
-const ADMIN_EMAIL = 'slarve@shopdesk.site'
+import { isAdmin } from '@/lib/admin'
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
 
@@ -30,7 +29,7 @@ export async function POST(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.email !== ADMIN_EMAIL) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!isAdmin(user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { shopId } = await request.json() as { shopId: string }
     if (!shopId) return NextResponse.json({ error: 'Missing shopId' }, { status: 400 })
@@ -86,12 +85,18 @@ export async function DELETE(request: Request) {
   try {
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user || user.email !== ADMIN_EMAIL) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+    if (!isAdmin(user)) return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
 
     const { shopId } = await request.json() as { shopId: string }
     const admin = createAdminClient()
     const { data: shop } = await admin.from('shops').select('*').eq('id', shopId).single()
     if (!shop) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+    // H-6: Only restore if shop is actually in a cancel state
+    const cancelStates = ['cancel_requested', 'cancelling', 'cancelled']
+    if (!cancelStates.includes(shop.status)) {
+      return NextResponse.json({ error: 'Shop is not in a cancellation state' }, { status: 400 })
+    }
 
     // Restore full Vapi prompt
     if (shop.vapi_agent_id) {

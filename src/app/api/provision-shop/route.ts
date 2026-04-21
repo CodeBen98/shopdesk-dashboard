@@ -124,12 +124,19 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Shop not found' }, { status: 404 })
     }
 
-    // Rate limit: block re-provisioning within 2 minutes of the last attempt
-    if (shop.updated_at) {
-      const secondsSinceLast = (Date.now() - new Date(shop.updated_at).getTime()) / 1000
-      if (secondsSinceLast < 120) {
-        return NextResponse.json({ error: 'Please wait before provisioning again.' }, { status: 429 })
-      }
+    // Rate limit: block re-provisioning within 2 minutes using an atomic update.
+    // We only proceed if provision_attempted_at is null or older than 2 minutes.
+    const twoMinAgo = new Date(Date.now() - 120_000).toISOString()
+    const { data: claimed } = await supabase
+      .from('shops')
+      .update({ provision_attempted_at: new Date().toISOString() })
+      .eq('owner_id', user.id)
+      .or(`provision_attempted_at.is.null,provision_attempted_at.lt.${twoMinAgo}`)
+      .select('id')
+      .single()
+
+    if (!claimed) {
+      return NextResponse.json({ error: 'Please wait a moment before trying again.' }, { status: 429 })
     }
 
     const systemPrompt = buildSystemPrompt({
@@ -147,7 +154,10 @@ export async function POST(request: Request) {
     const voice = voiceMap[shop.ai_voice] ?? voiceMap.patricia
 
     const webhookUrl = 'https://app.shopdesk.site/api/vapi-webhook'
-    const webhookSecret = process.env.VAPI_WEBHOOK_SECRET ?? ''
+    const webhookSecret = process.env.VAPI_WEBHOOK_SECRET
+    if (!webhookSecret) {
+      return NextResponse.json({ error: 'Server misconfiguration: webhook secret not set.' }, { status: 500 })
+    }
 
     const agentPayload = {
       name: shop.name,

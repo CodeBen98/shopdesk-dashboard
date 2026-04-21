@@ -9,8 +9,12 @@ export async function POST(request: Request) {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  const { type, reason } = await request.json() as { type: RequestType; reason?: string }
+  const body = await request.json()
+  const { type, reason } = body as { type: RequestType; reason?: string }
   if (!VALID_TYPES.includes(type)) return NextResponse.json({ error: 'Invalid type' }, { status: 400 })
+  if (reason !== undefined && (typeof reason !== 'string' || reason.length > 200)) {
+    return NextResponse.json({ error: 'Invalid reason' }, { status: 400 })
+  }
 
   // Try full update with new columns, fall back to status-only if migration hasn't run yet
   const fullUpdate = {

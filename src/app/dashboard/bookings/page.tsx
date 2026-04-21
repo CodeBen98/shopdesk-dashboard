@@ -84,9 +84,12 @@ export default function BookingsPage() {
   )
 
   async function updateStatus(id: string, status: string) {
-    const supabase = createClient()
-    const { error } = await supabase.from('bookings').update({ status }).eq('id', id)
-    if (error) {
+    const res = await fetch('/api/bookings/update-status', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookingId: id, status }),
+    })
+    if (!res.ok) {
       show('Failed to update booking', 'error')
     } else {
       setBookings(prev => prev.map(b => b.id === id ? { ...b, status: status as Booking['status'] } : b))

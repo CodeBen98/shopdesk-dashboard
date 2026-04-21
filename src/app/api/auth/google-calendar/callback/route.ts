@@ -1,17 +1,10 @@
 import { NextResponse } from 'next/server'
-import { createClient } from '@supabase/supabase-js'
+import { createClient as createServerClient } from '@/lib/supabase/server'
 
 const GOOGLE_CLIENT_ID = process.env.GOOGLE_CLIENT_ID!
 const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET!
 const REDIRECT_URI = 'https://app.shopdesk.site/api/auth/google-calendar/callback'
 const GOOGLE_CALENDAR_STATE_COOKIE = 'shopdesk_google_calendar_state'
-
-function getSupabase() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url)
@@ -32,6 +25,15 @@ export async function GET(request: Request) {
   const errorReturn = from === 'settings' ? 'https://app.shopdesk.site/dashboard/settings?tab=integrations&calendar=error' : 'https://app.shopdesk.site/onboard?calendar=error'
 
   if (error || !code || !state || !userId || !expectedState || state !== expectedState) {
+    const response = NextResponse.redirect(errorReturn)
+    response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
+    return response
+  }
+
+  // Verify the active session matches the userId encoded in the state cookie
+  const supabase = await createServerClient()
+  const { data: { user: sessionUser } } = await supabase.auth.getUser()
+  if (!sessionUser || sessionUser.id !== userId) {
     const response = NextResponse.redirect(errorReturn)
     response.cookies.delete(GOOGLE_CALENDAR_STATE_COOKIE)
     return response
@@ -86,7 +88,7 @@ export async function GET(request: Request) {
       updatePayload.onboarding_step = 'voice'
     }
 
-    const { error: updateError } = await getSupabase()
+    const { error: updateError } = await supabase
       .from('shops')
       .update(updatePayload)
       .eq('owner_id', userId)

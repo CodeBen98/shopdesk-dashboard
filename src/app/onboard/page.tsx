@@ -2,13 +2,14 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 import { Shop } from '@/types'
+import { isAdmin } from '@/lib/admin'
 
 export default async function OnboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/auth/login')
-  if (user.email === 'slarve@shopdesk.site') redirect('/admin')
+  if (isAdmin(user)) redirect('/admin')
 
   let { data: shop } = await supabase
     .from('shops')

@@ -3,17 +3,16 @@ import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { Metadata } from 'next'
 import { AdminShopList } from './AdminShopList'
+import { isAdmin, ADMIN_EMAIL } from '@/lib/admin'
 
 export const metadata: Metadata = { title: 'Admin | ShopDesk' }
-
-const ADMIN_EMAIL = 'slarve@shopdesk.site'
 
 export default async function AdminPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
   if (!user) redirect('/auth/login')
-  if (user.email !== ADMIN_EMAIL) redirect('/dashboard')
+  if (!isAdmin(user)) redirect('/dashboard')
 
   const admin = createAdminClient()
 
