@@ -138,8 +138,6 @@ export default function SettingsPage() {
 
   // Focus states
   const [focused, setFocused] = useState<string | null>(null)
-  const [loadingAutofill, setLoadingAutofill] = useState(false)
-  const [autofillError, setAutofillError] = useState<string | null>(null)
 
   // Owner mobile
   const [ownerPhone, setOwnerPhone] = useState('')
@@ -246,27 +244,6 @@ export default function SettingsPage() {
     )
   }
 
-  async function loadFromGoogle() {
-    if (!name && !address) {
-      setAutofillError('Enter a shop name or address first')
-      return
-    }
-    setLoadingAutofill(true)
-    setAutofillError(null)
-    try {
-      const query = address ? `${name} ${address}` : name
-      const res = await fetch(`/api/autofill-shop?q=${encodeURIComponent(query)}&save=true`)
-      if (!res.ok) throw new Error('Not found')
-      await res.json()
-      // Reload the page so all tabs reflect the new data cleanly
-      window.location.reload()
-    } catch {
-      setAutofillError('Could not find shop on Google Places. Try a more specific name or address.')
-    } finally {
-      setLoadingAutofill(false)
-    }
-  }
-
   async function playVoicePreview(voiceId: string, e: React.MouseEvent) {
     e.stopPropagation()
     if (voiceAudioRef.current) {
@@ -352,29 +329,6 @@ export default function SettingsPage() {
             <div>
               <h2 className="section-header">Shop Information</h2>
               <p className="section-desc">Your AI receptionist uses this to introduce your business.</p>
-            </div>
-
-            {/* Google autofill */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-              <button
-                onClick={loadFromGoogle}
-                disabled={loadingAutofill}
-                style={{
-                  display: 'inline-flex', alignItems: 'center', gap: 6,
-                  background: 'var(--card-raised)', border: '1px solid var(--border)',
-                  borderRadius: 8, padding: '8px 14px', fontSize: 13, fontWeight: 500,
-                  color: 'var(--text-mid)', cursor: loadingAutofill ? 'wait' : 'pointer',
-                  fontFamily: 'inherit', transition: 'all 0.15s',
-                }}
-              >
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none">
-                  <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" fill="currentColor"/>
-                </svg>
-                {loadingAutofill ? 'Loading & saving...' : 'Load from Google + Update AI'}
-              </button>
-              {autofillError && (
-                <span style={{ fontSize: 12, color: 'var(--error, #ef4444)' }}>{autofillError}</span>
-              )}
             </div>
 
             {/* Name + Phone */}
