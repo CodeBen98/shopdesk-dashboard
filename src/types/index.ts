@@ -14,7 +14,11 @@ export type Shop = {
   google_calendar_id: string | null
   google_refresh_token: string | null
   ai_voice: string
-  status: 'onboarding' | 'live' | 'paused'
+  status: 'onboarding' | 'live' | 'paused' | 'pause_requested' | 'cancel_requested' | 'cancelling' | 'cancelled' | 'deleted'
+  cancel_reason: string | null
+  cancel_requested_at: string | null
+  cancelled_at: string | null
+  deleted_at: string | null
   plan: 'trial' | 'starter' | 'professional' | 'growth'
   plan_tier: 'starter' | 'pro' | 'growth'
   is_founding_member: boolean

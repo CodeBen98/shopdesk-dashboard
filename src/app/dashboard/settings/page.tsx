@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
+import { CancelServiceButton } from '@/components/CancelServiceButton'
 import type { Shop, ShopHours, Service } from '@/types'
 
 type Tab = 'shop' | 'hours' | 'services' | 'ai' | 'phone' | 'integrations'
@@ -1045,6 +1046,25 @@ export default function SettingsPage() {
         )}
 
       </div>
+
+      {/* Danger Zone */}
+      <div style={{
+        maxWidth: 620,
+        marginTop: 32,
+        background: 'var(--surface)',
+        border: '1px solid rgba(239,68,68,0.2)',
+        borderRadius: 12,
+        padding: '24px',
+      }}>
+        <h2 style={{ fontSize: 13, fontWeight: 700, color: 'var(--danger)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+          Danger Zone
+        </h2>
+        <p style={{ fontSize: 13, color: 'var(--muted)', marginBottom: 20, lineHeight: 1.6 }}>
+          Need to pause or cancel your ShopDesk service? Submit a request and a representative will follow up within 24 hours.
+        </p>
+        <CancelServiceButton />
+      </div>
+
     </div>
   )
 }

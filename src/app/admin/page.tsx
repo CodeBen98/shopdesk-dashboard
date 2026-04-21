@@ -20,7 +20,7 @@ export default async function AdminPage() {
   // All shops via service role (bypasses RLS)
   const { data: allShops } = await admin
     .from('shops')
-    .select('id, owner_id, name, address, phone, status, vapi_agent_id, twilio_number, onboarding_step, created_at')
+    .select('id, owner_id, name, address, phone, status, vapi_agent_id, twilio_number, onboarding_step, created_at, cancel_reason, cancel_requested_at, cancelled_at')
     .order('created_at', { ascending: false })
 
   // All user emails
@@ -50,6 +50,9 @@ export default async function AdminPage() {
     ...s,
     owner_email: emailMap[s.owner_id] ?? '',
     last_call_at: lastCallMap[s.id] ?? null,
+    cancel_reason: s.cancel_reason ?? null,
+    cancel_requested_at: s.cancel_requested_at ?? null,
+    cancelled_at: s.cancelled_at ?? null,
   }))
 
   const liveCount = shopsWithMeta.filter(s => s.status === 'live').length
