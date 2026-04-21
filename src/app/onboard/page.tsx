@@ -7,9 +7,8 @@ export default async function OnboardPage() {
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  if (!user) {
-    redirect('/auth/login')
-  }
+  if (!user) redirect('/auth/login')
+  if (user.email === 'slarve@shopdesk.site') redirect('/admin')
 
   let { data: shop } = await supabase
     .from('shops')
