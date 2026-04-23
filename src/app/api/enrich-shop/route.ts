@@ -1,12 +1,20 @@
 // POST /api/enrich-shop
-// Harvests first-party data about the authenticated owner's shop and stores
-// it in shops.enrichment_raw. Synthesis is a separate step (Ship 2) — this
-// route is harvest-only so the raw cache is always available for cheap re-runs.
+// Harvests first-party data about the authenticated owner's shop, runs
+// synthesis via Claude Sonnet 4.6, and stores both raw + synthesized output
+// in the shops row. The raw cache enables cheap re-runs of synthesis without
+// re-paying third-party APIs.
+//
+// Optional query params:
+//   ?skip_synthesis=1  — harvest-only (debug / staged rollout)
+//
 // See shopdesk/design-docs/2026-04-23-enrichment-engine.md.
 
+import Anthropic from '@anthropic-ai/sdk'
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { harvestShop } from '@/lib/enrichment/harvest'
+import { synthesizeShop, type SynthesisOutput } from '@/lib/enrichment/synthesize'
+import type { Enrichment } from '@/types'
 
 export async function POST(request: Request) {
   const supabase = await createClient()
@@ -39,32 +47,81 @@ export async function POST(request: Request) {
     // body is optional — ignore
   }
 
-  const started = Date.now()
+  const { searchParams } = new URL(request.url)
+  const skipSynthesis = searchParams.get('skip_synthesis') === '1'
+
+  const harvestStart = Date.now()
   const raw = await harvestShop({
     shopName: overrideName ?? shop.name,
     shopAddress: overrideAddress ?? shop.address,
   })
-  const duration = Date.now() - started
+  const harvestMs = Date.now() - harvestStart
 
-  const { error: updateError } = await supabase
+  // Persist raw first so synthesis failures don't lose what we paid to fetch.
+  const { error: rawError } = await supabase
     .from('shops')
     .update({ enrichment_raw: raw })
     .eq('id', shop.id)
-
-  if (updateError) {
-    console.error('[enrich-shop] failed to persist enrichment_raw:', updateError)
+  if (rawError) {
+    console.error('[enrich-shop] failed to persist enrichment_raw:', rawError)
     return NextResponse.json({ error: 'Failed to save enrichment' }, { status: 500 })
   }
 
   const sources = {
-    places: raw.places ? true : false,
-    website: raw.website ? true : false,
-    serpapi: raw.serpapi ? true : false,
+    places: Boolean(raw.places),
+    website: Boolean(raw.website),
+    serpapi: Boolean(raw.serpapi),
+  }
+
+  if (skipSynthesis) {
+    return NextResponse.json({
+      success: true,
+      stage: 'harvest-only',
+      duration_ms: { harvest: harvestMs },
+      sources,
+    })
+  }
+
+  // Synthesis. Failures here must not take out the route — the raw cache is
+  // already persisted, so the owner can re-run synthesis later.
+  let synthesized: SynthesisOutput | null = null
+  let synthesisError: string | null = null
+  const synthStart = Date.now()
+  try {
+    synthesized = await synthesizeShop(raw)
+  } catch (err) {
+    if (err instanceof Anthropic.APIError) {
+      synthesisError = `Anthropic ${err.status}: ${err.message}`
+    } else {
+      synthesisError = err instanceof Error ? err.message : 'unknown synthesis error'
+    }
+    console.error('[enrich-shop] synthesis failed:', synthesisError)
+  }
+  const synthMs = Date.now() - synthStart
+
+  if (synthesized) {
+    const enrichment: Enrichment = {
+      ...synthesized,
+      synthesized_at: new Date().toISOString(),
+      owner_reviewed: false,
+      owner_reviewed_at: null,
+    }
+    const { error: enrichError } = await supabase
+      .from('shops')
+      .update({ enrichment, enriched_at: new Date().toISOString() })
+      .eq('id', shop.id)
+    if (enrichError) {
+      console.error('[enrich-shop] failed to persist enrichment:', enrichError)
+      return NextResponse.json({ error: 'Failed to save synthesis' }, { status: 500 })
+    }
   }
 
   return NextResponse.json({
-    success: true,
-    duration_ms: duration,
+    success: synthesized !== null,
+    stage: synthesized ? 'complete' : 'harvest-only (synthesis failed)',
+    duration_ms: { harvest: harvestMs, synthesis: synthMs },
     sources,
+    confidence: synthesized?.confidence.overall ?? null,
+    synthesis_error: synthesisError,
   })
 }

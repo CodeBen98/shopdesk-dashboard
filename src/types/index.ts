@@ -43,29 +43,29 @@ export type EnrichmentRaw = {
 }
 
 export type Enrichment = {
-  services: Array<{ name: string; price?: string | null; description?: string | null }>
+  services: Array<{ name: string; price: string | null; description: string | null }>
   shop_identity: {
-    key_people?: Array<{ name: string; role?: string }>
-    years_in_business?: number | null
-    certifications?: string[]
-    differentiators?: string[]
+    key_people: Array<{ name: string; role: string | null }>
+    years_in_business: number | null
+    certifications: string[]
+    differentiators: string[]
   }
   shop_voice: {
-    tone?: string
-    formality_level?: string
-    customer_address_style?: string
-    signature_phrases?: string[]
-    unique_selling_points?: string[]
-    values?: string[]
+    tone: string
+    formality_level: 'very casual' | 'casual' | 'casual-professional' | 'professional' | 'very professional'
+    customer_address_style: string
+    signature_phrases: string[]
+    unique_selling_points: string[]
+    values: string[]
   }
-  recommended_first_message?: string
+  recommended_first_message: string
   confidence: {
     overall: 'high' | 'medium' | 'low'
-    notes?: string
+    notes: string
   }
   synthesized_at: string
   owner_reviewed: boolean
-  owner_reviewed_at?: string | null
+  owner_reviewed_at: string | null
 }
 
 export type ShopHours = {
