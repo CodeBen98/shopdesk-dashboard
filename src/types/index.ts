@@ -29,7 +29,43 @@ export type Shop = {
   sms_consent: boolean
   owner_phone: string | null
   owner_phone_sms_consent: boolean
+  enrichment_raw: EnrichmentRaw | null
+  enrichment: Enrichment | null
+  enriched_at: string | null
   created_at: string
+}
+
+export type EnrichmentRaw = {
+  places?: unknown             // Google Places API v1 raw response
+  website?: { url: string; markdown: string } | null
+  serpapi?: unknown | null     // Reserved for v1.1 (owner replies, GBP services)
+  harvested_at: string
+}
+
+export type Enrichment = {
+  services: Array<{ name: string; price?: string | null; description?: string | null }>
+  shop_identity: {
+    key_people?: Array<{ name: string; role?: string }>
+    years_in_business?: number | null
+    certifications?: string[]
+    differentiators?: string[]
+  }
+  shop_voice: {
+    tone?: string
+    formality_level?: string
+    customer_address_style?: string
+    signature_phrases?: string[]
+    unique_selling_points?: string[]
+    values?: string[]
+  }
+  recommended_first_message?: string
+  confidence: {
+    overall: 'high' | 'medium' | 'low'
+    notes?: string
+  }
+  synthesized_at: string
+  owner_reviewed: boolean
+  owner_reviewed_at?: string | null
 }
 
 export type ShopHours = {
