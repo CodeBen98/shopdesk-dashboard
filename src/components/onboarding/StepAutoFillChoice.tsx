@@ -1,14 +1,32 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { ShopHours } from '@/types'
 import { StepProps } from './OnboardingWizard'
+
+// Rotating progress messages during the enrichment wait. The whole pipeline
+// takes 10-30 sec on a shop with a website, so a single "Loading..." feels
+// broken. These cycle while the request is in-flight.
+const PROGRESS_MESSAGES = [
+  'Finding your shop on Google…',
+  'Reading your website…',
+  'Building your agent profile…',
+  'Almost done…',
+]
 
 export function StepAutoFillChoice({ shop, userId, onBack, onSkipTo, onShopUpdate }: StepProps) {
   const [selected, setSelected] = useState<'auto' | 'manual'>('auto')
   const [loading, setLoading] = useState(false)
+  const [progressIdx, setProgressIdx] = useState(0)
   const [notFoundMsg, setNotFoundMsg] = useState('')
+
+  useEffect(() => {
+    if (!loading) return
+    const id = setInterval(() => {
+      setProgressIdx(i => Math.min(i + 1, PROGRESS_MESSAGES.length - 1))
+    }, 5000)
+    return () => clearInterval(id)
+  }, [loading])
 
   async function handleContinue() {
     if (selected === 'manual') {
@@ -20,46 +38,41 @@ export function StepAutoFillChoice({ shop, userId, onBack, onSkipTo, onShopUpdat
     }
 
     setLoading(true)
+    setProgressIdx(0)
     setNotFoundMsg('')
 
     try {
-      const res = await fetch('/api/gather-shop', {
+      // Kicks off harvest (Google Places + Jina website scrape) and
+      // synthesis (Claude Sonnet 4.6). Persists enrichment_raw + enrichment
+      // on the shops row. See shopdesk/design-docs/2026-04-23-enrichment-engine.md.
+      const res = await fetch('/api/enrich-shop', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: shop?.name ?? '', address: shop?.address ?? '' }),
       })
-      const data = await res.json()
-
-      if (data.found) {
-        const supabase = createClient()
-        const updates: Record<string, unknown> = {
-          hours: data.hours as ShopHours,
-          onboarding_step: 'auto_fill_review',
-        }
-        if (!shop?.phone && data.phone) {
-          updates.phone = data.phone
-        }
-        const { error } = await supabase.from('shops').update(updates).eq('owner_id', userId)
-        if (error) {
-          throw error
-        }
-        onShopUpdate({
-          hours: data.hours as ShopHours,
-          ...((!shop?.phone && data.phone) ? { phone: data.phone } : {}),
-          onboarding_step: 'auto_fill_review',
-        })
-        onSkipTo('auto_fill_review')
-      } else {
-        setNotFoundMsg("We couldn't find your shop online. No worries, you can fill it in manually.")
-        setTimeout(() => {
-          onSkipTo('hours')
-        }, 2000)
+      const data = await res.json() as {
+        success?: boolean
+        sources?: { places?: boolean; website?: boolean }
+        confidence?: 'high' | 'medium' | 'low' | null
+        synthesis_error?: string | null
       }
+
+      // If the harvest itself found no Google match, fall back to manual.
+      const foundAnything = data.sources?.places || data.sources?.website
+      if (!foundAnything) {
+        setNotFoundMsg("We couldn't find your shop online. No worries, you can fill it in manually.")
+        setTimeout(() => { onSkipTo('hours') }, 2000)
+        return
+      }
+
+      // Advance to the review step even if synthesis failed — the raw data
+      // is still useful, and the review page will show a graceful fallback.
+      const supabase = createClient()
+      await supabase.from('shops').update({ onboarding_step: 'auto_fill_review' }).eq('owner_id', userId)
+      onShopUpdate({ onboarding_step: 'auto_fill_review' })
+      onSkipTo('auto_fill_review')
     } catch {
       setNotFoundMsg("We couldn't find your shop online. No worries, you can fill it in manually.")
-      setTimeout(() => {
-        onSkipTo('hours')
-      }, 2000)
+      setTimeout(() => { onSkipTo('hours') }, 2000)
     } finally {
       setLoading(false)
     }
@@ -125,7 +138,7 @@ export function StepAutoFillChoice({ shop, userId, onBack, onSkipTo, onShopUpdat
       )}
 
       <button onClick={handleContinue} disabled={loading || !!notFoundMsg} className="step-btn-primary" style={{ width: 'auto', minWidth: 200, padding: '13px 32px', display: 'block', marginLeft: 'auto' }}>
-        {loading ? 'Looking up your shop...' : 'Continue →'}
+        {loading ? PROGRESS_MESSAGES[progressIdx] : 'Continue →'}
       </button>
     </div>
   )
