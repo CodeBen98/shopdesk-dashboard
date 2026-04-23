@@ -148,10 +148,22 @@ export async function POST(request: Request) {
       emergency_contact: shop.emergency_contact,
       emergency_contact_name: shop.emergency_contact_name,
       ai_voice: shop.ai_voice,
+      enrichment: shop.enrichment,
     }, { vehicleTypes, ownerName })
 
     const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
     const voice = voiceMap[shop.ai_voice] ?? voiceMap.patricia
+
+    // Prefer the owner-reviewed enrichment greeting when available. Fall back
+    // to the generic template for shops that skipped enrichment.
+    const enrichmentGreeting = shop.enrichment?.owner_reviewed
+      ? shop.enrichment.recommended_first_message
+      : null
+    const firstMessage = enrichmentGreeting && enrichmentGreeting.trim().length > 0
+      ? enrichmentGreeting
+          .replace(/\{receptionist\}/gi, receptionistName)
+          .replace(/\{shop\}/gi, shop.name)
+      : `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`
 
     const webhookUrl = 'https://app.shopdesk.site/api/vapi-webhook'
     const webhookSecret = process.env.VAPI_WEBHOOK_SECRET
@@ -175,7 +187,7 @@ export async function POST(request: Request) {
         voiceId: voice.voiceId,
         model: voice.model,
       },
-      firstMessage: `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`,
+      firstMessage,
     }
 
     let agentId: string

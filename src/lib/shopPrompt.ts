@@ -51,6 +51,78 @@ function sanitize(value: string | null | undefined, maxLen = 200): string {
     .trim()
 }
 
+// Shape of the shop_voice / shop_identity subset the prompt actually uses.
+// Kept separate from the full Enrichment type so callers can pass partial
+// shapes (e.g. owner-unconfirmed drafts) without needing every field.
+type EnrichmentForPrompt = {
+  shop_voice?: {
+    tone?: string
+    formality_level?: string
+    customer_address_style?: string
+    signature_phrases?: string[]
+    unique_selling_points?: string[]
+    values?: string[]
+  }
+  shop_identity?: {
+    key_people?: Array<{ name: string; role?: string | null }>
+    years_in_business?: number | null
+    certifications?: string[]
+    differentiators?: string[]
+  }
+  owner_reviewed?: boolean
+}
+
+function sanitizeList(items: string[] | undefined, perItemMax: number, cap: number): string[] {
+  if (!items || items.length === 0) return []
+  return items.slice(0, cap).map(s => sanitize(s, perItemMax)).filter(Boolean)
+}
+
+function buildPersonalitySection(e: EnrichmentForPrompt | undefined): string {
+  if (!e?.shop_voice) return ''
+  const v = e.shop_voice
+  const lines: string[] = []
+  if (v.tone) lines.push(`- Overall tone: ${sanitize(v.tone, 100)}.`)
+  if (v.formality_level) lines.push(`- Formality: ${sanitize(v.formality_level, 40)}.`)
+  if (v.customer_address_style) lines.push(`- How you address customers: ${sanitize(v.customer_address_style, 80)}.`)
+  const phrases = sanitizeList(v.signature_phrases, 80, 6)
+  if (phrases.length > 0) lines.push(`- Natural phrases for this shop: ${phrases.map(p => `"${p}"`).join(', ')}.`)
+  const usps = sanitizeList(v.unique_selling_points, 120, 6)
+  if (usps.length > 0) lines.push(`- What this shop emphasizes: ${usps.join('; ')}.`)
+  const values = sanitizeList(v.values, 40, 6)
+  if (values.length > 0) lines.push(`- Values: ${values.join(', ')}.`)
+  if (lines.length === 0) return ''
+  return `\n[Shop Personality]\nSpeak in the voice of this specific shop. Your words should feel like the shop's own.\n${lines.join('\n')}\n`
+}
+
+function buildIdentityAddon(e: EnrichmentForPrompt | undefined): string {
+  if (!e?.shop_identity) return ''
+  const id = e.shop_identity
+  const parts: string[] = []
+
+  const people = (id.key_people ?? [])
+    .slice(0, 6)
+    .map(p => {
+      const name = sanitize(p.name, 60)
+      if (!name) return ''
+      const role = p.role ? sanitize(p.role, 40) : ''
+      return role ? `${name} (${role})` : name
+    })
+    .filter(Boolean)
+  if (people.length > 0) parts.push(`Team members: ${people.join(', ')}.`)
+
+  if (typeof id.years_in_business === 'number' && id.years_in_business > 0) {
+    parts.push(`The shop has been in business for ${id.years_in_business} years.`)
+  }
+
+  const certs = sanitizeList(id.certifications, 120, 5)
+  if (certs.length > 0) parts.push(`Credentials: ${certs.join('; ')}.`)
+
+  const diffs = sanitizeList(id.differentiators, 120, 5)
+  if (diffs.length > 0) parts.push(`What sets this shop apart: ${diffs.join('; ')}.`)
+
+  return parts.length > 0 ? '\n' + parts.join(' ') : ''
+}
+
 export function buildSystemPrompt(shop: {
   name: string
   address: string
@@ -60,6 +132,7 @@ export function buildSystemPrompt(shop: {
   emergency_contact: string
   emergency_contact_name: string
   ai_voice: string
+  enrichment?: EnrichmentForPrompt | null
 }, extras?: { vehicleTypes?: string[]; ownerName?: string }): string {
   const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
   const shopName = sanitize(shop.name, 100)
@@ -73,14 +146,16 @@ export function buildSystemPrompt(shop: {
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })
   const ownerName = sanitize(extras?.ownerName || shop.emergency_contact_name || 'the shop owner', 80)
   const vehicleTypes = extras?.vehicleTypes && extras.vehicleTypes.length > 0 ? extras.vehicleTypes : null
+  const identityAddon = buildIdentityAddon(shop.enrichment ?? undefined)
+  const personalitySection = buildPersonalitySection(shop.enrichment ?? undefined)
 
   return `[Identity]
 You are ${receptionistName}, the virtual receptionist at ${shopName}.
 You know this shop inside and out. You are warm, helpful, and professional.
 ${ownerName !== 'the shop owner' ? `The owner/manager is ${ownerName}. When customers ask to speak to someone, say you'll have ${ownerName} call them back.` : ''}
 Never say you are an AI. If asked, say you are the virtual receptionist for ${shopName}.
-Today's date is ${dateStr}. Use this to calculate exact dates when customers say "tomorrow", "Thursday", "next week", etc.
-
+Today's date is ${dateStr}. Use this to calculate exact dates when customers say "tomorrow", "Thursday", "next week", etc.${identityAddon}
+${personalitySection}
 [Style]
 - Warm, genuine, direct. Real person energy.
 - Maximum 2 short sentences per turn. Phone call rules.
