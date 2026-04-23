@@ -51,6 +51,19 @@ function sanitize(value: string | null | undefined, maxLen = 200): string {
     .trim()
 }
 
+// Normalize user-typed phone to E.164 for Vapi transferCall destinations.
+// Accepts US-style input: "(407) 555-1234", "407-555-1234", "4075551234",
+// "14075551234", "+14075551234". Returns null for anything we can't safely
+// convert — the caller should skip adding transferCall when this returns null.
+// International numbers are not supported in v1 (US-only customer base).
+export function normalizeToE164(raw: string | null | undefined): string | null {
+  if (!raw) return null
+  const digits = raw.replace(/\D/g, '')
+  if (digits.length === 10) return `+1${digits}`
+  if (digits.length === 11 && digits.startsWith('1')) return `+${digits}`
+  return null
+}
+
 // Shape of the shop_voice / shop_identity subset the prompt actually uses.
 // Kept separate from the full Enrichment type so callers can pass partial
 // shapes (e.g. owner-unconfirmed drafts) without needing every field.
@@ -148,11 +161,46 @@ export function buildSystemPrompt(shop: {
   const vehicleTypes = extras?.vehicleTypes && extras.vehicleTypes.length > 0 ? extras.vehicleTypes : null
   const identityAddon = buildIdentityAddon(shop.enrichment ?? undefined)
   const personalitySection = buildPersonalitySection(shop.enrichment ?? undefined)
+  // Transfer is only offered when we have a valid owner phone to transfer to.
+  // If emergency_contact can't be normalized, the agent falls back to the
+  // callback flow (unchanged legacy behavior).
+  const ownerPhoneE164 = normalizeToE164(shop.emergency_contact)
+  const canTransfer = ownerPhoneE164 !== null
+
+  const escalationSection = canTransfer
+    ? `[Escalation]
+If the caller wants to speak to a human, is in an emergency, or needs help beyond what you can handle:
+1. During business hours (see Hours above): first WARN the caller you are transferring them. Say: "I'm connecting you to ${ownerName} right now. If they don't pick up, call us back and I'll take a message for them." Then invoke the transferCall function.
+2. Outside business hours, or if you are mid-booking and cannot cleanly hand off: take their name and phone number, call bookAppointment as a callback request, and promise a callback first thing the next business day.
+
+NEVER transfer during a booking flow. Complete the booking (or the caller's question) first, then ask if they'd like to speak with ${ownerName}.
+NEVER transfer for a question you can answer yourself (hours, services, directions) — only for human-needed matters.
+
+[Urgency]
+Emergency keywords (overheating, smoke, brake failure, stranded, steering failure, won't start): respond with concern and safety first. Ask if they are safe. Then:
+- During business hours: transfer to ${ownerName} live using transferCall.
+- Outside hours: take their number and promise an urgent morning callback from ${ownerName}.
+Urgent-but-not-emergency (warning lights, unusual sounds): acknowledge urgency, try to get them booked same day or next day. Only transfer if they explicitly ask for a human.`
+    : `[Escalation]
+Wants to speak to someone: take their name and phone number, call bookAppointment as a callback request, then say goodbye and call endCall.
+Emergency contact: ${ownerName} at ${sanitize(shop.emergency_contact, 30) || 'the shop'}.
+
+[Urgency]
+Emergency keywords (overheating, smoke, brake failure, stranded, steering failure, won't start): respond with concern and safety first. Ask if they are safe. Then offer to book or take their number for a callback.
+Urgent (warning lights, unusual sounds): acknowledge urgency, try to get them in same day or next day.`
+
+  const errorHandlingSection = canTransfer
+    ? `[Error Handling]
+Booking fails: during business hours, offer to transfer them to ${ownerName} immediately. Outside hours, take their number and promise a callback within the hour.
+Outside scope (something you cannot answer): during business hours, offer to transfer them to ${ownerName}. Outside hours, take their number so ${ownerName} can call them back.`
+    : `[Error Handling]
+Booking fails: take their number, promise a callback within the hour.
+Outside scope: take their number, have a tech call them back.`
 
   return `[Identity]
 You are ${receptionistName}, the virtual receptionist at ${shopName}.
 You know this shop inside and out. You are warm, helpful, and professional.
-${ownerName !== 'the shop owner' ? `The owner/manager is ${ownerName}. When customers ask to speak to someone, say you'll have ${ownerName} call them back.` : ''}
+${ownerName !== 'the shop owner' ? `The owner/manager is ${ownerName}. See the [Escalation] section below for how to handle callers who want to speak to ${ownerName}.` : ''}
 Never say you are an AI. If asked, say you are the virtual receptionist for ${shopName}.
 Today's date is ${dateStr}. Use this to calculate exact dates when customers say "tomorrow", "Thursday", "next week", etc.${identityAddon}
 ${personalitySection}
@@ -193,49 +241,82 @@ Safe to drive: if you're hearing grinding, seeing smoke, or the car is overheati
 Do NOT call endCall until the customer says they are done.
 Do NOT say goodbye until you are ready to call endCall immediately after.
 
-[Urgency]
-Emergency keywords (overheating, smoke, brake failure, stranded, steering failure, won't start): respond with concern and safety first. Ask if they are safe. Then offer to book or take their number for a callback.
-Urgent (warning lights, unusual sounds): acknowledge urgency, try to get them in same day or next day.
+${escalationSection}
 
-[Escalation]
-Wants to speak to someone: take their name and phone number, call bookAppointment as a callback request, then say goodbye and call endCall.
-Emergency contact: ${ownerName} at ${sanitize(shop.emergency_contact, 30) || 'the shop'}.
-
-[Error Handling]
-Booking fails: take their number, promise a callback within the hour.
-Outside scope: take their number, have a tech call them back.
+${errorHandlingSection}
 
 When a customer mentions a day like "tomorrow" or "Monday", use today's date above to calculate the exact date. State the specific date (e.g. "Thursday April 9th") before booking.`
 }
 
-export const BOOKING_TOOLS = (bookingWebhookUrl: string, shopId: string) => [
-  {
-    type: 'function',
-    server: { url: `${bookingWebhookUrl}?shop_id=${shopId}` },
-    function: {
-      name: 'bookAppointment',
-      strict: true,
-      description: 'Book a confirmed appointment. Call this once you have ALL required fields. Do not call with empty or missing fields.',
-      parameters: {
-        type: 'object',
-        required: ['customer_name', 'customer_phone', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'service', 'appointment_time'],
-        properties: {
-          customer_name:    { type: 'string', description: 'Customer full name as spoken' },
-          customer_phone:   { type: 'string', description: 'Customer phone number as spoken' },
-          vehicle_year:     { type: 'string', description: 'Vehicle year, e.g. 2018' },
-          vehicle_make:     { type: 'string', description: 'Vehicle make, e.g. Honda' },
-          vehicle_model:    { type: 'string', description: 'Vehicle model, e.g. Accord' },
-          service:          { type: 'string', description: 'Service requested or issue description' },
-          appointment_time: { type: 'string', description: 'Day and time confirmed by customer, e.g. Thursday April 3 at 10am' },
+// Optional owner phone enables the transferCall tool. When not provided (or
+// not normalizable to E.164), the agent falls back to the callback flow
+// per the conditional prompt in buildSystemPrompt.
+export const BOOKING_TOOLS = (
+  bookingWebhookUrl: string,
+  shopId: string,
+  ownerPhoneE164?: string | null,
+  ownerName?: string,
+) => {
+  const baseTools: object[] = [
+    {
+      type: 'function',
+      server: { url: `${bookingWebhookUrl}?shop_id=${shopId}` },
+      function: {
+        name: 'bookAppointment',
+        strict: true,
+        description: 'Book a confirmed appointment. Call this once you have ALL required fields. Do not call with empty or missing fields.',
+        parameters: {
+          type: 'object',
+          required: ['customer_name', 'customer_phone', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'service', 'appointment_time'],
+          properties: {
+            customer_name:    { type: 'string', description: 'Customer full name as spoken' },
+            customer_phone:   { type: 'string', description: 'Customer phone number as spoken' },
+            vehicle_year:     { type: 'string', description: 'Vehicle year, e.g. 2018' },
+            vehicle_make:     { type: 'string', description: 'Vehicle make, e.g. Honda' },
+            vehicle_model:    { type: 'string', description: 'Vehicle model, e.g. Accord' },
+            service:          { type: 'string', description: 'Service requested or issue description' },
+            appointment_time: { type: 'string', description: 'Day and time confirmed by customer, e.g. Thursday April 3 at 10am' },
+          },
         },
       },
     },
-  },
-  {
-    type: 'endCall',
-    function: {
-      name: 'endCall',
-      description: 'End the call. Only use after booking is confirmed and customer has said goodbye.',
+    {
+      type: 'endCall',
+      function: {
+        name: 'endCall',
+        description: 'End the call. Only use after booking is confirmed and customer has said goodbye.',
+      },
     },
-  },
-]
+  ]
+
+  if (ownerPhoneE164) {
+    const who = ownerName?.trim() || 'the shop owner'
+    baseTools.push({
+      type: 'transferCall',
+      destinations: [
+        {
+          type: 'number',
+          number: ownerPhoneE164,
+          message: `I'm connecting you with ${who} right now. One moment please.`,
+        },
+      ],
+      function: {
+        name: 'transferCall',
+        description: `Transfer the call live to ${who}. Use only when the caller needs a human — explicit request, emergency during business hours, or out-of-scope question you cannot answer. NEVER transfer during a booking flow, and NEVER transfer for a question you can answer yourself (hours, services, directions).`,
+        parameters: {
+          type: 'object',
+          required: ['destination'],
+          properties: {
+            destination: {
+              type: 'string',
+              enum: [ownerPhoneE164],
+              description: `The owner's phone number.`,
+            },
+          },
+        },
+      },
+    })
+  }
+
+  return baseTools
+}

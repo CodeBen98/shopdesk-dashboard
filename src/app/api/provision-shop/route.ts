@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS } from '@/lib/shopPrompt'
+import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS, normalizeToE164 } from '@/lib/shopPrompt'
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
@@ -180,7 +180,12 @@ export async function POST(request: Request) {
         model: 'claude-sonnet-4-6',
         messages: [{ role: 'system', content: systemPrompt }],
         temperature: 0.7,
-        tools: BOOKING_TOOLS(BOOKING_WEBHOOK_URL, shop.id),
+        tools: BOOKING_TOOLS(
+          BOOKING_WEBHOOK_URL,
+          shop.id,
+          normalizeToE164(shop.emergency_contact),
+          ownerName || shop.emergency_contact_name,
+        ),
       },
       voice: {
         provider: voice.provider,
