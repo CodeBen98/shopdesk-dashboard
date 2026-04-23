@@ -19,6 +19,27 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
 
     setLoading(true)
+
+    // Validate via Twilio Lookup before we let this number become a
+    // transferCall destination. Fails open on Twilio outage so onboarding
+    // isn't blocked by a third-party issue.
+    try {
+      const res = await fetch('/api/validate-phone', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: contactPhone }),
+      })
+      const data = await res.json() as { valid: boolean; e164?: string; reason?: string }
+      if (!data.valid) {
+        setErrors({ phone: data.reason ?? 'This phone number could not be verified.' })
+        setLoading(false)
+        return
+      }
+    } catch {
+      // Network error on our own route — fail open, proceed with save.
+      console.warn('[StepEmergency] phone validation request failed; proceeding')
+    }
+
     const supabase = createClient()
     await supabase.from('shops').update({
       emergency_contact_name: contactName.trim(),
