@@ -82,8 +82,8 @@ Allowed: Google Places editorial summary, Google Places business types, the shop
 Forbidden: customer review text. A customer writing "they fixed my brakes" is not evidence the shop currently advertises brake service — they may have stopped offering it, or only offered it for that customer. The shop itself must have published that service.
 
 **Rule 2 — Voice comes only from content the shop itself authored.**
-Allowed: website copy (About, Services, FAQ, homepage), owner-written bios, any content on the shop's own site.
-Forbidden: customer review text. We are cloning how the SHOP talks, not how the CUSTOMER talks about the shop. A customer saying "they are so friendly" tells us nothing about how the shop addresses its customers in its own voice.
+Allowed: website copy (About, Services, FAQ, homepage), owner-written bios, any content on the shop's own site, AND owner replies to Google reviews (these are first-party — the shop wrote them directly at customers). Owner replies are often the STRONGEST voice signal because they're unfiltered and directed at real customers.
+Forbidden: customer review text. We are cloning how the SHOP talks, not how the CUSTOMER talks about the shop. A customer saying "they are so friendly" tells us nothing about how the shop addresses its customers in its own voice. The review_snippet field in owner-reply records is provided only so you understand what the shop was responding to — do NOT extract voice from it, only from response_snippet.
 
 **Rule 3 — Proper nouns are a special case.**
 Staff and owner names are factual and can be cross-referenced against review authors' text ONLY as confirmation of repeated mentions. If 4+ independent reviews mention "Jason", Jason is real. But never use the customer's words ABOUT Jason as voice signal — only use the name itself.
@@ -118,6 +118,7 @@ Return a strict JSON object matching the provided schema. Every required field m
 function buildUserMessage(raw: EnrichmentRaw): string {
   const places = raw.places as Record<string, unknown> | undefined
   const website = raw.website
+  const ownerReplies = Array.isArray(raw.serpapi) ? raw.serpapi : null
 
   const parts: string[] = []
   parts.push('Harvested data for this shop:')
@@ -131,7 +132,16 @@ function buildUserMessage(raw: EnrichmentRaw): string {
     parts.push('')
     parts.push(website.markdown)
   } else {
-    parts.push('(no website available — this is a low-signal shop)')
+    parts.push('(no website available)')
+  }
+  parts.push('')
+  parts.push('--- Owner replies to Google reviews (first-party voice signal) ---')
+  if (ownerReplies && ownerReplies.length > 0) {
+    parts.push(`These are replies the shop itself wrote to customer reviews. USE THESE as a primary voice signal per Rule 2. The review_snippet is context only — do not extract voice from it.`)
+    parts.push('')
+    parts.push(JSON.stringify(ownerReplies, null, 2))
+  } else {
+    parts.push('(none available — voice must come from website only)')
   }
   parts.push('')
   parts.push('Produce the structured synthesis now.')

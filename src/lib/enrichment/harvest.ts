@@ -7,6 +7,7 @@
 import type { EnrichmentRaw } from '@/types'
 
 const PLACES_FIELD_MASK = [
+  'places.id',
   'places.displayName',
   'places.formattedAddress',
   'places.nationalPhoneNumber',
@@ -27,8 +28,32 @@ type HarvestInput = {
 }
 
 type PlaceRecord = {
+  id?: string
   websiteUri?: string
   [key: string]: unknown
+}
+
+// What we pull from SerpAPI. We only keep the fields the synthesis step
+// actually uses — reviews with an owner response. Anonymous review text
+// is forbidden as a voice signal per the Ship 2 extraction rules.
+export type SerpApiOwnerReply = {
+  review_author?: string
+  review_rating?: number
+  review_snippet?: string
+  response_snippet: string
+  response_date?: string
+}
+
+type SerpApiReview = {
+  user?: { name?: string }
+  rating?: number
+  snippet?: string
+  extracted_snippet?: { original?: string }
+  response?: {
+    snippet?: string
+    extracted_snippet?: { original?: string }
+    date?: string
+  }
 }
 
 async function fetchWithTimeout(url: string, init: RequestInit, timeoutMs = 15000): Promise<Response> {
@@ -103,21 +128,50 @@ async function harvestWebsite(url: string): Promise<{ url: string; markdown: str
   }
 }
 
-async function harvestSerpApi(_input: HarvestInput): Promise<unknown | null> {
-  // Reserved for v1.1. When SERPAPI_KEY is set, this will pull owner replies
-  // to Google reviews and the Google Business Profile Services tab. Today
-  // we return null so the synthesis step treats owner-reply signal as absent.
-  if (!process.env.SERPAPI_KEY) return null
-  console.log('[enrichment.harvest] SerpAPI key present but integration not yet implemented')
-  return null
+async function harvestSerpApiOwnerReplies(placeId: string | undefined): Promise<SerpApiOwnerReply[] | null> {
+  if (!placeId) return null
+  const apiKey = process.env.SERPAPI_KEY
+  if (!apiKey) return null
+
+  const url = `https://serpapi.com/search?engine=google_maps_reviews&place_id=${encodeURIComponent(placeId)}&num=20&api_key=${apiKey}`
+  const start = Date.now()
+  try {
+    const res = await fetchWithTimeout(url, {}, 15000)
+    const dur = Date.now() - start
+    if (!res.ok) {
+      console.error(`[enrichment.harvest] serpapi ${res.status} (${dur}ms)`)
+      return null
+    }
+    const data = await res.json() as { reviews?: SerpApiReview[] }
+    const reviews = data.reviews ?? []
+    // Only keep reviews where the shop replied. Anonymous customer review
+    // text is not a voice signal — owner replies are first-party content
+    // the shop itself wrote. See Ship 2 extraction rules.
+    const withReplies: SerpApiOwnerReply[] = reviews
+      .filter(r => r.response?.snippet || r.response?.extracted_snippet?.original)
+      .slice(0, 10)
+      .map(r => ({
+        review_author: r.user?.name,
+        review_rating: r.rating,
+        review_snippet: (r.extracted_snippet?.original ?? r.snippet ?? '').slice(0, 400),
+        response_snippet: (r.response!.extracted_snippet?.original ?? r.response!.snippet ?? '').slice(0, 1200),
+        response_date: r.response!.date,
+      }))
+    console.log(`[enrichment.harvest] serpapi ok (${dur}ms) reviews=${reviews.length} with_replies=${withReplies.length}`)
+    return withReplies
+  } catch (err) {
+    console.error('[enrichment.harvest] serpapi error:', err)
+    return null
+  }
 }
 
 export async function harvestShop(input: HarvestInput): Promise<EnrichmentRaw> {
   const places = await harvestPlaces(input)
   const websiteUri = places?.websiteUri
+  const placeId = typeof places?.id === 'string' ? places.id : undefined
   const [website, serpapi] = await Promise.all([
     websiteUri ? harvestWebsite(websiteUri) : Promise.resolve(null),
-    harvestSerpApi(input),
+    harvestSerpApiOwnerReplies(placeId),
   ])
   return {
     places: places ?? undefined,
