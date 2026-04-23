@@ -34,6 +34,27 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Shop name required before enrichment' }, { status: 400 })
   }
 
+  // Rate limit: 60 seconds between enrichment attempts per owner. Atomic
+  // compare-and-swap via update-where — if enriched_at is null or older
+  // than 60s, claim the lock by writing a fresh timestamp. Concurrent
+  // requests lose the race and get 429. Bounds cost amplification from
+  // authenticated users looping enrichment. Same pattern as provision-shop.
+  const sixtySecondsAgo = new Date(Date.now() - 60_000).toISOString()
+  const { data: claimed } = await supabase
+    .from('shops')
+    .update({ enriched_at: new Date().toISOString() })
+    .eq('owner_id', user.id)
+    .or(`enriched_at.is.null,enriched_at.lt.${sixtySecondsAgo}`)
+    .select('id')
+    .single()
+
+  if (!claimed) {
+    return NextResponse.json(
+      { error: 'Enrichment was just run. Please wait a minute before trying again.' },
+      { status: 429 },
+    )
+  }
+
   // Optional override from the request body — lets admin or debug tools
   // re-harvest with a different name/address combination without updating
   // the shop row.
