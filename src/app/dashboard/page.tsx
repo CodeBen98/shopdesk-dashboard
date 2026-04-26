@@ -39,14 +39,16 @@ export default async function DashboardPage() {
   if (!user) redirect('/auth/login')
   if (isAdmin(user)) redirect('/admin')
 
-  const { data: shop } = await supabase
+  const { data: existingShop } = await supabase
     .from('shops')
     .select('*')
     .eq('owner_id', user.id)
     .single()
 
+  let shop = existingShop
+
   if (!shop) {
-    await supabase.from('shops').insert({ owner_id: user.id, name: '', hours: {
+    const { data: createdShop } = await supabase.from('shops').insert({ owner_id: user.id, name: '', industry: 'auto_repair', hours: {
       monday:    { open: true,  from: '09:00', to: '17:00' },
       tuesday:   { open: true,  from: '09:00', to: '17:00' },
       wednesday: { open: true,  from: '09:00', to: '17:00' },
@@ -54,10 +56,11 @@ export default async function DashboardPage() {
       friday:    { open: true,  from: '09:00', to: '17:00' },
       saturday:  { open: false, from: '09:00', to: '17:00' },
       sunday:    { open: false, from: '09:00', to: '17:00' },
-    } })
-    redirect('/onboard')
+    } }).select('*').single()
+    shop = createdShop
   }
-  if (!shop.onboarding_complete) redirect('/onboard')
+
+  if (!shop) redirect('/auth/login')
 
   const [callsResult, bookingsResult, missedResult, recentCallsResult, upcomingResult, lastCallResult] = await Promise.all([
     supabase.from('calls').select('id', { count: 'exact' }).eq('shop_id', shop.id),
@@ -91,6 +94,17 @@ export default async function DashboardPage() {
     headerSub = "Your AI receptionist is live. Here's what's happening."
   }
 
+  const setupTasks = [
+    { label: 'Add business details', done: Boolean(shop.name && shop.phone && shop.address) },
+    { label: 'Choose industry', done: Boolean(shop.industry) },
+    { label: 'Add hours and services', done: Boolean(shop.services?.length) },
+    { label: 'Connect calendar', done: Boolean(shop.google_refresh_token) },
+    { label: 'Choose voice and provision agent', done: Boolean(shop.vapi_agent_id && shop.twilio_number) },
+    { label: 'Test and go live', done: Boolean(shop.onboarding_complete) },
+  ]
+  const completedSetupTasks = setupTasks.filter(task => task.done).length
+  const setupComplete = completedSetupTasks === setupTasks.length
+
   return (
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
       {/* Page header */}
@@ -102,6 +116,75 @@ export default async function DashboardPage() {
           {headerSub}
         </p>
       </div>
+
+      {!setupComplete && (
+        <div style={{
+          background: 'linear-gradient(135deg, rgba(15,118,149,0.16), rgba(255,255,255,0.04))',
+          border: '1px solid rgba(15,118,149,0.28)',
+          borderRadius: 16,
+          padding: '22px 24px',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(240px, 0.8fr)',
+          gap: 20,
+          marginBottom: 28,
+        }} className="setup-card">
+          <div>
+            <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
+              Setup in progress
+            </div>
+            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: '1.35rem', lineHeight: 1.2, margin: '0 0 8px', color: 'var(--text)' }}>
+              Set up your AI receptionist inside the dashboard.
+            </h2>
+            <p style={{ color: 'var(--text-mid)', fontSize: 14, lineHeight: 1.6, margin: '0 0 16px', maxWidth: 620 }}>
+              Add your business details, choose an industry, connect your calendar, pick a voice, and test the agent before going live.
+            </p>
+            <Link
+              href="/dashboard/setup"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                background: 'var(--accent)',
+                color: 'white',
+                borderRadius: 10,
+                padding: '11px 16px',
+                fontSize: 14,
+                fontWeight: 700,
+                textDecoration: 'none',
+              }}
+            >
+              Continue setup →
+            </Link>
+          </div>
+          <div style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 14 }}>
+            <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 700, marginBottom: 10 }}>
+              {completedSetupTasks} of {setupTasks.length} complete
+            </div>
+            <div style={{ display: 'grid', gap: 8 }}>
+              {setupTasks.map(task => (
+                <div key={task.label} style={{ display: 'flex', alignItems: 'center', gap: 8, color: task.done ? 'var(--text)' : 'var(--muted)', fontSize: 13 }}>
+                  <span style={{
+                    width: 16,
+                    height: 16,
+                    borderRadius: '50%',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: task.done ? 'var(--success)' : 'rgba(255,255,255,0.06)',
+                    color: task.done ? '#04110b' : 'var(--muted)',
+                    fontSize: 11,
+                    fontWeight: 800,
+                    flexShrink: 0,
+                  }}>
+                    {task.done ? '✓' : '·'}
+                  </span>
+                  {task.label}
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* AI Status banner */}
       <div style={{
@@ -119,17 +202,17 @@ export default async function DashboardPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <span style={{
             width: 10, height: 10, borderRadius: '50%',
-            background: 'var(--success)',
-            boxShadow: '0 0 0 3px var(--success-dim)',
+            background: setupComplete ? 'var(--success)' : 'var(--warning)',
+            boxShadow: setupComplete ? '0 0 0 3px var(--success-dim)' : '0 0 0 3px var(--warning-dim)',
             flexShrink: 0,
           }} />
-          <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>AI Receptionist is Live</span>
+          <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>{setupComplete ? 'AI Receptionist is Live' : 'AI Receptionist setup is not complete'}</span>
           {shop.twilio_number && (
             <span style={{ fontSize: 14, color: 'var(--muted)' }}>· {shop.twilio_number}</span>
           )}
           <span style={{ fontSize: 13, color: 'var(--muted)' }}>· {lastCallText}</span>
         </div>
-        {shop.twilio_number && (
+        {shop.twilio_number ? (
           <a
             href={`tel:${shop.twilio_number}`}
             style={{
@@ -144,6 +227,10 @@ export default async function DashboardPage() {
           >
             Make a test call →
           </a>
+        ) : (
+          <Link href="/dashboard/setup" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+            Finish setup →
+          </Link>
         )}
       </div>
 
@@ -365,6 +452,11 @@ export default async function DashboardPage() {
       <style>{`
         @media (max-width: 1200px) {
           .dashboard-grid { grid-template-columns: 1fr !important; }
+        }
+      `}</style>
+      <style>{`
+        @media (max-width: 900px) {
+          .setup-card { grid-template-columns: 1fr !important; }
         }
       `}</style>
     </div>

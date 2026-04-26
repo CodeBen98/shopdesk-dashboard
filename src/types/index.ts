@@ -1,3 +1,5 @@
+import type { IndustryId } from '@/lib/industries/templates'
+
 export type Shop = {
   id: string
   owner_id: string
@@ -5,6 +7,8 @@ export type Shop = {
   address: string
   phone: string
   email: string | null
+  industry: IndustryId | null
+  industry_config: Record<string, unknown>
   hours: ShopHours
   services: Service[]
   emergency_contact: string

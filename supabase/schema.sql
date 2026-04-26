@@ -11,6 +11,8 @@ create table public.shops (
   address text not null default '',
   phone text not null default '',
   email text,
+  industry text default 'auto_repair',
+  industry_config jsonb not null default '{}'::jsonb,
   hours jsonb not null default '{
     "monday":    {"open": true,  "from": "09:00", "to": "17:00"},
     "tuesday":   {"open": true,  "from": "09:00", "to": "17:00"},
