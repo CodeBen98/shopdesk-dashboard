@@ -219,7 +219,7 @@ ${personalitySection}
 - Skip questions already answered in conversation.
 - Did not understand: "Sorry, could you repeat that?"
 - Never invent prices or times.
-- Never assume or invent the customer's name, phone, or vehicle. Always ask. Never use a name until the customer gives it to you.
+- Never assume or invent the customer's name, phone, vehicle, address, or appointment details. Always ask. Never use a name until the customer gives it to you.
 
 [Shop Info]
 ${shopName} | ${shopAddress}${shopPhone ? ` | ${shopPhone}` : ''}
@@ -244,7 +244,7 @@ ${intakeFields}
 3. Ask: "What is the best phone number to send your confirmation to?" Wait for the customer to give their number.
 4. Repeat the number back digit by digit to confirm it, e.g. "Let me confirm, that's 4-0-7-5-5-5-1-2-3-4, is that right?" Wait for confirmation. If they correct you, update the number and confirm again.
 5. After they confirm the number, say EXACTLY: "You will receive a confirmation text at that number. By providing your number you agree to receive appointment texts from ${shopName}. Message and data rates may apply. Reply STOP at any time to opt out."
-6. Once you have all required info, call the bookAppointment function. For now, the booking tool still expects auto-repair-style vehicle fields. If this is not an auto repair business, put the most relevant appointment detail into service and use "N/A" for vehicle fields until the booking service is generalized.
+6. Once you have all required info, call the bookAppointment function. Put the requested service or issue in service. Put the key appointment details in appointment_details as a concise summary. For auto repair, also fill vehicle_year, vehicle_make, and vehicle_model when known.
 7. After the function returns success, confirm the booking details back to the customer.
 8. Ask if there is anything else.
 9. When done, say a warm goodbye and call the endCall function.
@@ -278,15 +278,16 @@ export const BOOKING_TOOLS = (
         description: 'Book a confirmed appointment. Call this once you have ALL required fields. Do not call with empty or missing fields.',
         parameters: {
           type: 'object',
-          required: ['customer_name', 'customer_phone', 'vehicle_year', 'vehicle_make', 'vehicle_model', 'service', 'appointment_time'],
+          required: ['customer_name', 'customer_phone', 'service', 'appointment_time'],
           properties: {
-            customer_name:    { type: 'string', description: 'Customer full name as spoken' },
-            customer_phone:   { type: 'string', description: 'Customer phone number as spoken' },
-            vehicle_year:     { type: 'string', description: 'Vehicle year, e.g. 2018' },
-            vehicle_make:     { type: 'string', description: 'Vehicle make, e.g. Honda' },
-            vehicle_model:    { type: 'string', description: 'Vehicle model, e.g. Accord' },
-            service:          { type: 'string', description: 'Service requested or issue description' },
-            appointment_time: { type: 'string', description: 'Day and time confirmed by customer, e.g. Thursday April 3 at 10am' },
+            customer_name:       { type: 'string', description: 'Customer full name as spoken' },
+            customer_phone:      { type: 'string', description: 'Customer phone number as spoken' },
+            service:             { type: 'string', description: 'Service requested or issue description' },
+            appointment_time:    { type: 'string', description: 'Day and time confirmed by customer, e.g. Thursday April 3 at 10am' },
+            appointment_details: { type: 'string', description: 'Concise summary of industry-specific intake details, e.g. service address, system type, pet breed, property size, urgency notes' },
+            vehicle_year:        { type: 'string', description: 'Auto repair only: vehicle year, e.g. 2018. Leave blank for non-auto businesses.' },
+            vehicle_make:        { type: 'string', description: 'Auto repair only: vehicle make, e.g. Honda. Leave blank for non-auto businesses.' },
+            vehicle_model:       { type: 'string', description: 'Auto repair only: vehicle model, e.g. Accord. Leave blank for non-auto businesses.' },
           },
         },
       },
