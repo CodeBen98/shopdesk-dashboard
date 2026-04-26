@@ -1,3 +1,4 @@
+import { getIndustryTemplate, normalizeIndustry, type IndustryId } from '@/lib/industries/templates'
 export const voiceNames: Record<string, string> = {
   cindy:      'Cindy',
   jacqueline: 'Jacqueline',
@@ -145,6 +146,7 @@ export function buildSystemPrompt(shop: {
   emergency_contact: string
   emergency_contact_name: string
   ai_voice: string
+  industry?: IndustryId | string | null
   enrichment?: EnrichmentForPrompt | null
 }, extras?: { vehicleTypes?: string[]; ownerName?: string }): string {
   const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
@@ -158,7 +160,12 @@ export function buildSystemPrompt(shop: {
   const now = new Date()
   const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })
   const ownerName = sanitize(extras?.ownerName || shop.emergency_contact_name || 'the shop owner', 80)
+  const industry = normalizeIndustry(shop.industry)
+  const industryTemplate = getIndustryTemplate(industry)
   const vehicleTypes = extras?.vehicleTypes && extras.vehicleTypes.length > 0 ? extras.vehicleTypes : null
+  const intakeFields = industryTemplate.intakeFields.map(field => `  - ${field.label}${field.required ? ' (required)' : ' (optional)'}`).join('\n')
+  const urgencyTriggers = industryTemplate.urgencyTriggers.join(', ')
+  const disallowedClaims = industryTemplate.disallowedClaims.map(rule => `- ${rule}`).join('\n')
   const identityAddon = buildIdentityAddon(shop.enrichment ?? undefined)
   const personalitySection = buildPersonalitySection(shop.enrichment ?? undefined)
   // Transfer is only offered when we have a valid owner phone to transfer to.
@@ -222,18 +229,22 @@ ${vehicleTypes ? `Vehicle types serviced: ${vehicleTypes.join(', ')}` : ''}
 Services:
 ${serviceList || '  - General auto repair and maintenance'}
 
-[Common Questions]
-Pricing: prices vary by vehicle and service. We give a quote before any work begins — no surprises.
-Check engine: we run a diagnostic scan to find out what's going on, usually takes about an hour.
-Safe to drive: if you're hearing grinding, seeing smoke, or the car is overheating — do not drive it. For warning lights, get in as soon as you can.
+[Industry Playbook]
+Industry: ${industryTemplate.label}
+${industryTemplate.promptSection}
+Common questions to expect: ${industryTemplate.commonQuestions.join(', ') || 'hours, services, pricing, availability'}.
+Urgency triggers for this industry: ${urgencyTriggers || 'caller safety, urgent service needs, explicit human request'}.
+Disallowed claims:
+${disallowedClaims || '- Do not invent prices, availability, certifications, guarantees, or outcomes.'}
 
 [Booking Flow]
 1. Find out what they need help with.
-2. Collect: name, vehicle (year/make/model), service needed, preferred day and time — ONE question at a time.
+2. Collect these details ONE question at a time:
+${intakeFields}
 3. Ask: "What is the best phone number to send your confirmation to?" Wait for the customer to give their number.
-4. Repeat the number back digit by digit to confirm it, e.g. "Let me confirm — that's 4-0-7-5-5-5-1-2-3-4, is that right?" Wait for confirmation. If they correct you, update the number and confirm again.
+4. Repeat the number back digit by digit to confirm it, e.g. "Let me confirm, that's 4-0-7-5-5-5-1-2-3-4, is that right?" Wait for confirmation. If they correct you, update the number and confirm again.
 5. After they confirm the number, say EXACTLY: "You will receive a confirmation text at that number. By providing your number you agree to receive appointment texts from ${shopName}. Message and data rates may apply. Reply STOP at any time to opt out."
-6. Once you have all required info, call the bookAppointment function.
+6. Once you have all required info, call the bookAppointment function. For now, the booking tool still expects auto-repair-style vehicle fields. If this is not an auto repair business, put the most relevant appointment detail into service and use "N/A" for vehicle fields until the booking service is generalized.
 7. After the function returns success, confirm the booking details back to the customer.
 8. Ask if there is anything else.
 9. When done, say a warm goodbye and call the endCall function.

@@ -148,6 +148,7 @@ export async function POST(request: Request) {
       emergency_contact: shop.emergency_contact,
       emergency_contact_name: shop.emergency_contact_name,
       ai_voice: shop.ai_voice,
+      industry: shop.industry,
       enrichment: shop.enrichment,
     }, { vehicleTypes, ownerName })
 

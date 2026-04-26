@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   const { data: shop, error: shopError } = await supabase
     .from('shops')
-    .select('id, name, address')
+    .select('id, name, address, industry')
     .eq('owner_id', user.id)
     .single()
 
@@ -109,7 +109,7 @@ export async function POST(request: Request) {
   let synthesisError: string | null = null
   const synthStart = Date.now()
   try {
-    synthesized = await synthesizeShop(raw)
+    synthesized = await synthesizeShop(raw, { industry: shop.industry })
   } catch (err) {
     if (err instanceof Anthropic.APIError) {
       synthesisError = `Anthropic ${err.status}: ${err.message}`

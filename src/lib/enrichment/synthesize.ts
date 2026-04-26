@@ -18,6 +18,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
 import { z } from 'zod'
 import type { EnrichmentRaw } from '@/types'
+import { getIndustryTemplate, normalizeIndustry, type IndustryId } from '@/lib/industries/templates'
 
 const SYNTHESIS_MODEL = 'claude-sonnet-4-6'
 
@@ -71,7 +72,7 @@ export type SynthesisOutput = z.infer<typeof SynthesisSchema>
 // Static. Long enough to cross the 2048-token Sonnet 4.6 prefix cache minimum.
 // Stable across all shops — prime candidate for prompt caching.
 
-const SYSTEM_PROMPT = `You are the synthesis engine for ShopDesk, an AI receptionist product for independent auto repair shops. Your one job: take raw first-party data about a specific shop (Google Places record + scraped website content) and produce a structured agent profile that will be used to configure that shop's AI receptionist.
+const SYSTEM_PROMPT = `You are the synthesis engine for ShopDesk, an AI receptionist product for service businesses. Your one job: take raw first-party data about a specific business (Google Places record + scraped website content) and produce a structured agent profile that will be used to configure that shop's AI receptionist.
 
 The profile you produce is not marketing copy. It is the specification an AI voice agent will use to sound like THIS specific shop on the phone. If the output is generic, the agent will sound generic. If the output captures the shop's actual voice and specifics, the agent will feel personal from the first sentence.
 
@@ -115,13 +116,15 @@ Return a strict JSON object matching the provided schema. Every required field m
 
 // -- Call ----------------------------------------------------------------
 
-function buildUserMessage(raw: EnrichmentRaw): string {
+function buildUserMessage(raw: EnrichmentRaw, options?: { industry?: IndustryId | string | null }): string {
+  const industry = getIndustryTemplate(normalizeIndustry(options?.industry))
   const places = raw.places as Record<string, unknown> | undefined
   const website = raw.website
   const ownerReplies = Array.isArray(raw.serpapi) ? raw.serpapi : null
 
   const parts: string[] = []
-  parts.push('Harvested data for this shop:')
+  parts.push(`Harvested data for this business. Selected industry template: ${industry.label}.`)
+  parts.push(`Industry handling guidance: ${industry.promptSection}`)
   parts.push('')
   parts.push('--- Google Places ---')
   parts.push(places ? JSON.stringify(places, null, 2) : '(not available)')
@@ -148,12 +151,12 @@ function buildUserMessage(raw: EnrichmentRaw): string {
   return parts.join('\n')
 }
 
-export async function synthesizeShop(raw: EnrichmentRaw): Promise<SynthesisOutput> {
+export async function synthesizeShop(raw: EnrichmentRaw, options?: { industry?: IndustryId | string | null }): Promise<SynthesisOutput> {
   const apiKey = process.env.ANTHROPIC_API_KEY
   if (!apiKey) throw new Error('ANTHROPIC_API_KEY not set')
 
   const client = new Anthropic({ apiKey })
-  const userMessage = buildUserMessage(raw)
+  const userMessage = buildUserMessage(raw, options)
   const started = Date.now()
 
   const response = await client.messages.parse({

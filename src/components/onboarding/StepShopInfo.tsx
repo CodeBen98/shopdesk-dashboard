@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
+import { INDUSTRY_TEMPLATES, normalizeIndustry, type IndustryId } from '@/lib/industries/templates'
 
 const VEHICLE_OPTIONS = [
   'All Makes and Models',
@@ -22,6 +23,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
   const [ownerPhone, setOwnerPhone] = useState(shop?.owner_phone ?? '')
   const [ownerSmsConsent, setOwnerSmsConsent] = useState(shop?.owner_phone_sms_consent ?? false)
   const [email, setEmail] = useState(shop?.email ?? '')
+  const [industry, setIndustry] = useState<IndustryId>(normalizeIndustry(shop?.industry))
   const [vehicleTypes, setVehicleTypes] = useState<string[]>([])
 
   const [errors, setErrors] = useState<{
@@ -33,6 +35,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     ownerSmsConsent?: string
     email?: string
     vehicleTypes?: string
+    industry?: string
   }>({})
   const [saveError, setSaveError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -59,7 +62,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       errs.email = 'Please enter a valid email address'
     }
-    if (vehicleTypes.length === 0) errs.vehicleTypes = 'Please select at least one vehicle type'
+    if (industry === 'auto_repair' && vehicleTypes.length === 0) errs.vehicleTypes = 'Please select at least one vehicle type'
 
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
 
@@ -75,6 +78,8 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       email: email.trim() || null,
       owner_phone: normalizedOwnerPhone || null,
       owner_phone_sms_consent: smsOptIn,
+      industry,
+      industry_config: shop?.industry_config ?? {},
       onboarding_step: 'auto_fill_choice',
     }
     if (!shop?.emergency_contact_name) {
@@ -100,6 +105,8 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       email: email.trim() || null,
       owner_phone: normalizedOwnerPhone || null,
       owner_phone_sms_consent: smsOptIn,
+      industry,
+      industry_config: shop?.industry_config ?? {},
     }
     if (!shop?.emergency_contact_name) {
       shopUpdate.emergency_contact_name = ownerName.trim()
@@ -112,18 +119,18 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
   return (
     <div style={card}>
       <button onClick={onBack} style={backBtn}>← Back</button>
-      <h2 style={title}>Tell us about your shop</h2>
-      <p style={subtitle}>Your AI uses this to introduce your business on every call.</p>
+      <h2 style={title}>Tell us about your business</h2>
+      <p style={subtitle}>Your AI uses this to introduce your business and choose the right call-handling playbook.</p>
 
       {/* Shop Name */}
       <div style={field}>
-        <label style={labelStyle}>Shop Name *</label>
+        <label style={labelStyle}>Business Name *</label>
         <input
           value={name}
           onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: undefined })) }}
           className="step-input"
           style={errors.name ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-          placeholder="e.g. Mike's Auto Repair"
+          placeholder="e.g. Mike's Auto Repair, ClearFlow Plumbing"
         />
         {errors.name && <p style={errorStyle}>{errors.name}</p>}
       </div>
@@ -143,7 +150,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
             type="tel"
           />
         </div>
-        <p style={helperStyle}>This is your shop&apos;s main number, the one customers call.</p>
+        <p style={helperStyle}>This is your business&apos;s main number, the one customers call.</p>
         {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
       </div>
 
@@ -161,6 +168,38 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
         />
         {errors.address && <p style={errorStyle}>{errors.address}</p>}
       </div>
+      {/* Industry */}
+      <div style={field}>
+        <label style={labelStyle}>Industry *</label>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
+          {Object.values(INDUSTRY_TEMPLATES).map(template => {
+            const selected = industry === template.id
+            return (
+              <button
+                key={template.id}
+                type="button"
+                onClick={() => { setIndustry(template.id); setErrors(p => ({ ...p, industry: undefined, vehicleTypes: undefined })) }}
+                style={{
+                  textAlign: 'left',
+                  padding: '10px 12px',
+                  borderRadius: 10,
+                  border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                  background: selected ? 'var(--accent-dim)' : 'var(--card)',
+                  color: selected ? 'var(--accent)' : 'var(--text-mid)',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 3 }}>{template.label}</div>
+                <div style={{ fontSize: 11, lineHeight: 1.35, color: selected ? 'var(--accent)' : 'var(--muted)' }}>{template.shortDescription}</div>
+              </button>
+            )
+          })}
+        </div>
+        <p style={helperStyle}>This controls the AI&apos;s intake questions, urgency rules, and service suggestions. Auto repair remains the default template.</p>
+        {errors.industry && <p style={errorStyle}>{errors.industry}</p>}
+      </div>
+
 
       {/* Owner / Manager Name */}
       <div style={field}>
@@ -255,38 +294,39 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
         {errors.email && <p style={errorStyle}>{errors.email}</p>}
       </div>
 
-      {/* Vehicle Types */}
-      <div style={{ ...field, marginBottom: 28 }}>
-        <label style={labelStyle}>What vehicles do you work on? *</label>
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-          {VEHICLE_OPTIONS.map(type => {
-            const selected = vehicleTypes.includes(type)
-            return (
-              <button
-                key={type}
-                type="button"
-                onClick={() => toggleVehicleType(type)}
-                style={{
-                  position: 'relative',
-                  padding: '6px 14px',
-                  borderRadius: 9999,
-                  border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
-                  background: selected ? 'var(--accent-dim)' : 'var(--card)',
-                  color: selected ? 'var(--accent)' : 'var(--text-mid)',
-                  fontSize: 13,
-                  cursor: 'pointer',
-                  fontWeight: selected ? 600 : 400,
-                  transition: 'border-color 0.15s, background 0.15s',
-                  fontFamily: 'inherit',
-                }}
-              >
-                {type}
-              </button>
-            )
-          })}
+      {industry === 'auto_repair' && (
+        <div style={{ ...field, marginBottom: 28 }}>
+          <label style={labelStyle}>What vehicles do you work on? *</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
+            {VEHICLE_OPTIONS.map(type => {
+              const selected = vehicleTypes.includes(type)
+              return (
+                <button
+                  key={type}
+                  type="button"
+                  onClick={() => toggleVehicleType(type)}
+                  style={{
+                    position: 'relative',
+                    padding: '6px 14px',
+                    borderRadius: 9999,
+                    border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
+                    background: selected ? 'var(--accent-dim)' : 'var(--card)',
+                    color: selected ? 'var(--accent)' : 'var(--text-mid)',
+                    fontSize: 13,
+                    cursor: 'pointer',
+                    fontWeight: selected ? 600 : 400,
+                    transition: 'border-color 0.15s, background 0.15s',
+                    fontFamily: 'inherit',
+                  }}
+                >
+                  {type}
+                </button>
+              )
+            })}
+          </div>
+          {errors.vehicleTypes && <p style={errorStyle}>{errors.vehicleTypes}</p>}
         </div>
-        {errors.vehicleTypes && <p style={errorStyle}>{errors.vehicleTypes}</p>}
-      </div>
+      )}
 
       {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
 
