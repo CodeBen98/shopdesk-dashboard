@@ -48,7 +48,7 @@ export default async function DashboardPage() {
   let shop = existingShop
 
   if (!shop) {
-    const { data: createdShop } = await supabase.from('shops').insert({ owner_id: user.id, name: '', industry: 'auto_repair', hours: {
+    const { data: createdShop } = await supabase.from('shops').insert({ owner_id: user.id, name: '', hours: {
       monday:    { open: true,  from: '09:00', to: '17:00' },
       tuesday:   { open: true,  from: '09:00', to: '17:00' },
       wednesday: { open: true,  from: '09:00', to: '17:00' },
@@ -76,7 +76,6 @@ export default async function DashboardPage() {
   const totalCalls = callsResult.count ?? 0
   const totalBookings = bookingsResult.count ?? 0
   const missedCalls = missedResult.count ?? 0
-  const allTimeRevenue = totalBookings * 650
   const recentCalls: Call[] = recentCallsResult.data ?? []
   const upcomingBookings: Booking[] = upcomingResult.data ?? []
 
@@ -274,28 +273,16 @@ export default async function DashboardPage() {
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>callers who did not book</div>
         </div>
 
-        {/* Revenue Recovered */}
+        {/* Bookings */}
         <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px' }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em', display: 'flex', alignItems: 'center', gap: 5 }}>
-            Revenue Recovered
-            <span
-              title="Estimated at $650 average repair order (AAPEX 2024 industry average). Actual results vary."
-              style={{
-                display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-                width: 14, height: 14, borderRadius: '50%',
-                border: '1px solid var(--muted)',
-                fontSize: 10, fontWeight: 700,
-                cursor: 'help', flexShrink: 0, lineHeight: 1,
-              }}
-            >
-              i
-            </span>
+          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+            Appointments Booked
           </div>
-          <div style={{ fontSize: 36, fontWeight: 800, color: allTimeRevenue > 0 ? 'var(--text)' : 'var(--muted)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6, letterSpacing: '-0.5px' }}>
-            {allTimeRevenue > 0 ? `$${allTimeRevenue.toLocaleString()}` : '—'}
+          <div style={{ fontSize: 36, fontWeight: 800, color: totalBookings > 0 ? 'var(--text)' : 'var(--muted)', fontFamily: 'var(--font-space)', lineHeight: 1, marginBottom: 6, letterSpacing: '-0.5px' }}>
+            {totalBookings > 0 ? totalBookings.toLocaleString() : '—'}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-            {allTimeRevenue > 0 ? 'est. at $650/booking, industry avg' : 'updates after first booking'}
+            {totalBookings > 0 ? 'booked by your AI receptionist' : 'updates after first booking'}
           </div>
         </div>
 

@@ -183,7 +183,7 @@ export default function SignupPage() {
             </div>
 
             <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-              Built exclusively for independent auto repair shops
+              The AI receptionist for every service business
             </p>
           </div>
         </div>

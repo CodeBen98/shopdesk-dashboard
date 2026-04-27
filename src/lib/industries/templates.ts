@@ -15,6 +15,7 @@ export type IndustryTemplate = {
   label: string
   shortDescription: string
   serviceExamples: string[]
+  serviceSuggestions: string[]
   intakeFields: Array<{
     key: string
     label: string
@@ -35,6 +36,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Auto repair',
     shortDescription: 'Vehicle repair shops, mechanics, and maintenance garages.',
     serviceExamples: ['Oil changes', 'Brake repair', 'Diagnostics', 'AC repair', 'Tire service'],
+    serviceSuggestions: ['Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Diagnostics', 'AC Repair', 'Transmission Service', 'Battery Replacement', 'Wheel Alignment', 'Suspension', 'Exhaust'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -52,6 +54,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'HVAC',
     shortDescription: 'Heating, cooling, air conditioning, and ventilation contractors.',
     serviceExamples: ['AC repair', 'Heating repair', 'Tune-ups', 'Install estimates', 'Indoor air quality'],
+    serviceSuggestions: ['AC Repair', 'Heating Repair', 'System Tune-Up', 'New Installation', 'Duct Cleaning', 'Thermostat Service', 'Emergency Service', 'Maintenance Plan'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -69,6 +72,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Plumbing',
     shortDescription: 'Residential and commercial plumbing services.',
     serviceExamples: ['Leak repair', 'Drain cleaning', 'Water heater repair', 'Fixture installation', 'Emergency plumbing'],
+    serviceSuggestions: ['Drain Cleaning', 'Leak Repair', 'Water Heater Repair', 'Fixture Installation', 'Toilet Repair', 'Pipe Repair', 'Emergency Service', 'Sewer Line'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -86,6 +90,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Roofing',
     shortDescription: 'Roof repair, replacement, inspection, and leak calls.',
     serviceExamples: ['Roof repair', 'Leak inspection', 'Replacement estimate', 'Storm damage', 'Gutter service'],
+    serviceSuggestions: ['Roof Repair', 'Leak Inspection', 'Storm Damage', 'Replacement Estimate', 'Gutter Service', 'Skylight Repair', 'Roof Inspection', 'Emergency Tarping'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -103,6 +108,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Landscaping',
     shortDescription: 'Lawn care, landscaping, maintenance, and outdoor services.',
     serviceExamples: ['Lawn care', 'Landscape design', 'Tree trimming', 'Irrigation', 'Cleanup'],
+    serviceSuggestions: ['Lawn Mowing', 'Landscape Design', 'Tree Trimming', 'Irrigation Service', 'Cleanup', 'Sod Installation', 'Fertilization', 'Mulching'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -120,6 +126,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Towing',
     shortDescription: 'Towing, roadside assistance, and vehicle transport.',
     serviceExamples: ['Local towing', 'Roadside assistance', 'Jump starts', 'Lockouts', 'Vehicle transport'],
+    serviceSuggestions: ['Local Tow', 'Long Distance Tow', 'Jump Start', 'Lockout Service', 'Flat Tire', 'Fuel Delivery', 'Winch Out', 'Vehicle Transport'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -137,6 +144,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Salon and spa',
     shortDescription: 'Hair salons, barbers, nail salons, medspa-lite, and wellness studios.',
     serviceExamples: ['Haircut', 'Color', 'Nails', 'Facials', 'Massage'],
+    serviceSuggestions: ['Haircut', 'Color Treatment', 'Highlights', 'Blowout', 'Facial', 'Massage', 'Manicure', 'Pedicure', 'Nail Art', 'Waxing'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -154,6 +162,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Pet grooming',
     shortDescription: 'Pet grooming, bathing, trimming, and grooming salons.',
     serviceExamples: ['Bath', 'Full groom', 'Nail trim', 'De-shedding', 'Breed-specific cuts'],
+    serviceSuggestions: ['Full Groom', 'Bath Only', 'Nail Trim', 'De-shedding', 'Teeth Brushing', 'Ear Cleaning', 'Breed Cut', 'Puppy Package'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -171,6 +180,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Cleaning services',
     shortDescription: 'House cleaning, office cleaning, move-out cleaning, and recurring service.',
     serviceExamples: ['Standard clean', 'Deep clean', 'Move-out clean', 'Office cleaning', 'Recurring cleaning'],
+    serviceSuggestions: ['Standard Clean', 'Deep Clean', 'Move-Out Clean', 'Move-In Clean', 'Office Cleaning', 'Post-Construction Clean', 'Recurring Service'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },
@@ -188,6 +198,7 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     label: 'Real estate',
     shortDescription: 'Agents, property managers, leasing offices, and real estate teams.',
     serviceExamples: ['Buyer inquiry', 'Seller consultation', 'Showing request', 'Rental inquiry', 'Property management'],
+    serviceSuggestions: ['Buyer Consultation', 'Seller Consultation', 'Showing Request', 'Rental Inquiry', 'Property Management', 'Investment Property'],
     intakeFields: [
       { key: 'name', label: 'Customer name', required: true },
       { key: 'phone', label: 'Phone number', required: true },

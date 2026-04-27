@@ -2,20 +2,16 @@
 
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import { getIndustryTemplate } from '@/lib/industries/templates'
 import { Service } from '@/types'
 import { StepProps } from './OnboardingWizard'
-
-const SUGGESTIONS = [
-  'Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Diagnostics',
-  'AC Service', 'Transmission', 'Battery Replacement', 'Wheel Alignment',
-  'Suspension', 'Exhaust',
-]
 
 function emptyService(): Service {
   return { name: '', price: null, description: null }
 }
 
 export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
+  const suggestions = getIndustryTemplate(shop?.industry).serviceSuggestions
   const [services, setServices] = useState<Service[]>(
     shop?.services && shop.services.length > 0 ? shop.services : []
   )
@@ -98,7 +94,7 @@ export function StepServices({ shop, userId, onNext, onBack, onShopUpdate }: Ste
           Quick-add common services:
         </p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-          {SUGGESTIONS.map(s => {
+          {suggestions.map(s => {
             const added = services.some(sv => sv.name === s)
             return (
               <button

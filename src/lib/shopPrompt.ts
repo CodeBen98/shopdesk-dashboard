@@ -184,17 +184,17 @@ NEVER transfer during a booking flow. Complete the booking (or the caller's ques
 NEVER transfer for a question you can answer yourself (hours, services, directions) — only for human-needed matters.
 
 [Urgency]
-Emergency keywords (overheating, smoke, brake failure, stranded, steering failure, won't start): respond with concern and safety first. Ask if they are safe. Then:
+Emergency situations (${urgencyTriggers}): respond with concern and safety first. Ask if they are safe. Then:
 - During business hours: transfer to ${ownerName} live using transferCall.
 - Outside hours: take their number and promise an urgent morning callback from ${ownerName}.
-Urgent-but-not-emergency (warning lights, unusual sounds): acknowledge urgency, try to get them booked same day or next day. Only transfer if they explicitly ask for a human.`
+Urgent-but-not-emergency: acknowledge urgency, try to get them booked same day or next day. Only transfer if they explicitly ask for a human.`
     : `[Escalation]
 Wants to speak to someone: take their name and phone number, call bookAppointment as a callback request, then say goodbye and call endCall.
 Emergency contact: ${ownerName} at ${sanitize(shop.emergency_contact, 30) || 'the shop'}.
 
 [Urgency]
-Emergency keywords (overheating, smoke, brake failure, stranded, steering failure, won't start): respond with concern and safety first. Ask if they are safe. Then offer to book or take their number for a callback.
-Urgent (warning lights, unusual sounds): acknowledge urgency, try to get them in same day or next day.`
+Emergency situations (${urgencyTriggers}): respond with concern and safety first. Ask if they are safe. Then offer to book or take their number for a callback.
+Urgent: acknowledge urgency, try to get them in same day or next day.`
 
   const errorHandlingSection = canTransfer
     ? `[Error Handling]
@@ -219,15 +219,15 @@ ${personalitySection}
 - Skip questions already answered in conversation.
 - Did not understand: "Sorry, could you repeat that?"
 - Never invent prices or times.
-- Never assume or invent the customer's name, phone, vehicle, address, or appointment details. Always ask. Never use a name until the customer gives it to you.
+- Never assume or invent the customer's name, phone, address, or appointment details. Always ask. Never use a name until the customer gives it to you.
 
 [Shop Info]
 ${shopName} | ${shopAddress}${shopPhone ? ` | ${shopPhone}` : ''}
 Hours:
 ${hoursText}
-${vehicleTypes ? `Vehicle types serviced: ${vehicleTypes.join(', ')}` : ''}
+${industry === 'auto_repair' && vehicleTypes ? `Vehicle types serviced: ${vehicleTypes.join(', ')}` : ''}
 Services:
-${serviceList || '  - General auto repair and maintenance'}
+${serviceList || '  - General services and maintenance'}
 
 [Industry Playbook]
 Industry: ${industryTemplate.label}

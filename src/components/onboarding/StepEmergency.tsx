@@ -76,7 +76,7 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
 
       <h2 style={titleStyle}>Who handles urgent caller situations?</h2>
       <p style={subtitleStyle}>
-        If a caller says their car is overheating, their brakes failed, or they&apos;re stranded. Who should we text immediately so someone can help them?
+        If a caller reports an urgent or emergency situation, who should we contact immediately so someone can help them?
       </p>
 
       <div style={fieldStyle}>
@@ -110,7 +110,7 @@ export function StepEmergency({ shop, userId, onNext, onBack, onShopUpdate }: St
       </div>
 
       <p style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.6, marginBottom: 28 }}>
-        This is only used when a caller reports a breakdown or emergency. For everyday booking alerts, we use the mobile number you gave us in the previous step.
+        This is only used when a caller reports an urgent situation or emergency. For everyday booking alerts, we use the mobile number you gave us in the previous step.
       </p>
 
       <button

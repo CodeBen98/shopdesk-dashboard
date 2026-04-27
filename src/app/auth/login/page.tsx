@@ -156,7 +156,7 @@ export default function LoginPage() {
 
             {/* Social proof */}
             <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-              Built exclusively for independent auto repair shops
+              The AI receptionist for every service business
             </p>
           </div>
         </div>

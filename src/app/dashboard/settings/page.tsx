@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
 import { CancelServiceButton } from '@/components/CancelServiceButton'
+import { getIndustryTemplate } from '@/lib/industries/templates'
 import type { Shop, ShopHours, Service } from '@/types'
 
 type Tab = 'shop' | 'hours' | 'services' | 'ai' | 'phone' | 'integrations'
@@ -24,10 +25,7 @@ const VOICES = [
   { id: 'marcus',     initial: 'M', color: '#10b981', name: 'Marcus',     desc: 'Direct and trustworthy' },
 ]
 
-const SUGGESTIONS = [
-  'Oil Change', 'Brake Service', 'Tire Rotation', 'Engine Diagnostics',
-  'AC Repair', 'Transmission Service', 'Alignment', 'Battery Replacement',
-]
+// serviceSuggestions are derived from the shop's industry template at render time
 
 function inputStyle(focused: boolean): React.CSSProperties {
   return {
@@ -541,7 +539,7 @@ export default function SettingsPage() {
                 Quick Add
               </p>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {SUGGESTIONS.map(s => {
+                {getIndustryTemplate(shop?.industry).serviceSuggestions.map(s => {
                   const added = services.some(sv => sv.name === s)
                   return (
                     <button
@@ -776,10 +774,10 @@ export default function SettingsPage() {
             <div style={{ height: 1, background: 'var(--border)', marginBottom: 20 }} />
 
             <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 4 }}>
-              Breakdown Escalation Contact
+              Emergency Escalation Contact
             </p>
             <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16 }}>
-              Who gets a text if a caller reports a breakdown or emergency.
+              Who gets a text if a caller reports an urgent situation or emergency.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
               <div>
