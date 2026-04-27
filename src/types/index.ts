@@ -117,6 +117,8 @@ export type Booking = {
   customer_phone: string
   vehicle: string | null
   service: string | null
+  industry: IndustryId | string | null
+  intake: Record<string, unknown>
   appointment_at: string
   notes: string | null
   status: 'scheduled' | 'confirmed' | 'completed' | 'cancelled' | 'no_show'
@@ -130,6 +132,8 @@ export type Customer = {
   name: string
   phone: string
   vehicle: string | null
+  industry: IndustryId | string | null
+  intake: Record<string, unknown>
   last_visit: string | null
   visit_count: number
   created_at: string

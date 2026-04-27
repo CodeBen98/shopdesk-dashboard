@@ -68,6 +68,8 @@ async function syncCustomerRecord(params: {
   phone: string
   name?: string | null
   vehicle?: string | null
+  industry?: string | null
+  intake?: Record<string, unknown> | null
   interactionAt?: string | null
   incrementVisitCount?: boolean
 }) {
@@ -78,7 +80,7 @@ async function syncCustomerRecord(params: {
   const supabase = getSupabase()
   const { data: existing } = await supabase
     .from('customers')
-    .select('id, name, vehicle, last_visit, visit_count')
+    .select('id, name, vehicle, last_visit, visit_count, industry, intake')
     .eq('shop_id', params.shopId)
     .eq('phone', phone)
     .maybeSingle()
@@ -89,6 +91,8 @@ async function syncCustomerRecord(params: {
       .update({
         name: params.name || existing.name,
         vehicle: params.vehicle || existing.vehicle,
+        industry: params.industry || existing.industry || 'auto_repair',
+        intake: { ...(existing.intake ?? {}), ...(params.intake ?? {}) },
         last_visit: laterIso(existing.last_visit, params.interactionAt),
         visit_count: shouldIncrementVisitCount ? (existing.visit_count ?? 0) + 1 : (existing.visit_count ?? 1),
       })
@@ -101,6 +105,8 @@ async function syncCustomerRecord(params: {
     name: params.name?.trim() || 'Unknown Customer',
     phone,
     vehicle: params.vehicle || null,
+    industry: params.industry || 'auto_repair',
+    intake: params.intake ?? {},
     last_visit: params.interactionAt || new Date().toISOString(),
     visit_count: 1,
   })
@@ -287,7 +293,7 @@ export async function POST(request: Request) {
         const tenMinAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString()
         const { data: recentBookings } = await getSupabase()
           .from('bookings')
-          .select('customer_name, customer_phone, vehicle, id')
+          .select('customer_name, customer_phone, vehicle, id, industry, intake')
           .eq('shop_id', shopForCall.id)
           .is('call_id', null)
           .gte('created_at', tenMinAgo)
@@ -314,6 +320,8 @@ export async function POST(request: Request) {
             phone: callerPhone || booking.customer_phone,
             name: booking.customer_name,
             vehicle: booking.vehicle,
+            industry: booking.industry,
+            intake: booking.intake,
             interactionAt: endedAt ?? startedAt ?? new Date().toISOString(),
             incrementVisitCount: false,
           })

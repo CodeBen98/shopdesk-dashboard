@@ -161,7 +161,7 @@ export default function BookingsPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 700 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Date / Time', 'Customer', 'Vehicle', 'Service', 'Status', 'Confirmation Sent', ''].map(h => (
+                  {['Date / Time', 'Customer', 'Details', 'Service', 'Status', 'Confirmation Sent', ''].map(h => (
                     <th key={h} style={{
                       textAlign: 'left', padding: '12px 16px',
                       fontSize: 11, color: 'var(--muted)',
@@ -218,8 +218,8 @@ export default function BookingsPage() {
                             <div style={{ fontSize: 12, color: 'var(--muted)', fontFamily: 'monospace' }}>{booking.customer_phone}</div>
                           )}
                         </td>
-                        <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)' }}>
-                          {booking.vehicle ?? '—'}
+                        <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                          {booking.vehicle || (typeof booking.intake?.details === 'string' ? booking.intake.details : '—')}
                         </td>
                         <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)', maxWidth: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                           {booking.service ?? '—'}

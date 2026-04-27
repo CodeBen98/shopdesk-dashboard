@@ -124,7 +124,7 @@ export default function CustomersPage() {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: 600 }}>
               <thead>
                 <tr style={{ borderBottom: '1px solid var(--border)' }}>
-                  {['Name', 'Phone', 'Vehicle', 'Last Visit', 'Total Visits'].map(h => (
+                  {['Name', 'Phone', 'Details', 'Last Visit', 'Total Visits'].map(h => (
                     <th key={h} style={{
                       textAlign: 'left', padding: '12px 16px',
                       fontSize: 11, color: 'var(--muted)',
@@ -149,8 +149,8 @@ export default function CustomersPage() {
                     <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)', fontFamily: 'monospace' }}>
                       {customer.phone ?? '—'}
                     </td>
-                    <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)' }}>
-                      {customer.vehicle ?? '—'}
+                    <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--text-mid)', maxWidth: 220, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      {customer.vehicle || (typeof customer.intake?.details === 'string' ? customer.intake.details : '—')}
                     </td>
                     <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--muted)' }}>
                       {formatDate(customer.last_visit)}
