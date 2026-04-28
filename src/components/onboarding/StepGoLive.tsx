@@ -83,7 +83,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
           You&apos;re live!
         </h2>
         <p style={{ fontSize: 16, color: 'var(--muted)', marginBottom: 32, lineHeight: 1.6 }}>
-          Your AI receptionist is ready to take calls for <strong style={{ color: 'var(--text)' }}>{shopName}</strong>.
+          ShopDesk is answering missed calls for <strong style={{ color: 'var(--text)' }}>{shopName}</strong>. We handle it from here.
         </p>
 
         {/* Summary card */}
@@ -96,7 +96,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
           textAlign: 'left',
         }}>
           <p style={{ fontSize: 12, fontWeight: 700, color: 'var(--success)', textTransform: 'uppercase', letterSpacing: '0.06em', marginBottom: 16 }}>
-            Your Setup Summary
+            What We Set Up
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <SummaryRow label="Shop" value={shopName} />
@@ -119,7 +119,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             <SummaryRow label="Calls" value="Your shop rings first, then ShopDesk answers missed calls" />
             <SummaryRow label="Bookings" value="New appointments show up in your dashboard and calendar" />
-            <SummaryRow label="Updates" value="You can change hours, services, and voice anytime" />
+            <SummaryRow label="Results" value="Your call log and bookings appear here as they come in" />
           </div>
         </div>
 
@@ -134,7 +134,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
             marginTop: 0,
           }}
         >
-          {loading ? 'Setting up...' : 'Go to Dashboard →'}
+          {loading ? 'Setting up...' : 'See Your Results →'}
         </button>
       </div>
     </div>

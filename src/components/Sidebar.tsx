@@ -40,7 +40,7 @@ const sections: NavSection[] = [
         icon: <Icon><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><rect x="1" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="1" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="1" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/><rect x="11" y="11" width="6" height="6" rx="1.5" stroke="currentColor" strokeWidth="1.5"/></svg></Icon>,
       },
       {
-        label: 'Call Logs',
+        label: 'Calls Handled',
         href: '/dashboard/calls',
         badge: 'emergency',
         icon: <Icon><svg width="16" height="16" viewBox="0 0 18 18" fill="none"><path d="M3.5 2h3l1.5 3.5-1.75 1.25C7.2 8.25 9.75 10.8 11.25 11.75L12.5 10l3.5 1.5v3C16 15.88 15.5 16 15 16 7.82 16 2 10.18 2 3c0-.5.12-1 1.5-1z" stroke="currentColor" strokeWidth="1.5" strokeLinejoin="round"/></svg></Icon>,
@@ -58,7 +58,7 @@ const sections: NavSection[] = [
     ],
   },
   {
-    label: 'Configure',
+    label: 'Account',
     items: [
       {
         label: 'Setup',

@@ -86,11 +86,11 @@ export default async function DashboardPage() {
 
   let headerSub: string
   if (totalCalls === 0) {
-    headerSub = "You're live! Make a test call to confirm everything works."
+    headerSub = "You're live. We're listening for your first missed call."
   } else if (totalBookings === 0) {
-    headerSub = "Your AI is handling calls. No bookings yet — check your forwarding setup."
+    headerSub = "We're answering calls. No bookings yet — confirm call forwarding is active."
   } else {
-    headerSub = "Your AI receptionist is live. Here's what's happening."
+    headerSub = "We're answering your calls. Here's what we recovered."
   }
 
   const setupTasks = [
@@ -132,10 +132,10 @@ export default async function DashboardPage() {
               Setup in progress
             </div>
             <h2 style={{ fontFamily: 'var(--font-space)', fontSize: '1.35rem', lineHeight: 1.2, margin: '0 0 8px', color: 'var(--text)' }}>
-              Set up your AI receptionist inside the dashboard.
+              Tell us about your business and we'll handle the rest.
             </h2>
             <p style={{ color: 'var(--text-mid)', fontSize: 14, lineHeight: 1.6, margin: '0 0 16px', maxWidth: 620 }}>
-              Add your business details, choose an industry, connect your calendar, pick a voice, and test the agent before going live.
+              Your name, industry, and hours. We build and configure your AI receptionist automatically. Takes about 10 minutes.
             </p>
             <Link
               href="/dashboard/setup"
@@ -205,7 +205,7 @@ export default async function DashboardPage() {
             boxShadow: setupComplete ? '0 0 0 3px var(--success-dim)' : '0 0 0 3px var(--warning-dim)',
             flexShrink: 0,
           }} />
-          <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>{setupComplete ? 'AI Receptionist is Live' : 'AI Receptionist setup is not complete'}</span>
+          <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>{setupComplete ? 'ShopDesk is Live' : 'Setup is not complete'}</span>
           {shop.twilio_number && (
             <span style={{ fontSize: 14, color: 'var(--muted)' }}>· {shop.twilio_number}</span>
           )}

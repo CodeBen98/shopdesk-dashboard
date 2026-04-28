@@ -5,10 +5,10 @@ import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
 const HIGHLIGHTS = [
-  'Your AI learns your shop: name, hours, services',
-  'Customers call your number, AI answers when you\'re busy',
-  'Appointments go straight to your Google Calendar',
-  'You get a text every time someone books',
+  'We set up your receptionist with your name, hours, and services',
+  'Customers call your number, we answer when you can\'t',
+  'Every booking goes straight to your Google Calendar',
+  'You get an email every time we book an appointment',
 ]
 
 export function WelcomeStep({ userId, onNext, onShopUpdate }: StepProps) {
@@ -62,7 +62,7 @@ export function WelcomeStep({ userId, onNext, onShopUpdate }: StepProps) {
           maxWidth: 380,
           margin: '0 auto',
         }}>
-          Your AI receptionist will be answering calls for your shop in about 8 minutes.
+          We're setting everything up. You'll be live and answering calls in about 8 minutes.
         </p>
       </div>
 
