@@ -1,6 +1,10 @@
 import { Resend } from 'resend'
 
-const resend = new Resend(process.env.RESEND_API_KEY)
+function getResend() {
+  const key = process.env.RESEND_API_KEY
+  if (!key) throw new Error('RESEND_API_KEY is not set')
+  return new Resend(key)
+}
 const FROM = 'ShopDesk <support@shopdesk.site>'
 
 export async function sendCancellationNotice({
@@ -16,7 +20,7 @@ export async function sendCancellationNotice({
     weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
   })
 
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: `Your ShopDesk account is scheduled for cancellation`,
@@ -74,7 +78,7 @@ export async function sendDeletionConfirmation({
   to: string
   shopName: string
 }) {
-  await resend.emails.send({
+  await getResend().emails.send({
     from: FROM,
     to,
     subject: `Your ShopDesk account has been deleted`,

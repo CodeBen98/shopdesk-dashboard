@@ -18,6 +18,8 @@ type Shop = {
   cancel_reason: string | null
   cancel_requested_at: string | null
   cancelled_at: string | null
+  provision_attempted_at: string | null
+  industry: string | null
 }
 
 const STATUS_CONFIG: Record<string, { bg: string; color: string; label: string }> = {
@@ -191,6 +193,7 @@ export function AdminShopList({ initialShops }: { initialShops: Shop[] }) {
   const [deleteTarget, setDeleteTarget] = useState<Shop | null>(null)
   const [deleteBusy, setDeleteBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [provisioningId, setProvisioningId] = useState<string | null>(null)
 
   async function callApi(url: string, method: string, body: object) {
     const res = await fetch(url, {
@@ -229,6 +232,30 @@ export function AdminShopList({ initialShops }: { initialShops: Shop[] }) {
     }
   }
 
+  async function handleProvision(shopId: string) {
+    setProvisioningId(shopId)
+    setError(null)
+    try {
+      const res = await fetch('/api/admin/provision-shop', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ shopId }),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error ?? 'Provisioning failed')
+      setShops(prev => prev.map(s => s.id === shopId ? {
+        ...s,
+        vapi_agent_id: data.agentId,
+        twilio_number: data.twilio_number,
+        status: 'live',
+      } : s))
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Provisioning failed')
+    } finally {
+      setProvisioningId(null)
+    }
+  }
+
   async function handleRestoreFromCancel(shopId: string) {
     setBusyId(shopId)
     setError(null)
@@ -259,10 +286,11 @@ export function AdminShopList({ initialShops }: { initialShops: Shop[] }) {
   }
 
   // Segment shops
-  const requests = shops.filter(s => s.status === 'pause_requested' || s.status === 'cancel_requested')
-  const cancelling = shops.filter(s => s.status === 'cancelling' || s.status === 'cancelled')
-  const active = shops.filter(s => s.vapi_agent_id && !['pause_requested', 'cancel_requested', 'cancelling', 'cancelled', 'deleted'].includes(s.status ?? ''))
-  const onboarding = shops.filter(s => !s.vapi_agent_id && !['deleted'].includes(s.status ?? ''))
+  const requests    = shops.filter(s => s.status === 'pause_requested' || s.status === 'cancel_requested')
+  const cancelling  = shops.filter(s => s.status === 'cancelling' || s.status === 'cancelled')
+  const active      = shops.filter(s => s.vapi_agent_id && !['pause_requested', 'cancel_requested', 'cancelling', 'cancelled', 'deleted'].includes(s.status ?? ''))
+  const needsProvision = shops.filter(s => !s.vapi_agent_id && s.name && !['deleted'].includes(s.status ?? ''))
+  const onboarding  = shops.filter(s => !s.vapi_agent_id && !s.name && !['deleted'].includes(s.status ?? ''))
 
   return (
     <>
@@ -296,43 +324,65 @@ export function AdminShopList({ initialShops }: { initialShops: Shop[] }) {
             <ShopCard key={s.id} shop={s} busyId={busyId}
               onToggle={handleToggle} onCancel={handleCancel}
               onRestoreCancel={handleRestoreFromCancel}
-              onDelete={() => setDeleteTarget(s)} />
+              onDelete={() => setDeleteTarget(s)}
+              onProvision={handleProvision}
+              provisioningId={provisioningId} />
+          ))}
+        </>
+      )}
+
+      {needsProvision.length > 0 && (
+        <>
+          <SectionLabel label="Needs provisioning" count={needsProvision.length} top={requests.length > 0} color="var(--accent)" />
+          {needsProvision.map(s => (
+            <ShopCard key={s.id} shop={s} busyId={busyId}
+              onToggle={handleToggle} onCancel={handleCancel}
+              onRestoreCancel={handleRestoreFromCancel}
+              onDelete={() => setDeleteTarget(s)}
+              onProvision={handleProvision}
+              provisioningId={provisioningId} />
           ))}
         </>
       )}
 
       {active.length > 0 && (
         <>
-          <SectionLabel label="Active shops" count={active.length} top={requests.length > 0} />
+          <SectionLabel label="Active shops" count={active.length} top={requests.length > 0 || needsProvision.length > 0} />
           {active.map(s => (
             <ShopCard key={s.id} shop={s} busyId={busyId}
               onToggle={handleToggle} onCancel={handleCancel}
               onRestoreCancel={handleRestoreFromCancel}
-              onDelete={() => setDeleteTarget(s)} />
+              onDelete={() => setDeleteTarget(s)}
+              onProvision={handleProvision}
+              provisioningId={provisioningId} />
           ))}
         </>
       )}
 
       {cancelling.length > 0 && (
         <>
-          <SectionLabel label="Cancelling" count={cancelling.length} top={active.length > 0 || requests.length > 0} />
+          <SectionLabel label="Cancelling" count={cancelling.length} top={active.length > 0 || requests.length > 0 || needsProvision.length > 0} />
           {cancelling.map(s => (
             <ShopCard key={s.id} shop={s} busyId={busyId}
               onToggle={handleToggle} onCancel={handleCancel}
               onRestoreCancel={handleRestoreFromCancel}
-              onDelete={() => setDeleteTarget(s)} />
+              onDelete={() => setDeleteTarget(s)}
+              onProvision={handleProvision}
+              provisioningId={provisioningId} />
           ))}
         </>
       )}
 
       {onboarding.length > 0 && (
         <>
-          <SectionLabel label="In onboarding" count={onboarding.length} top />
+          <SectionLabel label="Empty accounts" count={onboarding.length} top />
           {onboarding.map(s => (
             <ShopCard key={s.id} shop={s} busyId={busyId}
               onToggle={handleToggle} onCancel={handleCancel}
               onRestoreCancel={handleRestoreFromCancel}
-              onDelete={() => setDeleteTarget(s)} />
+              onDelete={() => setDeleteTarget(s)}
+              onProvision={handleProvision}
+              provisioningId={provisioningId} />
           ))}
         </>
       )}
@@ -349,15 +399,18 @@ export function AdminShopList({ initialShops }: { initialShops: Shop[] }) {
   )
 }
 
-function ShopCard({ shop, busyId, onToggle, onCancel, onRestoreCancel, onDelete }: {
+function ShopCard({ shop, busyId, onToggle, onCancel, onRestoreCancel, onDelete, onProvision, provisioningId }: {
   shop: Shop
   busyId: string | null
   onToggle: (id: string, action: 'pause' | 'unpause') => void
   onCancel: (id: string) => void
   onRestoreCancel: (id: string) => void
   onDelete: () => void
+  onProvision: (id: string) => void
+  provisioningId: string | null
 }) {
   const busy = busyId === shop.id
+  const provisioning = provisioningId === shop.id
   const isProvisioned = !!shop.vapi_agent_id
   const s = shop.status
   const daysLeft = daysUntil(shop.cancelled_at)
@@ -393,7 +446,12 @@ function ShopCard({ shop, busyId, onToggle, onCancel, onRestoreCancel, onDelete 
         {/* Action buttons */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 6, flexShrink: 0, alignItems: 'flex-end' }}>
           {!isProvisioned ? (
-            <span style={{ fontSize: 12, color: 'var(--muted)', fontStyle: 'italic' }}>Not provisioned</span>
+            <ActionBtn
+              label={provisioning ? 'Provisioning...' : 'Provision'}
+              variant="success"
+              disabled={provisioning || !shop.name}
+              onClick={() => onProvision(shop.id)}
+            />
           ) : (
             <>
               {/* Primary action based on status */}
@@ -432,6 +490,7 @@ function ShopCard({ shop, busyId, onToggle, onCancel, onRestoreCancel, onDelete 
       }}>
         <Detail label="Phone" value={shop.phone || 'none'} />
         <Detail label="SD number" value={shop.twilio_number || 'none'} />
+        <Detail label="Industry" value={shop.industry || 'none'} />
         <Detail label="Last call" value={formatRelative(shop.last_call_at)} />
         <Detail label="Joined" value={formatDate(shop.created_at)} />
         {shop.cancel_requested_at && (
