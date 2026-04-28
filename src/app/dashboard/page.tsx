@@ -93,16 +93,7 @@ export default async function DashboardPage() {
     headerSub = "We're answering your calls. Here's what we recovered."
   }
 
-  const setupTasks = [
-    { label: 'Add business details', done: Boolean(shop.name && shop.phone && shop.address) },
-    { label: 'Choose industry', done: Boolean(shop.industry) },
-    { label: 'Add hours and services', done: Boolean(shop.services?.length) },
-    { label: 'Connect calendar', done: Boolean(shop.google_refresh_token) },
-    { label: 'Choose voice and provision agent', done: Boolean(shop.vapi_agent_id && shop.twilio_number) },
-    { label: 'Test and go live', done: Boolean(shop.onboarding_complete) },
-  ]
-  const completedSetupTasks = setupTasks.filter(task => task.done).length
-  const setupComplete = completedSetupTasks === setupTasks.length
+  const isProvisioned = Boolean(shop.vapi_agent_id && shop.twilio_number)
 
   return (
     <div style={{ animation: 'fadeIn 0.3s ease' }}>
@@ -116,72 +107,40 @@ export default async function DashboardPage() {
         </p>
       </div>
 
-      {!setupComplete && (
+      {!isProvisioned && (
         <div style={{
-          background: 'linear-gradient(135deg, rgba(15,118,149,0.16), rgba(255,255,255,0.04))',
-          border: '1px solid rgba(15,118,149,0.28)',
+          background: 'linear-gradient(135deg, rgba(15,118,149,0.12), rgba(255,255,255,0.03))',
+          border: '1px solid rgba(15,118,149,0.24)',
           borderRadius: 16,
-          padding: '22px 24px',
-          display: 'grid',
-          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(240px, 0.8fr)',
-          gap: 20,
+          padding: '28px 28px',
           marginBottom: 28,
-        }} className="setup-card">
-          <div>
-            <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 8 }}>
-              Setup in progress
-            </div>
-            <h2 style={{ fontFamily: 'var(--font-space)', fontSize: '1.35rem', lineHeight: 1.2, margin: '0 0 8px', color: 'var(--text)' }}>
-              Tell us about your business and we'll handle the rest.
-            </h2>
-            <p style={{ color: 'var(--text-mid)', fontSize: 14, lineHeight: 1.6, margin: '0 0 16px', maxWidth: 620 }}>
-              Your name, industry, and hours. We build and configure your AI receptionist automatically. Takes about 10 minutes.
-            </p>
-            <Link
-              href="/dashboard/setup"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 8,
-                background: 'var(--accent)',
-                color: 'white',
-                borderRadius: 10,
-                padding: '11px 16px',
-                fontSize: 14,
-                fontWeight: 700,
-                textDecoration: 'none',
-              }}
-            >
-              Continue setup →
-            </Link>
+        }}>
+          <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em', marginBottom: 10 }}>
+            Getting you set up
           </div>
-          <div style={{ background: 'rgba(0,0,0,0.18)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: 12, padding: 14 }}>
-            <div style={{ fontSize: 13, color: 'var(--text)', fontWeight: 700, marginBottom: 10 }}>
-              {completedSetupTasks} of {setupTasks.length} complete
-            </div>
-            <div style={{ display: 'grid', gap: 8 }}>
-              {setupTasks.map(task => (
-                <div key={task.label} style={{ display: 'flex', alignItems: 'center', gap: 8, color: task.done ? 'var(--text)' : 'var(--muted)', fontSize: 13 }}>
-                  <span style={{
-                    width: 16,
-                    height: 16,
-                    borderRadius: '50%',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    background: task.done ? 'var(--success)' : 'rgba(255,255,255,0.06)',
-                    color: task.done ? '#04110b' : 'var(--muted)',
-                    fontSize: 11,
-                    fontWeight: 800,
-                    flexShrink: 0,
-                  }}>
-                    {task.done ? '✓' : '·'}
-                  </span>
-                  {task.label}
-                </div>
-              ))}
-            </div>
-          </div>
+          <h2 style={{ fontFamily: 'var(--font-space)', fontSize: '1.25rem', lineHeight: 1.2, margin: '0 0 8px', color: 'var(--text)' }}>
+            Tell us about your business and we handle the rest.
+          </h2>
+          <p style={{ color: 'var(--text-mid)', fontSize: 14, lineHeight: 1.6, margin: '0 0 20px' }}>
+            Your name, phone, and what you do. We build and configure your receptionist automatically.
+          </p>
+          <Link
+            href="/onboard"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              background: 'var(--accent)',
+              color: 'white',
+              borderRadius: 10,
+              padding: '11px 18px',
+              fontSize: 14,
+              fontWeight: 700,
+              textDecoration: 'none',
+            }}
+          >
+            Get started →
+          </Link>
         </div>
       )}
 
@@ -201,33 +160,22 @@ export default async function DashboardPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
           <span style={{
             width: 10, height: 10, borderRadius: '50%',
-            background: setupComplete ? 'var(--success)' : 'var(--warning)',
-            boxShadow: setupComplete ? '0 0 0 3px var(--success-dim)' : '0 0 0 3px var(--warning-dim)',
+            background: isProvisioned ? 'var(--success)' : 'var(--warning)',
+            boxShadow: isProvisioned ? '0 0 0 3px var(--success-dim)' : '0 0 0 3px var(--warning-dim)',
             flexShrink: 0,
           }} />
-          <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>{setupComplete ? 'ShopDesk is Live' : 'Setup is not complete'}</span>
+          <span style={{ fontWeight: 600, color: 'var(--text)', fontSize: 14 }}>{isProvisioned ? 'ShopDesk is Live' : 'Setup is not complete'}</span>
           {shop.twilio_number && (
             <span style={{ fontSize: 14, color: 'var(--muted)' }}>· {shop.twilio_number}</span>
           )}
           <span style={{ fontSize: 13, color: 'var(--muted)' }}>· {lastCallText}</span>
         </div>
         {shop.twilio_number ? (
-          <a
-            href={`tel:${shop.twilio_number}`}
-            style={{
-              fontSize: 13,
-              color: 'var(--accent)',
-              textDecoration: 'none',
-              fontWeight: 500,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 4,
-            }}
-          >
+          <a href={`tel:${shop.twilio_number}`} style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
             Make a test call →
           </a>
         ) : (
-          <Link href="/dashboard/setup" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
+          <Link href="/onboard" style={{ fontSize: 13, color: 'var(--accent)', textDecoration: 'none', fontWeight: 500 }}>
             Finish setup →
           </Link>
         )}
@@ -282,27 +230,8 @@ export default async function DashboardPage() {
             {totalBookings > 0 ? totalBookings.toLocaleString() : '—'}
           </div>
           <div style={{ fontSize: 12, color: 'var(--muted)' }}>
-            {totalBookings > 0 ? 'booked by your AI receptionist' : 'updates after first booking'}
+            {totalBookings > 0 ? 'booked by your receptionist' : 'updates after first booking'}
           </div>
-        </div>
-
-        {/* AI Status */}
-        <div style={{ background: 'var(--surface)', border: '1px solid var(--border)', borderRadius: 12, padding: '20px 24px' }}>
-          <div style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 10, fontWeight: 500, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
-            AI Status
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 6 }}>
-            <span style={{
-              width: 10, height: 10, borderRadius: '50%',
-              background: 'var(--success)',
-              boxShadow: '0 0 0 3px var(--success-dim)',
-              flexShrink: 0,
-            }} />
-            <div style={{ fontSize: 30, fontWeight: 800, color: 'var(--text)', fontFamily: 'var(--font-space)', lineHeight: 1, letterSpacing: '-0.5px' }}>
-              Live 24/7
-            </div>
-          </div>
-          <div style={{ fontSize: 12, color: 'var(--muted)' }}>always on</div>
         </div>
       </div>
 

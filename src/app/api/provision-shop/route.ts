@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS, normalizeToE164 } from '@/lib/shopPrompt'
+import { sendProvisioningStarted, sendProvisioningComplete } from '@/lib/email'
 
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
@@ -139,6 +140,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Please wait a moment before trying again.' }, { status: 429 })
     }
 
+    // Email 1: notify business that setup has started
+    if (user.email && shop.name) {
+      sendProvisioningStarted({ to: user.email, shopName: shop.name }).catch(err =>
+        console.error('sendProvisioningStarted failed (non-fatal):', err)
+      )
+    }
+
     const systemPrompt = buildSystemPrompt({
       name: shop.name,
       address: shop.address,
@@ -251,6 +259,13 @@ export async function POST(request: Request) {
       twilio_number: assignedNumber,
       onboarding_step: 'forwarding',
     }).eq('owner_id', user.id)
+
+    // Email 2: you're live, here's how to activate forwarding
+    if (user.email && shop.name) {
+      sendProvisioningComplete({ to: user.email, shopName: shop.name, twilioNumber: assignedNumber }).catch(err =>
+        console.error('sendProvisioningComplete failed (non-fatal):', err)
+      )
+    }
 
     return NextResponse.json({ success: true, agentId })
 

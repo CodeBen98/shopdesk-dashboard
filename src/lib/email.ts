@@ -7,6 +7,114 @@ function getResend() {
 }
 const FROM = 'ShopDesk <support@shopdesk.site>'
 
+export async function sendProvisioningStarted({
+  to,
+  shopName,
+}: {
+  to: string
+  shopName: string
+}) {
+  await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `ShopDesk is setting up your receptionist`,
+    html: `
+      <div style="font-family: -apple-system, sans-serif; max-width: 560px; margin: 0 auto; color: #1a1a1a;">
+        <div style="padding: 40px 0 24px;">
+          <span style="font-weight: 800; font-size: 18px; letter-spacing: -0.3px;">ShopDesk</span>
+        </div>
+
+        <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 16px;">
+          We're setting up your receptionist
+        </h1>
+
+        <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 16px;">
+          Hi ${shopName},
+        </p>
+
+        <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 16px;">
+          We're configuring your AI receptionist now. This usually takes about 30 seconds. You'll get another email as soon as it's live with instructions to activate call forwarding.
+        </p>
+
+        <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 24px;">
+          You don't need to do anything yet.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+        <p style="font-size: 12px; color: #9ca3af; line-height: 1.6;">
+          ShopDesk &mdash; AI receptionist for service businesses<br />
+          <a href="https://shopdesk.site" style="color: #9ca3af;">shopdesk.site</a>
+        </p>
+      </div>
+    `,
+  })
+}
+
+export async function sendProvisioningComplete({
+  to,
+  shopName,
+  twilioNumber,
+}: {
+  to: string
+  shopName: string
+  twilioNumber: string
+}) {
+  await getResend().emails.send({
+    from: FROM,
+    to,
+    subject: `Your receptionist is live — activate call forwarding`,
+    html: `
+      <div style="font-family: -apple-system, sans-serif; max-width: 560px; margin: 0 auto; color: #1a1a1a;">
+        <div style="padding: 40px 0 24px;">
+          <span style="font-weight: 800; font-size: 18px; letter-spacing: -0.3px;">ShopDesk</span>
+        </div>
+
+        <h1 style="font-size: 22px; font-weight: 700; margin-bottom: 16px;">
+          Your receptionist is live
+        </h1>
+
+        <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 16px;">
+          Hi ${shopName},
+        </p>
+
+        <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 16px;">
+          Your ShopDesk receptionist is configured and ready. One step left: activate call forwarding so missed calls route to us automatically.
+        </p>
+
+        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 10px; padding: 20px 24px; margin: 24px 0;">
+          <p style="font-size: 14px; font-weight: 600; color: #166534; margin: 0 0 8px;">
+            Your ShopDesk number
+          </p>
+          <p style="font-size: 22px; font-weight: 800; color: #14532d; margin: 0 0 16px; letter-spacing: -0.5px;">
+            ${twilioNumber}
+          </p>
+          <p style="font-size: 14px; font-weight: 600; color: #166534; margin: 0 0 6px;">
+            To activate forwarding from your business phone:
+          </p>
+          <p style="font-size: 15px; color: #166534; margin: 0;">
+            Dial <strong>*72${twilioNumber}</strong> and press Call.<br />
+            <span style="font-size: 13px; opacity: 0.8;">(AT&amp;T, Verizon, T-Mobile)</span>
+          </p>
+        </div>
+
+        <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 16px;">
+          Once forwarding is active, every call your team misses will be answered by your receptionist. You'll get an email each time a booking is made.
+        </p>
+
+        <p style="font-size: 15px; line-height: 1.7; color: #444; margin-bottom: 24px;">
+          You can see all your results at <a href="https://app.shopdesk.site/dashboard" style="color: #0f7695;">app.shopdesk.site</a>.
+        </p>
+
+        <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
+        <p style="font-size: 12px; color: #9ca3af; line-height: 1.6;">
+          ShopDesk &mdash; AI receptionist for service businesses<br />
+          <a href="https://shopdesk.site" style="color: #9ca3af;">shopdesk.site</a>
+        </p>
+      </div>
+    `,
+  })
+}
+
 export async function sendCancellationNotice({
   to,
   shopName,
