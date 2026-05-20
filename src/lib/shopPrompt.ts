@@ -149,7 +149,11 @@ export function buildSystemPrompt(shop: {
   ai_voice: string
   industry?: IndustryId | string | null
   enrichment?: EnrichmentForPrompt | null
+  knowledge_flags?: Record<string, boolean> | null
+  farewell_message?: string | null
 }, extras?: { vehicleTypes?: string[]; ownerName?: string }): string {
+  const flags = shop.knowledge_flags ?? {}
+  const kEnabled = (key: string) => flags[key] !== false
   const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
   const shopName = sanitize(shop.name, 100)
   const shopAddress = sanitize(shop.address, 200)
@@ -167,8 +171,8 @@ export function buildSystemPrompt(shop: {
   const intakeFields = industryTemplate.intakeFields.map(field => `  - ${field.label}${field.required ? ' (required)' : ' (optional)'}`).join('\n')
   const urgencyTriggers = industryTemplate.urgencyTriggers.join(', ')
   const disallowedClaims = industryTemplate.disallowedClaims.map(rule => `- ${rule}`).join('\n')
-  const identityAddon = buildIdentityAddon(shop.enrichment ?? undefined)
-  const personalitySection = buildPersonalitySection(shop.enrichment ?? undefined)
+  const identityAddon = kEnabled('differentiators') ? buildIdentityAddon(shop.enrichment ?? undefined) : ''
+  const personalitySection = kEnabled('voice_tone') ? buildPersonalitySection(shop.enrichment ?? undefined) : ''
   const businessDescription = industry === 'other' && shop.enrichment?.businessDescription
     ? sanitize(shop.enrichment.businessDescription, 500)
     : null
@@ -227,11 +231,9 @@ ${personalitySection}
 
 [Shop Info]
 ${shopName} | ${shopAddress}${shopPhone ? ` | ${shopPhone}` : ''}
-Hours:
-${hoursText}
+${kEnabled('business_hours') ? `Hours:\n${hoursText}` : 'Hours: not specified — do not quote hours to callers.'}
 ${industry === 'auto_repair' && vehicleTypes ? `Vehicle types serviced: ${vehicleTypes.join(', ')}` : ''}
-Services:
-${serviceList || '  - General services and maintenance'}
+${kEnabled('services') ? `Services:\n${serviceList || '  - General services and maintenance'}` : 'Services: not specified — do not quote specific services or prices.'}
 
 [Industry Playbook]
 ${businessDescription ? `Business type: ${businessDescription}` : `Industry: ${industryTemplate.label}`}
@@ -251,7 +253,7 @@ ${intakeFields}
 6. Once you have all required info, call the bookAppointment function. Put the requested service or issue in service. Put the key appointment details in appointment_details as a concise summary. For auto repair, also fill vehicle_year, vehicle_make, and vehicle_model when known.
 7. After the function returns success, confirm the booking details back to the customer.
 8. Ask if there is anything else.
-9. When done, say a warm goodbye and call the endCall function.
+9. When done, say a warm goodbye${shop.farewell_message ? ` — use this exact line: "${sanitize(shop.farewell_message, 200)}"` : ''} and call the endCall function.
 
 Do NOT call endCall until the customer says they are done.
 Do NOT say goodbye until you are ready to call endCall immediately after.

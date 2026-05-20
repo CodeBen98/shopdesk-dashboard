@@ -214,8 +214,8 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
   },
   other: {
     id: 'other',
-    label: 'Service business',
-    shortDescription: 'Any service business not listed above.',
+    label: 'Other',
+    shortDescription: 'Any business not listed above.',
     serviceExamples: [],
     serviceSuggestions: [],
     intakeFields: [

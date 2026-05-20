@@ -7,7 +7,7 @@ import { CancelServiceButton } from '@/components/CancelServiceButton'
 import { getIndustryTemplate, INDUSTRY_TEMPLATES, normalizeIndustry, type IndustryId } from '@/lib/industries/templates'
 import type { Shop, ShopHours, Service } from '@/types'
 
-type Tab = 'shop' | 'hours' | 'services' | 'ai' | 'phone' | 'integrations'
+type Tab = 'shop' | 'hours' | 'services' | 'ai' | 'knowledge' | 'phone' | 'integrations'
 type SaveStatus = 'idle' | 'saving' | 'saved'
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'] as const
@@ -134,6 +134,14 @@ export default function SettingsPage() {
   const voiceAudioRef = useRef<HTMLAudioElement | null>(null)
   const [emergencyContact, setEmergencyContact] = useState('')
   const [emergencyContactName, setEmergencyContactName] = useState('')
+  const [farewell, setFarewell] = useState('')
+
+  // Knowledge base
+  const [greeting, setGreeting] = useState('')
+  const [knowledgeFlags, setKnowledgeFlags] = useState<Record<string, boolean>>({})
+  const [editingKey, setEditingKey] = useState<string | null>(null)
+  const [editingValue, setEditingValue] = useState('')
+  const [rescanLoading, setRescanLoading] = useState(false)
 
   // Focus states
   const [focused, setFocused] = useState<string | null>(null)
@@ -170,6 +178,9 @@ export default function SettingsPage() {
         setVoice(data.ai_voice ?? 'patricia')
         setEmergencyContact(data.emergency_contact ?? '')
         setEmergencyContactName(data.emergency_contact_name ?? '')
+        setFarewell(data.farewell_message ?? '')
+        setGreeting((data.enrichment as { recommended_first_message?: string } | null)?.recommended_first_message ?? '')
+        setKnowledgeFlags((data.knowledge_flags as Record<string, boolean>) ?? {})
       }
       setLoading(false)
     }
@@ -226,11 +237,12 @@ export default function SettingsPage() {
   }
 
   const tabs: { value: Tab; label: string }[] = [
-    { value: 'shop',     label: 'Business Info' },
-    { value: 'hours',    label: 'Hours' },
-    { value: 'services', label: 'Services' },
-    { value: 'ai',       label: 'AI & Voice' },
-    { value: 'phone',    label: 'Phone Setup' },
+    { value: 'shop',         label: 'Business Info' },
+    { value: 'hours',        label: 'Hours' },
+    { value: 'services',     label: 'Services' },
+    { value: 'ai',           label: 'AI & Voice' },
+    { value: 'knowledge',    label: 'Knowledge' },
+    { value: 'phone',        label: 'Phone Setup' },
     { value: 'integrations', label: 'Integrations' },
   ]
 
@@ -834,12 +846,35 @@ export default function SettingsPage() {
                 />
               </div>
             </div>
+            <div style={{ height: 1, background: 'var(--border)', margin: '20px 0' }} />
+
+            <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 16 }}>
+              Goodbye Message
+            </p>
+            <textarea
+              value={farewell}
+              onChange={e => setFarewell(e.target.value)}
+              rows={2}
+              placeholder="e.g. Thanks for calling, have a great day!"
+              onFocus={() => setFocused('farewell')}
+              onBlur={() => setFocused(null)}
+              style={{
+                ...inputStyle(focused === 'farewell'),
+                resize: 'vertical',
+                lineHeight: 1.5,
+              } as React.CSSProperties}
+            />
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
+              What your AI says when ending the call. Leave blank to use the default.
+            </p>
+
             <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 8 }}>
               <SaveButton
                 onClick={() => save({
                   ai_voice: voice,
                   emergency_contact: emergencyContact,
                   emergency_contact_name: emergencyContactName,
+                  farewell_message: farewell.trim() || null,
                 }, true)}
                 status={saveStatus}
                 savingText="Updating AI..."
@@ -852,7 +887,278 @@ export default function SettingsPage() {
           </div>
         )}
 
-        {/* ── Tab 5: Phone Setup ── */}
+        {/* ── Tab 5: Knowledge ── */}
+        {tab === 'knowledge' && (() => {
+          const enrichment = shop?.enrichment as {
+            recommended_first_message?: string
+            shop_identity?: { differentiators?: string[]; key_people?: Array<{ name: string; role?: string | null }> }
+            shop_voice?: { tone?: string; formality_level?: string }
+            businessDescription?: string
+          } | null
+
+          type KnowledgeItem = {
+            key: string
+            title: string
+            content: string
+            editable: boolean
+            linkedTab?: Tab
+          }
+
+          const items: KnowledgeItem[] = [
+            {
+              key: 'business_name',
+              title: 'Business Name',
+              content: shop?.name ?? '',
+              editable: false,
+              linkedTab: 'shop',
+            },
+            {
+              key: 'website',
+              title: 'Website',
+              content: shop?.website_url ?? '(not set)',
+              editable: false,
+              linkedTab: 'shop',
+            },
+            {
+              key: 'business_hours',
+              title: 'Business Hours',
+              content: shop?.hours ? (() => {
+                const days = ['monday','tuesday','wednesday','thursday','friday','saturday','sunday'] as const
+                const open = days.filter(d => shop.hours[d]?.open).map(d => d.charAt(0).toUpperCase() + d.slice(1, 3))
+                return open.length > 0 ? `Open ${open.join(', ')}` : 'No hours set'
+              })() : 'No hours set',
+              editable: false,
+              linkedTab: 'hours',
+            },
+            {
+              key: 'services',
+              title: 'Services',
+              content: Array.isArray(shop?.services) && shop.services.length > 0
+                ? shop.services.map((s: { name: string }) => s.name).join(', ')
+                : '(no services added)',
+              editable: false,
+              linkedTab: 'services',
+            },
+            {
+              key: 'greeting',
+              title: 'Greeting Message',
+              content: greeting || '(using default)',
+              editable: true,
+            },
+            ...(enrichment?.shop_identity?.differentiators?.length
+              ? [{
+                  key: 'differentiators',
+                  title: 'What Makes You Different',
+                  content: enrichment.shop_identity.differentiators.join(' · '),
+                  editable: false,
+                }]
+              : []),
+            ...(enrichment?.shop_voice?.tone
+              ? [{
+                  key: 'voice_tone',
+                  title: 'Voice & Tone',
+                  content: `${enrichment.shop_voice.tone}${enrichment.shop_voice.formality_level ? ` · ${enrichment.shop_voice.formality_level}` : ''}`,
+                  editable: false,
+                }]
+              : []),
+          ]
+
+          function isEnabled(key: string) {
+            return knowledgeFlags[key] !== false
+          }
+
+          async function toggleFlag(key: string) {
+            const updated = { ...knowledgeFlags, [key]: !isEnabled(key) }
+            setKnowledgeFlags(updated)
+            await save({ knowledge_flags: updated }, true)
+          }
+
+          async function saveEdit(key: string, value: string) {
+            if (key === 'greeting') {
+              const updatedEnrichment = { ...(shop?.enrichment ?? {}), recommended_first_message: value.trim() }
+              await save({ enrichment: updatedEnrichment as Shop['enrichment'] }, true)
+              setGreeting(value.trim())
+            }
+            setEditingKey(null)
+          }
+
+          async function rescan() {
+            setRescanLoading(true)
+            try {
+              await fetch('/api/enrich-shop', { method: 'POST' })
+              window.location.reload()
+            } catch {
+              setRescanLoading(false)
+            }
+          }
+
+          return (
+            <div>
+              <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 20, flexWrap: 'wrap', gap: 12 }}>
+                <div>
+                  <h2 className="section-header">Knowledge Base</h2>
+                  <p className="section-desc" style={{ marginBottom: 0 }}>
+                    What your AI receptionist knows about your business. Toggle items to include or exclude them.
+                  </p>
+                </div>
+                {shop?.website_url && (
+                  <button
+                    onClick={rescan}
+                    disabled={rescanLoading}
+                    style={{
+                      background: 'transparent',
+                      color: 'var(--accent)',
+                      border: '1px solid rgba(15,118,149,0.3)',
+                      borderRadius: 8,
+                      padding: '7px 14px',
+                      fontSize: 12,
+                      fontWeight: 600,
+                      cursor: rescanLoading ? 'wait' : 'pointer',
+                      fontFamily: 'inherit',
+                      whiteSpace: 'nowrap',
+                      flexShrink: 0,
+                      opacity: rescanLoading ? 0.6 : 1,
+                    }}
+                  >
+                    {rescanLoading ? 'Scanning...' : 'Re-scan website'}
+                  </button>
+                )}
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 0, border: '1px solid var(--border)', borderRadius: 10, overflow: 'hidden' }}>
+                {items.map((item, idx) => {
+                  const enabled = isEnabled(item.key)
+                  const isEditing = editingKey === item.key
+                  return (
+                    <div
+                      key={item.key}
+                      style={{
+                        padding: '14px 16px',
+                        borderBottom: idx < items.length - 1 ? '1px solid var(--border)' : 'none',
+                        opacity: enabled ? 1 : 0.45,
+                        transition: 'opacity 0.15s',
+                        background: 'var(--card)',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 12 }}>
+                        {/* Toggle */}
+                        <button
+                          onClick={() => toggleFlag(item.key)}
+                          title={enabled ? 'Disable' : 'Enable'}
+                          style={{
+                            width: 32, height: 18, borderRadius: 9999, border: 'none',
+                            background: enabled ? 'var(--accent)' : 'var(--border)',
+                            cursor: 'pointer', flexShrink: 0, marginTop: 2,
+                            position: 'relative', transition: 'background 0.2s',
+                          }}
+                        >
+                          <span style={{
+                            position: 'absolute', top: 2,
+                            left: enabled ? 16 : 2,
+                            width: 14, height: 14, borderRadius: '50%',
+                            background: '#fff', transition: 'left 0.2s',
+                          }} />
+                        </button>
+
+                        {/* Content */}
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: 4 }}>
+                            {item.title}
+                          </div>
+                          {isEditing ? (
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                              <textarea
+                                value={editingValue}
+                                onChange={e => setEditingValue(e.target.value)}
+                                rows={2}
+                                autoFocus
+                                style={{
+                                  width: '100%', boxSizing: 'border-box',
+                                  background: 'var(--surface)', border: '1px solid var(--accent)',
+                                  borderRadius: 6, padding: '8px 10px', fontSize: 13,
+                                  color: 'var(--text)', outline: 'none', resize: 'vertical',
+                                  lineHeight: 1.5, fontFamily: 'inherit',
+                                }}
+                              />
+                              <div style={{ display: 'flex', gap: 8 }}>
+                                <button
+                                  onClick={() => saveEdit(item.key, editingValue)}
+                                  style={{
+                                    background: 'var(--accent)', color: '#fff', border: 'none',
+                                    borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 600,
+                                    cursor: 'pointer', fontFamily: 'inherit',
+                                  }}
+                                >
+                                  Save
+                                </button>
+                                <button
+                                  onClick={() => setEditingKey(null)}
+                                  style={{
+                                    background: 'transparent', color: 'var(--muted)', border: '1px solid var(--border)',
+                                    borderRadius: 6, padding: '5px 12px', fontSize: 12, fontWeight: 500,
+                                    cursor: 'pointer', fontFamily: 'inherit',
+                                  }}
+                                >
+                                  Cancel
+                                </button>
+                              </div>
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: 13, color: 'var(--text)', lineHeight: 1.5, wordBreak: 'break-word' }}>
+                              {item.content}
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Action */}
+                        {!isEditing && (
+                          item.editable ? (
+                            <button
+                              onClick={() => { setEditingKey(item.key); setEditingValue(item.content === '(using default)' ? '' : item.content) }}
+                              style={{
+                                background: 'transparent', border: '1px solid var(--border)', borderRadius: 6,
+                                padding: '4px 10px', fontSize: 11, fontWeight: 500, color: 'var(--muted)',
+                                cursor: 'pointer', fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Edit
+                            </button>
+                          ) : item.linkedTab ? (
+                            <button
+                              onClick={() => setTab(item.linkedTab!)}
+                              style={{
+                                background: 'transparent', border: 'none',
+                                fontSize: 12, color: 'var(--accent)', cursor: 'pointer',
+                                fontFamily: 'inherit', flexShrink: 0, whiteSpace: 'nowrap',
+                                padding: '4px 0',
+                              }}
+                            >
+                              Edit →
+                            </button>
+                          ) : null
+                        )}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+
+              {!shop?.enrichment && (
+                <div style={{
+                  marginTop: 16, padding: '14px 16px',
+                  background: 'var(--card)', border: '1px solid var(--border)',
+                  borderRadius: 8, fontSize: 13, color: 'var(--muted)', lineHeight: 1.6,
+                }}>
+                  {shop?.website_url
+                    ? 'Your website hasn\'t been scanned yet. Click "Re-scan website" above to populate your knowledge base.'
+                    : 'Add your website URL in Business Info to enable auto-scanning, or edit each item manually above.'}
+                </div>
+              )}
+            </div>
+          )
+        })()}
+
+        {/* ── Tab 6: Phone Setup ── */}
         {tab === 'phone' && (
           <div>
             <div style={{ marginBottom: 20 }}>

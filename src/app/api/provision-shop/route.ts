@@ -157,16 +157,16 @@ export async function POST(request: Request) {
       ai_voice: shop.ai_voice,
       industry: shop.industry,
       enrichment: shop.enrichment,
+      knowledge_flags: shop.knowledge_flags as Record<string, boolean> | null,
+      farewell_message: shop.farewell_message as string | null,
     }, { vehicleTypes, ownerName })
 
     const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
     const voice = voiceMap[shop.ai_voice] ?? voiceMap.patricia
 
-    // Prefer the owner-reviewed enrichment greeting when available. Fall back
+    // Prefer any saved enrichment greeting (owner-reviewed or edited in settings). Fall back
     // to the generic template for shops that skipped enrichment.
-    const enrichmentGreeting = shop.enrichment?.owner_reviewed
-      ? shop.enrichment.recommended_first_message
-      : null
+    const enrichmentGreeting = shop.enrichment?.recommended_first_message ?? null
     const firstMessage = enrichmentGreeting && enrichmentGreeting.trim().length > 0
       ? enrichmentGreeting
           .replace(/\{receptionist\}/gi, receptionistName)

@@ -25,6 +25,7 @@ const PLACES_FIELD_MASK = [
 type HarvestInput = {
   shopName: string
   shopAddress?: string
+  websiteUrl?: string
 }
 
 type PlaceRecord = {
@@ -167,7 +168,8 @@ async function harvestSerpApiOwnerReplies(placeId: string | undefined): Promise<
 
 export async function harvestShop(input: HarvestInput): Promise<EnrichmentRaw> {
   const places = await harvestPlaces(input)
-  const websiteUri = places?.websiteUri
+  // Prefer the directly-provided URL; fall back to whatever Google Places discovered.
+  const websiteUri = input.websiteUrl || (places?.websiteUri as string | undefined)
   const placeId = typeof places?.id === 'string' ? places.id : undefined
   const [website, serpapi] = await Promise.all([
     websiteUri ? harvestWebsite(websiteUri) : Promise.resolve(null),

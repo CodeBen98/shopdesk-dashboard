@@ -91,7 +91,7 @@ async function syncCustomerRecord(params: {
       .update({
         name: params.name || existing.name,
         vehicle: params.vehicle || existing.vehicle,
-        industry: params.industry || existing.industry || 'auto_repair',
+        industry: params.industry || existing.industry || 'other',
         intake: { ...(existing.intake ?? {}), ...(params.intake ?? {}) },
         last_visit: laterIso(existing.last_visit, params.interactionAt),
         visit_count: shouldIncrementVisitCount ? (existing.visit_count ?? 0) + 1 : (existing.visit_count ?? 1),

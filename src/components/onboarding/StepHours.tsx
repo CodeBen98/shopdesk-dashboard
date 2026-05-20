@@ -71,7 +71,7 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
     const supabase = createClient()
     const { error: saveErr } = await supabase.from('shops').update({
       hours,
-      onboarding_step: 'services',
+      onboarding_step: 'voice',
     }).eq('owner_id', userId)
     if (saveErr) {
       setSaveError('Failed to save. Please try again.')
@@ -192,7 +192,7 @@ export function StepHours({ shop, userId, onNext, onBack, onShopUpdate }: StepPr
           onClick={async () => {
             setLoading(true)
             const supabase = (await import('@/lib/supabase/client')).createClient()
-            await supabase.from('shops').update({ onboarding_step: 'services' }).eq('owner_id', userId)
+            await supabase.from('shops').update({ onboarding_step: 'voice' }).eq('owner_id', userId)
             setLoading(false)
             onNext()
           }}

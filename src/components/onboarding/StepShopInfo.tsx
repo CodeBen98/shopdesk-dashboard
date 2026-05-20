@@ -3,33 +3,19 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
-import { INDUSTRY_TEMPLATES, normalizeIndustry, type IndustryId } from '@/lib/industries/templates'
 
-const VEHICLE_OPTIONS = [
-  'All Makes and Models',
-  'Domestic (Ford/GM/Chrysler)',
-  'European (BMW/Mercedes/Audi/VW)',
-  'Japanese (Toyota/Honda/Nissan)',
-  'Korean (Hyundai/Kia)',
-  'Trucks and SUVs',
-  'Diesel',
-]
-
-export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
+export function StepShopInfo({ shop, userId, onNext, onShopUpdate }: StepProps) {
   const [name, setName] = useState(shop?.name ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
   const [address, setAddress] = useState(shop?.address ?? '')
+  const [websiteUrl, setWebsiteUrl] = useState(shop?.website_url ?? '')
+  const [businessDescription, setBusinessDescription] = useState(
+    (shop?.enrichment as { businessDescription?: string } | null)?.businessDescription ?? ''
+  )
   const [ownerName, setOwnerName] = useState(shop?.emergency_contact_name ?? '')
   const [ownerPhone, setOwnerPhone] = useState(shop?.owner_phone ?? '')
   const [ownerSmsConsent, setOwnerSmsConsent] = useState(shop?.owner_phone_sms_consent ?? false)
   const [email, setEmail] = useState(shop?.email ?? '')
-  const [industry, setIndustry] = useState<IndustryId>(normalizeIndustry(shop?.industry))
-  const [businessDescription, setBusinessDescription] = useState(
-    (shop?.enrichment as { businessDescription?: string } | null)?.businessDescription ?? ''
-  )
-  const [vehicleTypes, setVehicleTypes] = useState<string[]>(
-    (shop?.industry_config as { vehicleTypes?: string[] } | null)?.vehicleTypes ?? []
-  )
 
   const [errors, setErrors] = useState<{
     name?: string
@@ -39,22 +25,13 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     ownerPhone?: string
     ownerSmsConsent?: string
     email?: string
-    vehicleTypes?: string
-    industry?: string
   }>({})
   const [saveError, setSaveError] = useState('')
   const [loading, setLoading] = useState(false)
 
-  function toggleVehicleType(type: string) {
-    setVehicleTypes(prev =>
-      prev.includes(type) ? prev.filter(t => t !== type) : [...prev, type]
-    )
-    setErrors(p => ({ ...p, vehicleTypes: undefined }))
-  }
-
   async function handleSubmit() {
     const errs: typeof errors = {}
-    if (!name.trim()) errs.name = 'Shop name is required'
+    if (!name.trim()) errs.name = 'Business name is required'
     const phoneDigits = phone.replace(/\D/g, '')
     if (!phone.trim()) errs.phone = 'Business phone is required'
     else if (phoneDigits.length < 10) errs.phone = 'Please enter a valid phone number'
@@ -67,7 +44,6 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     if (email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
       errs.email = 'Please enter a valid email address'
     }
-    if (industry === 'auto_repair' && vehicleTypes.length === 0) errs.vehicleTypes = 'Please select at least one vehicle type'
 
     if (Object.keys(errs).length > 0) { setErrors(errs); return }
 
@@ -76,12 +52,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     const supabase = createClient()
     const smsOptIn = !!normalizedOwnerPhone && ownerSmsConsent
 
-    const industryConfig = {
-      ...(shop?.industry_config ?? {}),
-      ...(industry === 'auto_repair' ? { vehicleTypes } : {}),
-    }
-
-    const enrichmentPatch = industry === 'other' && businessDescription.trim()
+    const enrichmentPatch = businessDescription.trim()
       ? { ...(shop?.enrichment ?? {}), businessDescription: businessDescription.trim() }
       : shop?.enrichment ?? null
 
@@ -96,11 +67,10 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       owner_phone: normalizedOwnerPhone || null,
       owner_phone_sms_consent: smsOptIn,
       emergency_contact_name: ownerName.trim(),
-      industry,
-      industry_config: industryConfig,
+      website_url: websiteUrl.trim() || null,
+      industry: 'other',
       onboarding_step: 'auto_fill_choice',
       ...(enrichmentPatch ? { enrichment: enrichmentPatch } : {}),
-      // Set trial dates once on first save; never overwrite if already set
       ...(shop?.trial_started_at ? {} : {
         trial_started_at: now,
         trial_ends_at: trialEnd,
@@ -115,7 +85,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       return
     }
 
-    const shopUpdate: Record<string, unknown> = {
+    onShopUpdate({
       name: name.trim(),
       address: address.trim(),
       phone: phone.trim(),
@@ -123,11 +93,10 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       owner_phone: normalizedOwnerPhone || null,
       owner_phone_sms_consent: smsOptIn,
       emergency_contact_name: ownerName.trim(),
-      industry,
-      industry_config: industryConfig,
-      ...(enrichmentPatch ? { enrichment: enrichmentPatch } : {}),
-    }
-    onShopUpdate(shopUpdate)
+      website_url: websiteUrl.trim() || null,
+      industry: 'other',
+      ...(enrichmentPatch ? { enrichment: enrichmentPatch as import('@/types').Enrichment } : {}),
+    })
     setLoading(false)
     onNext()
   }
@@ -144,9 +113,9 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
         </span>
       </div>
       <h2 style={title}>Tell us about your business</h2>
-      <p style={subtitle}>Your AI uses this to introduce your business and choose the right call-handling playbook.</p>
+      <p style={subtitle}>Your AI uses this to introduce your business and answer callers accurately.</p>
 
-      {/* Shop Name */}
+      {/* Business Name */}
       <div style={field}>
         <label style={labelStyle}>Business Name *</label>
         <input
@@ -174,7 +143,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
             type="tel"
           />
         </div>
-        <p style={helperStyle}>This is your business&apos;s main number, the one customers call.</p>
+        <p style={helperStyle}>This is your main number — the one customers call.</p>
         {errors.phone && <p style={errorStyle}>{errors.phone}</p>}
       </div>
 
@@ -192,52 +161,34 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
         />
         {errors.address && <p style={errorStyle}>{errors.address}</p>}
       </div>
-      {/* Industry */}
+
+      {/* Website */}
       <div style={field}>
-        <label style={labelStyle}>Industry *</label>
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
-          {Object.values(INDUSTRY_TEMPLATES).map(template => {
-            const selected = industry === template.id
-            return (
-              <button
-                key={template.id}
-                type="button"
-                onClick={() => { setIndustry(template.id); setErrors(p => ({ ...p, industry: undefined, vehicleTypes: undefined })) }}
-                style={{
-                  textAlign: 'left',
-                  padding: '10px 12px',
-                  borderRadius: 10,
-                  border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
-                  background: selected ? 'var(--accent-dim)' : 'var(--card)',
-                  color: selected ? 'var(--accent)' : 'var(--text-mid)',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
-                }}
-              >
-                <div style={{ fontSize: 13, fontWeight: 700, marginBottom: 3 }}>{template.label}</div>
-                <div style={{ fontSize: 11, lineHeight: 1.35, color: selected ? 'var(--accent)' : 'var(--muted)' }}>{template.shortDescription}</div>
-              </button>
-            )
-          })}
-        </div>
-        <p style={helperStyle}>This controls the AI&apos;s intake questions, urgency rules, and service suggestions.</p>
-        {errors.industry && <p style={errorStyle}>{errors.industry}</p>}
+        <label style={labelStyle}>Website <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+        <input
+          value={websiteUrl}
+          onChange={e => setWebsiteUrl(e.target.value)}
+          className="step-input"
+          style={{ boxSizing: 'border-box' }}
+          placeholder="https://yourbusiness.com"
+          type="url"
+        />
+        <p style={helperStyle}>We&apos;ll use this to pre-fill your business info in the next step.</p>
       </div>
 
-      {industry === 'other' && (
-        <div style={field}>
-          <label style={labelStyle}>Describe your business</label>
-          <textarea
-            value={businessDescription}
-            onChange={e => setBusinessDescription(e.target.value)}
-            className="step-input"
-            style={{ resize: 'vertical', lineHeight: 1.5 } as React.CSSProperties}
-            rows={3}
-            placeholder="e.g. Photography studio specializing in weddings and portraits"
-          />
-          <p style={helperStyle}>Your AI will use this to understand your business and answer callers accurately.</p>
-        </div>
-      )}
+      {/* Business Description */}
+      <div style={field}>
+        <label style={labelStyle}>What does your business do? <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
+        <textarea
+          value={businessDescription}
+          onChange={e => setBusinessDescription(e.target.value)}
+          className="step-input"
+          style={{ resize: 'vertical', lineHeight: 1.5 } as React.CSSProperties}
+          rows={3}
+          placeholder="e.g. HVAC contractor serving Orlando — repairs, maintenance, and new installations for residential and commercial."
+        />
+        <p style={helperStyle}>Your AI will use this to understand your business and answer callers accurately.</p>
+      </div>
 
       {/* Owner / Manager Name */}
       <div style={field}>
@@ -256,7 +207,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
 
       {/* Owner Mobile */}
       <div style={field}>
-        <label style={labelStyle}>Owner Mobile (optional)</label>
+        <label style={labelStyle}>Owner Mobile <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
         <div style={{ display: 'flex', border: `1px solid ${errors.ownerPhone ? 'var(--danger)' : 'var(--border)'}`, borderRadius: 8, overflow: 'hidden', background: 'var(--card)' }}>
           <div style={{ padding: '10px 12px', borderRight: '1px solid var(--border)', fontSize: 14, color: 'var(--text-mid)', background: 'var(--card-raised)', flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6 }}>
             🇺🇸 +1
@@ -269,7 +220,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
             type="tel"
           />
         </div>
-        <p style={helperStyle}>Add this if you want booking alerts and urgent shop notifications by text. Different from your shop number.</p>
+        <p style={helperStyle}>Add this if you want booking alerts and urgent call notifications by text. Different from your ShopDesk number.</p>
         {errors.ownerPhone && <p style={errorStyle}>{errors.ownerPhone}</p>}
       </div>
 
@@ -279,17 +230,11 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
           <div
             onClick={() => { setOwnerSmsConsent(v => !v); setErrors(p => ({ ...p, ownerSmsConsent: undefined })) }}
             style={{
-              width: 18,
-              height: 18,
-              borderRadius: 4,
+              width: 18, height: 18, borderRadius: 4,
               border: `2px solid ${errors.ownerSmsConsent ? 'var(--danger)' : ownerSmsConsent ? 'var(--accent)' : 'var(--border)'}`,
               background: ownerSmsConsent ? 'var(--accent)' : 'var(--card)',
-              flexShrink: 0,
-              marginTop: 2,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              flexShrink: 0, marginTop: 2, cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
               transition: 'background 0.15s, border-color 0.15s',
             }}
           >
@@ -300,18 +245,12 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
             )}
           </div>
           <span style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.6 }}>
-            I agree to receive SMS booking alerts and urgent shop notifications at this number. Consent is optional. Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help.{' '}
-            <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
-              SMS Policy
-            </a>
+            I agree to receive SMS booking alerts and urgent notifications at this number. Consent is optional. Msg &amp; data rates may apply. Reply STOP to opt out. Reply HELP for help.{' '}
+            <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>SMS Policy</a>
             {' '}·{' '}
-            <a href="https://shopdesk.site/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
-              Terms
-            </a>
+            <a href="https://shopdesk.site/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Terms</a>
             {' '}·{' '}
-            <a href="https://shopdesk.site/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>
-              Privacy
-            </a>
+            <a href="https://shopdesk.site/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Privacy</a>
           </span>
         </label>
         {errors.ownerSmsConsent && <p style={{ ...errorStyle, marginTop: 8 }}>{errors.ownerSmsConsent}</p>}
@@ -319,52 +258,18 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
 
       {/* Email */}
       <div style={field}>
-        <label style={labelStyle}>Email</label>
+        <label style={labelStyle}>Email <span style={{ fontWeight: 400, textTransform: 'none', letterSpacing: 0 }}>(optional)</span></label>
         <input
           value={email}
           onChange={e => { setEmail(e.target.value); setErrors(p => ({ ...p, email: undefined })) }}
           className="step-input"
           style={errors.email ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-          placeholder="shop@example.com"
+          placeholder="owner@yourbusiness.com"
           type="email"
         />
         <p style={helperStyle}>For booking confirmations and account updates.</p>
         {errors.email && <p style={errorStyle}>{errors.email}</p>}
       </div>
-
-      {industry === 'auto_repair' && (
-        <div style={{ ...field, marginBottom: 28 }}>
-          <label style={labelStyle}>What vehicles do you work on? *</label>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 8 }}>
-            {VEHICLE_OPTIONS.map(type => {
-              const selected = vehicleTypes.includes(type)
-              return (
-                <button
-                  key={type}
-                  type="button"
-                  onClick={() => toggleVehicleType(type)}
-                  style={{
-                    position: 'relative',
-                    padding: '6px 14px',
-                    borderRadius: 9999,
-                    border: `1px solid ${selected ? 'var(--accent)' : 'var(--border)'}`,
-                    background: selected ? 'var(--accent-dim)' : 'var(--card)',
-                    color: selected ? 'var(--accent)' : 'var(--text-mid)',
-                    fontSize: 13,
-                    cursor: 'pointer',
-                    fontWeight: selected ? 600 : 400,
-                    transition: 'border-color 0.15s, background 0.15s',
-                    fontFamily: 'inherit',
-                  }}
-                >
-                  {type}
-                </button>
-              )
-            })}
-          </div>
-          {errors.vehicleTypes && <p style={errorStyle}>{errors.vehicleTypes}</p>}
-        </div>
-      )}
 
       {saveError && <p style={{ ...errorStyle, marginBottom: 12 }}>{saveError}</p>}
 
@@ -380,17 +285,6 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
   )
 }
 
-const backBtn: React.CSSProperties = {
-  background: 'none',
-  border: 'none',
-  color: 'var(--muted)',
-  fontSize: 14,
-  cursor: 'pointer',
-  padding: 0,
-  marginBottom: 24,
-  display: 'block',
-  fontFamily: 'inherit',
-}
 const card: React.CSSProperties = {
   background: 'var(--surface)',
   border: '1px solid var(--border)',

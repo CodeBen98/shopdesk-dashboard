@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   const { data: shop, error: shopError } = await supabase
     .from('shops')
-    .select('id, name, address, industry')
+    .select('id, name, address, industry, website_url')
     .eq('owner_id', user.id)
     .single()
 
@@ -75,6 +75,7 @@ export async function POST(request: Request) {
   const raw = await harvestShop({
     shopName: overrideName ?? shop.name,
     shopAddress: overrideAddress ?? shop.address,
+    websiteUrl: (shop as { website_url?: string | null }).website_url ?? undefined,
   })
   const harvestMs = Date.now() - harvestStart
 

@@ -86,6 +86,9 @@ export async function POST(request: Request) {
       emergency_contact: shop.emergency_contact,
       emergency_contact_name: shop.emergency_contact_name,
       ai_voice: shop.ai_voice,
+      enrichment: shop.enrichment,
+      knowledge_flags: shop.knowledge_flags as Record<string, boolean> | null,
+      farewell_message: shop.farewell_message as string | null,
     })
 
     const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'

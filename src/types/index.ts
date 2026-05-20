@@ -36,6 +36,9 @@ export type Shop = {
   enrichment_raw: EnrichmentRaw | null
   enrichment: Enrichment | null
   enriched_at: string | null
+  website_url: string | null
+  knowledge_flags: Record<string, boolean> | null
+  farewell_message: string | null
   created_at: string
 }
 
