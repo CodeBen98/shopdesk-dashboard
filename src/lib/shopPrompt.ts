@@ -267,11 +267,16 @@ export const BOOKING_TOOLS = (
   shopId: string,
   ownerPhoneE164?: string | null,
   ownerName?: string,
+  webhookSecret?: string,
 ) => {
+  const serverConfig: { url: string; headers?: Record<string, string> } = {
+    url: `${bookingWebhookUrl}?shop_id=${shopId}`,
+    ...(webhookSecret ? { headers: { Authorization: `Bearer ${webhookSecret}` } } : {}),
+  }
   const baseTools: object[] = [
     {
       type: 'function',
-      server: { url: `${bookingWebhookUrl}?shop_id=${shopId}` },
+      server: serverConfig,
       function: {
         name: 'bookAppointment',
         strict: true,
