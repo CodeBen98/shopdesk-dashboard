@@ -8,7 +8,7 @@ import { StepProps } from './OnboardingWizard'
 // takes 10-30 sec on a shop with a website, so a single "Loading..." feels
 // broken. These cycle while the request is in-flight.
 const PROGRESS_MESSAGES = [
-  'Finding your shop on Google…',
+  'Finding your business on Google…',
   'Reading your website…',
   'Building your agent profile…',
   'Almost done…',
@@ -59,7 +59,7 @@ export function StepAutoFillChoice({ shop, userId, onBack, onSkipTo, onShopUpdat
       // If the harvest itself found no Google match, fall back to manual.
       const foundAnything = data.sources?.places || data.sources?.website
       if (!foundAnything) {
-        setNotFoundMsg("We couldn't find your shop online. No worries, you can fill it in manually.")
+        setNotFoundMsg("We couldn't find your business online. No worries, you can fill it in manually.")
         setTimeout(() => { onSkipTo('hours') }, 2000)
         return
       }
@@ -71,7 +71,7 @@ export function StepAutoFillChoice({ shop, userId, onBack, onSkipTo, onShopUpdat
       onShopUpdate({ onboarding_step: 'auto_fill_review' })
       onSkipTo('auto_fill_review')
     } catch {
-      setNotFoundMsg("We couldn't find your shop online. No worries, you can fill it in manually.")
+      setNotFoundMsg("We couldn't find your business online. No worries, you can fill it in manually.")
       setTimeout(() => { onSkipTo('hours') }, 2000)
     } finally {
       setLoading(false)
@@ -84,7 +84,7 @@ export function StepAutoFillChoice({ shop, userId, onBack, onSkipTo, onShopUpdat
 
       <h2 style={titleStyle}>Auto-fill your profile</h2>
       <p style={subtitleStyle}>
-        We found <strong style={{ color: 'var(--text)' }}>{shop?.name ?? 'your shop'}</strong> online and can pre-fill your hours and contact info. You review before continuing.
+        We found <strong style={{ color: 'var(--text)' }}>{shop?.name ?? 'your business'}</strong> online and can pre-fill your hours and contact info. You review before continuing.
       </p>
 
       <div style={cardsRow}>
@@ -107,7 +107,7 @@ export function StepAutoFillChoice({ shop, userId, onBack, onSkipTo, onShopUpdat
           </div>
           <div style={optionTitle}>Auto-fill my profile</div>
           <div style={optionDesc}>
-            We&apos;ll look up your shop online and fill in your hours, phone, and more. Takes about 10 seconds
+            We&apos;ll look up your business online and fill in your hours, phone, and more. Takes about 10 seconds
           </div>
         </button>
 

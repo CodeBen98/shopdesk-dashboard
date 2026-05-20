@@ -6,7 +6,7 @@ import { StepProps } from './OnboardingWizard'
 
 const STAGES = [
   'Creating your AI receptionist...',
-  'Teaching it your shop\'s name and hours...',
+  'Teaching it your business name and hours...',
   'Setting up your dedicated phone number...',
   'Almost done. Final checks...',
 ]

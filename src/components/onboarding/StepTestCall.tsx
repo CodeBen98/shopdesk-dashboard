@@ -30,7 +30,7 @@ export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
       </div>
       <h2 style={titleStyle}>Make a test call</h2>
       <p style={subtitleStyle}>
-        Call your shop number right now and let it ring 4 times without answering. Your AI receptionist should pick up. During early setup, we usually verify this live with you before moving on.
+        Call your business number right now and let it ring 4 times without answering. Your AI receptionist should pick up. During early setup, we usually verify this live with you before moving on.
       </p>
 
       <div style={{

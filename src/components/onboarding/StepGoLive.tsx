@@ -40,7 +40,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
     router.push('/dashboard')
   }
 
-  const shopName = shop?.name ?? 'Your Shop'
+  const shopName = shop?.name ?? 'Your Business'
   const phoneNumber = shop?.twilio_number ?? DEMO_NUMBER
   const voiceLabel = VOICE_LABELS[shop?.ai_voice ?? ''] ?? shop?.ai_voice ?? 'Not selected'
 
@@ -99,7 +99,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
             What We Set Up
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <SummaryRow label="Shop" value={shopName} />
+            <SummaryRow label="Business" value={shopName} />
             <SummaryRow label="Phone Number" value={phoneNumber} />
             <SummaryRow label="AI Voice" value={voiceLabel} />
           </div>
@@ -117,7 +117,7 @@ export function StepGoLive({ shop, userId, onBack }: StepProps) {
             What happens now
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            <SummaryRow label="Calls" value="Your shop rings first, then ShopDesk answers missed calls" />
+            <SummaryRow label="Calls" value="Your number rings first, then ShopDesk answers missed calls" />
             <SummaryRow label="Bookings" value="New appointments show up in your dashboard and calendar" />
             <SummaryRow label="Results" value="Your call log and bookings appear here as they come in" />
           </div>

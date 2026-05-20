@@ -53,7 +53,7 @@ export function OnboardingWizard({ shop, userId }: OnboardingWizardProps) {
   const STEP_NAMES: Record<string, string> = {
     plan_selection: 'Choose Your Plan',
     welcome: 'Welcome',
-    shop_info: 'Your Shop',
+    shop_info: 'Your Business',
     auto_fill_choice: 'Auto-Fill',
     auto_fill_review: 'Review Info',
     hours: 'Business Hours',
