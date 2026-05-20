@@ -224,7 +224,7 @@ export default function SettingsPage() {
   }
 
   const tabs: { value: Tab; label: string }[] = [
-    { value: 'shop',     label: 'Shop Info' },
+    { value: 'shop',     label: 'Business Info' },
     { value: 'hours',    label: 'Hours' },
     { value: 'services', label: 'Services' },
     { value: 'ai',       label: 'AI & Voice' },
@@ -280,7 +280,7 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p style={{ color: 'var(--muted)', fontSize: 14 }}>
-          Manage your shop, hours, services, and AI configuration
+          Manage your business info, hours, services, and AI configuration
         </p>
       </div>
 
@@ -325,19 +325,19 @@ export default function SettingsPage() {
         {tab === 'shop' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
             <div>
-              <h2 className="section-header">Shop Information</h2>
+              <h2 className="section-header">Business Information</h2>
               <p className="section-desc">Your AI receptionist uses this to introduce your business.</p>
             </div>
 
             {/* Name + Phone */}
             <div className="form-grid-2">
               <div>
-                <label style={labelStyle}>Shop Name</label>
+                <label style={labelStyle}>Business Name</label>
                 <input
                   type="text"
                   value={name}
                   onChange={e => setName(e.target.value)}
-                  placeholder="Your Auto Shop"
+                  placeholder="Your Business Name"
                   onFocus={() => setFocused('name')}
                   onBlur={() => setFocused(null)}
                   style={inputStyle(focused === 'name')}
@@ -408,7 +408,7 @@ export default function SettingsPage() {
                 style={inputStyle(focused === 'owner-phone')}
               />
               <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 6 }}>
-                Add this if you want booking alerts and urgent shop notifications by text. Different from your shop phone.
+                Add this if you want booking alerts and urgent notifications by text. Different from your business phone.
               </p>
               <label style={{
                 display: 'flex', alignItems: 'flex-start', gap: 10, marginTop: 10, cursor: 'pointer',
@@ -420,7 +420,7 @@ export default function SettingsPage() {
                   style={{ marginTop: 2, accentColor: 'var(--accent)', flexShrink: 0 }}
                 />
                 <span style={{ fontSize: 12, color: 'var(--muted)', lineHeight: 1.5 }}>
-                  I agree to receive SMS booking alerts and urgent shop notifications at this number. Consent is optional. Msg and data rates may apply. Reply STOP to opt out. Reply HELP for help. <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>SMS Policy</a> · <a href="https://shopdesk.site/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Terms</a> · <a href="https://shopdesk.site/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Privacy</a>
+                  I agree to receive SMS booking alerts and urgent notifications at this number. Consent is optional. Msg and data rates may apply. Reply STOP to opt out. Reply HELP for help. <a href="https://shopdesk.site/sms-consent" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>SMS Policy</a> · <a href="https://shopdesk.site/terms" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Terms</a> · <a href="https://shopdesk.site/privacy" target="_blank" rel="noopener noreferrer" style={{ color: 'var(--accent)' }}>Privacy</a>
                 </span>
               </label>
             </div>
@@ -437,7 +437,7 @@ export default function SettingsPage() {
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: 24, flexWrap: 'wrap', gap: 12 }}>
               <div>
                 <h2 className="section-header">Business Hours</h2>
-                <p className="section-desc" style={{ marginBottom: 0 }}>Set when your shop is open. Your AI will use these when answering calls.</p>
+                <p className="section-desc" style={{ marginBottom: 0 }}>Set when your business is open. Your AI will use these when answering calls.</p>
               </div>
               <button
                 onClick={copyMonToWeekdays}
@@ -828,7 +828,7 @@ export default function SettingsPage() {
           <div>
             <div style={{ marginBottom: 20 }}>
               <h2 className="section-header">Phone Setup</h2>
-              <p className="section-desc">Forward your shop number to this AI receptionist line.</p>
+              <p className="section-desc">Forward your business number to this AI receptionist line.</p>
             </div>
 
             {/* Assigned number */}
@@ -907,7 +907,7 @@ export default function SettingsPage() {
               Call Forwarding Instructions
             </p>
             <p style={{ fontSize: 13, color: 'var(--text-mid)', lineHeight: 1.7, marginBottom: 16 }}>
-              Forward your shop&apos;s existing phone number to your AI receptionist number so every call is answered automatically.
+              Forward your existing business number to your AI receptionist number so every call is answered automatically.
             </p>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               {[
