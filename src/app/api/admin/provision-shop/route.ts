@@ -5,7 +5,7 @@ import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS, normalizeToE164
 import { isAdmin } from '@/lib/admin'
 
 const VAPI_API_KEY        = process.env.VAPI_API_KEY!
-const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
+const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking.onrender.com/book'
 const TWILIO_ACCOUNT_SID  = process.env.TWILIO_ACCOUNT_SID!
 const TWILIO_AUTH_TOKEN   = process.env.TWILIO_AUTH_TOKEN!
 
@@ -145,6 +145,7 @@ export async function POST(request: Request) {
           shop.id,
           normalizeToE164(shop.emergency_contact),
           shop.emergency_contact_name,
+          webhookSecret,
         ),
       },
       voice: { provider: voice.provider, voiceId: voice.voiceId, model: voice.model },
