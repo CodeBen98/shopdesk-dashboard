@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   const { data: shop, error: shopError } = await supabase
     .from('shops')
-    .select('id, name, address, industry, website_url')
+    .select('id, name, address, industry, website_url, enrichment')
     .eq('owner_id', user.id)
     .single()
 
@@ -122,11 +122,13 @@ export async function POST(request: Request) {
   const synthMs = Date.now() - synthStart
 
   if (synthesized) {
+    const existingDescription = (shop.enrichment as { businessDescription?: string } | null)?.businessDescription ?? null
     const enrichment: Enrichment = {
       ...synthesized,
       synthesized_at: new Date().toISOString(),
       owner_reviewed: false,
       owner_reviewed_at: null,
+      ...(existingDescription ? { businessDescription: existingDescription } : {}),
     }
     const { error: enrichError } = await supabase
       .from('shops')

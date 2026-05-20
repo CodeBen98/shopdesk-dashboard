@@ -16,10 +16,12 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [loading, setLoading] = useState(false)
   const [playingId, setPlayingId] = useState<string | null>(null)
   const [loadingPreview, setLoadingPreview] = useState<string | null>(null)
+  const [previewError, setPreviewError] = useState<string | null>(null)
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   async function playPreview(voiceId: string, e: React.MouseEvent) {
     e.stopPropagation()
+    setPreviewError(null)
     if (audioRef.current) {
       audioRef.current.pause()
       audioRef.current = null
@@ -45,6 +47,7 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
       }
     } catch {
       setLoadingPreview(null)
+      setPreviewError('Voice preview unavailable — check your connection and try again.')
     }
   }
 
@@ -156,7 +159,12 @@ export function StepVoice({ userId, onNext, onBack, onShopUpdate }: StepProps) {
           )
         })}
       </div>
-      {!selected && (
+      {previewError && (
+        <p style={{ fontSize: 13, color: '#ef4444', textAlign: 'center', marginBottom: 12 }}>
+          {previewError}
+        </p>
+      )}
+      {!selected && !previewError && (
         <p style={{ fontSize: 13, color: 'var(--muted)', textAlign: 'center', marginBottom: 16 }}>
           Preview and select a voice to continue
         </p>

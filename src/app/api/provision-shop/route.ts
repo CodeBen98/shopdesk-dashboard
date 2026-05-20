@@ -167,11 +167,22 @@ export async function POST(request: Request) {
     // Prefer any saved enrichment greeting (owner-reviewed or edited in settings). Fall back
     // to the generic template for shops that skipped enrichment.
     const enrichmentGreeting = shop.enrichment?.recommended_first_message ?? null
-    const firstMessage = enrichmentGreeting && enrichmentGreeting.trim().length > 0
-      ? enrichmentGreeting
-          .replace(/\{receptionist\}/gi, receptionistName)
-          .replace(/\{shop\}/gi, shop.name)
-      : `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`
+    let firstMessage: string
+    if (enrichmentGreeting && enrichmentGreeting.trim().length > 0) {
+      let processed = enrichmentGreeting
+        .replace(/\{receptionist\}/gi, receptionistName)
+        .replace(/\{shop\}/gi, shop.name)
+      // Enrichment sometimes hardcodes a name (e.g. "this is Sarah"). Replace any
+      // known voice name that doesn't match the owner's actual selection.
+      for (const n of Object.values(voiceNames)) {
+        if (n.toLowerCase() !== receptionistName.toLowerCase()) {
+          processed = processed.replace(new RegExp(`\\b${n}\\b`, 'gi'), receptionistName)
+        }
+      }
+      firstMessage = processed
+    } else {
+      firstMessage = `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`
+    }
 
     const webhookUrl = 'https://app.shopdesk.site/api/vapi-webhook'
     const webhookSecret = process.env.VAPI_WEBHOOK_SECRET

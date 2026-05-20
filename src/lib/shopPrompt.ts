@@ -173,8 +173,8 @@ export function buildSystemPrompt(shop: {
   const disallowedClaims = industryTemplate.disallowedClaims.map(rule => `- ${rule}`).join('\n')
   const identityAddon = kEnabled('differentiators') ? buildIdentityAddon(shop.enrichment ?? undefined) : ''
   const personalitySection = kEnabled('voice_tone') ? buildPersonalitySection(shop.enrichment ?? undefined) : ''
-  const businessDescription = industry === 'other' && shop.enrichment?.businessDescription
-    ? sanitize(shop.enrichment.businessDescription, 500)
+  const businessDescription = shop.enrichment?.businessDescription
+    ? sanitize(shop.enrichment.businessDescription as string, 500)
     : null
   // Transfer is only offered when we have a valid owner phone to transfer to.
   // If emergency_contact can't be normalized, the agent falls back to the
@@ -233,8 +233,8 @@ ${personalitySection}
 ${shopName} | ${shopAddress}${shopPhone ? ` | ${shopPhone}` : ''}
 ${kEnabled('business_hours') ? `Hours:\n${hoursText}` : 'Hours: not specified — do not quote hours to callers.'}
 ${industry === 'auto_repair' && vehicleTypes ? `Vehicle types serviced: ${vehicleTypes.join(', ')}` : ''}
-${kEnabled('services') ? `Services:\n${serviceList || '  - General services and maintenance'}` : 'Services: not specified — do not quote specific services or prices.'}
-
+${kEnabled('services') && serviceList ? `Services:\n${serviceList}` : 'Services: not specified — do not quote specific services or prices to callers.'}
+${!businessDescription && !serviceList ? '\nNote: The owner has not yet finished setting up this business profile. If callers ask about specific services, prices, or what this business offers, say you don\'t have those details in front of you right now and suggest they ask the owner directly.\n' : ''}
 [Industry Playbook]
 ${businessDescription ? `Business type: ${businessDescription}` : `Industry: ${industryTemplate.label}`}
 ${industryTemplate.promptSection}

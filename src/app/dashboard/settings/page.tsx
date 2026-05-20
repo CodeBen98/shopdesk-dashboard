@@ -175,7 +175,7 @@ export default function SettingsPage() {
         setHours(data.hours ?? {})
         setIndustry(normalizeIndustry(data.industry))
         setServices(data.services ?? [])
-        setVoice(data.ai_voice ?? 'patricia')
+        setVoice(data.ai_voice ?? 'cindy')
         setEmergencyContact(data.emergency_contact ?? '')
         setEmergencyContactName(data.emergency_contact_name ?? '')
         setFarewell(data.farewell_message ?? '')
@@ -283,6 +283,7 @@ export default function SettingsPage() {
       }
     } catch {
       setLoadingVoice(null)
+      show('Voice preview unavailable', 'error')
     }
   }
 
@@ -1334,8 +1335,8 @@ export default function SettingsPage() {
 
       </div>
 
-      {/* Danger Zone */}
-      <div style={{
+      {/* Danger Zone — only on Business Info tab */}
+      {tab === 'shop' && <div style={{
         maxWidth: 620,
         marginTop: 32,
         background: 'var(--surface)',
@@ -1350,7 +1351,7 @@ export default function SettingsPage() {
           Need to pause or cancel your ShopDesk service? Submit a request and a representative will follow up within 24 hours.
         </p>
         <CancelServiceButton />
-      </div>
+      </div>}
 
     </div>
   )

@@ -52,6 +52,7 @@ export function StepAutoFillReview({ shop, userId, onBack, onSkipTo, onShopUpdat
   const [fullShop, setFullShop] = useState<Shop | null>(shop)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [rescanning, setRescanning] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   // Editable local copies of the two most owner-impactful fields.
@@ -135,6 +136,29 @@ export function StepAutoFillReview({ shop, userId, onBack, onSkipTo, onShopUpdat
     setServices(prev => [...prev, { name: '', price: null, description: null }])
   }
 
+  async function rescan() {
+    setRescanning(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/enrich-shop', { method: 'POST' })
+      if (!res.ok) throw new Error('Re-scan failed — please try again.')
+      const supabase = createClient()
+      const { data, error } = await supabase.from('shops').select('*').eq('owner_id', userId).single()
+      if (error) throw error
+      const s = data as Shop
+      setFullShop(s)
+      setGreeting(s.enrichment?.recommended_first_message ?? '')
+      const seed = s.enrichment?.services && s.enrichment.services.length > 0
+        ? s.enrichment.services.map(svc => ({ name: svc.name, price: svc.price, description: svc.description }))
+        : s.services
+      setServices(seed ?? [])
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Re-scan failed')
+    } finally {
+      setRescanning(false)
+    }
+  }
+
   if (loading) {
     return (
       <div style={card}>
@@ -215,11 +239,22 @@ export function StepAutoFillReview({ shop, userId, onBack, onSkipTo, onShopUpdat
         </Section>
       )}
 
+      {confidence === 'low' && (
+        <div style={{ fontSize: 13, color: '#ca8a04', marginTop: 16, padding: '10px 14px', background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 8 }}>
+          Your AI has limited info about your business. You can improve this in Settings → Knowledge after setup.
+        </div>
+      )}
+
       {error && <p style={errorText}>{error}</p>}
 
-      <button onClick={confirmAndAdvance} disabled={saving} className="step-btn-primary" style={{ marginTop: 16 }}>
-        {saving ? 'Saving…' : 'Looks good, continue →'}
+      <button onClick={confirmAndAdvance} disabled={saving || rescanning} className="step-btn-primary" style={{ marginTop: 16 }}>
+        {saving ? 'Saving…' : confidence === 'low' ? 'Continue with limited info →' : 'Looks good, continue →'}
       </button>
+      {confidence === 'low' && (
+        <button onClick={rescan} disabled={rescanning || saving} style={{ ...addServiceBtn, marginTop: 8, width: '100%', justifyContent: 'center', padding: '10px', display: 'block', textAlign: 'center' }}>
+          {rescanning ? 'Re-scanning…' : 'Try re-scanning'}
+        </button>
+      )}
       <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 10, textAlign: 'center' }}>
         You can edit everything later in Settings.
       </p>
