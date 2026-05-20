@@ -11,7 +11,7 @@ const STAGES = [
   'Almost done. Final checks...',
 ]
 
-export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProps) {
+export function StepProvision({ shop, userId, onNext, onBack, onShopUpdate }: StepProps) {
   const [stageIndex, setStageIndex] = useState(0)
   const [done, setDone] = useState(false)
   const [error, setError] = useState('')
@@ -31,13 +31,13 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
     // Call real provision API
     const provision = async () => {
       try {
-        const extras = JSON.parse(localStorage.getItem('shopdesk_onboarding_extras') || '{}')
+        const industryConfig = shop?.industry_config as { vehicleTypes?: string[] } | null
         const res = await fetch('/api/provision-shop', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
-            vehicleTypes: extras.vehicleTypes || [],
-            ownerName: extras.ownerName || '',
+            vehicleTypes: industryConfig?.vehicleTypes || [],
+            ownerName: shop?.emergency_contact_name || '',
           }),
         })
         const data = await res.json()
@@ -48,7 +48,6 @@ export function StepProvision({ userId, onNext, onBack, onShopUpdate }: StepProp
         }
 
         if (!cancelled) {
-          localStorage.removeItem('shopdesk_onboarding_extras')
           // Re-fetch full shop row so forwarding step gets the real twilio_number
           try {
             const supabase = createClient()

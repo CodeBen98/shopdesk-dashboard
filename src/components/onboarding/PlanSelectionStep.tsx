@@ -42,10 +42,9 @@ const PLANS: {
     popular: true,
     features: [
       'Everything in Starter',
-      'Missed call text-back (coming soon)',
-      'Review request automation (coming soon)',
-      'Morning summary email (coming soon)',
       'Priority support',
+      'Advanced call analytics',
+      'Dedicated onboarding assistance',
     ],
   },
   {
@@ -57,9 +56,9 @@ const PLANS: {
     overage: '$0.40/min overage',
     features: [
       'Everything in Pro',
-      'Multi-location up to 3 shops (coming soon)',
+      'Multi-location up to 3 shops',
       'Dedicated onboarding call',
-      'Custom AI voice (coming soon)',
+      'Custom AI voice',
     ],
   },
 ]

@@ -1,7 +1,8 @@
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
-import { IntakeForm } from '@/components/onboarding/IntakeForm'
+import { OnboardingWizard } from '@/components/onboarding/OnboardingWizard'
 import { isAdmin } from '@/lib/admin'
+import type { Shop } from '@/types'
 
 export default async function OnboardPage() {
   const supabase = await createClient()
@@ -12,7 +13,7 @@ export default async function OnboardPage() {
 
   let { data: shop } = await supabase
     .from('shops')
-    .select('name, phone, industry, twilio_number, vapi_agent_id, onboarding_complete, enrichment')
+    .select('*')
     .eq('owner_id', user.id)
     .single()
 
@@ -28,34 +29,12 @@ export default async function OnboardPage() {
         saturday:  { open: false, from: '09:00', to: '17:00' },
         sunday:    { open: false, from: '09:00', to: '17:00' },
       }})
-      .select('name, phone, industry, twilio_number, vapi_agent_id, onboarding_complete, enrichment')
+      .select('*')
       .single()
     shop = newShop
   }
 
   if (shop?.onboarding_complete) redirect('/dashboard')
 
-  return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'var(--bg)',
-      display: 'flex',
-      flexDirection: 'column',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '40px 20px',
-    }}>
-      <div style={{ marginBottom: 32, textAlign: 'center' }}>
-        <div style={{ display: 'inline-flex', alignItems: 'center', gap: 10 }}>
-          <div style={{ width: 4, height: 30, background: 'var(--accent)', borderRadius: 2 }} />
-          <div style={{ display: 'flex', flexDirection: 'column', lineHeight: 1, gap: 2 }}>
-            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 700, fontSize: '0.95rem', letterSpacing: '0.02em', color: 'var(--text)' }}>SHOP</span>
-            <span style={{ fontFamily: 'var(--font-space)', fontWeight: 500, fontSize: '0.78rem', letterSpacing: '0.04em', color: 'var(--muted)' }}>DESK</span>
-          </div>
-        </div>
-      </div>
-
-      <IntakeForm userId={user.id} existingShop={shop} />
-    </div>
-  )
+  return <OnboardingWizard shop={shop as Shop | null} userId={user.id} />
 }

@@ -19,12 +19,17 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
   const [name, setName] = useState(shop?.name ?? '')
   const [phone, setPhone] = useState(shop?.phone ?? '')
   const [address, setAddress] = useState(shop?.address ?? '')
-  const [ownerName, setOwnerName] = useState('')
+  const [ownerName, setOwnerName] = useState(shop?.emergency_contact_name ?? '')
   const [ownerPhone, setOwnerPhone] = useState(shop?.owner_phone ?? '')
   const [ownerSmsConsent, setOwnerSmsConsent] = useState(shop?.owner_phone_sms_consent ?? false)
   const [email, setEmail] = useState(shop?.email ?? '')
   const [industry, setIndustry] = useState<IndustryId>(normalizeIndustry(shop?.industry))
-  const [vehicleTypes, setVehicleTypes] = useState<string[]>([])
+  const [businessDescription, setBusinessDescription] = useState(
+    (shop?.enrichment as { businessDescription?: string } | null)?.businessDescription ?? ''
+  )
+  const [vehicleTypes, setVehicleTypes] = useState<string[]>(
+    (shop?.industry_config as { vehicleTypes?: string[] } | null)?.vehicleTypes ?? []
+  )
 
   const [errors, setErrors] = useState<{
     name?: string
@@ -71,6 +76,15 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
     const supabase = createClient()
     const smsOptIn = !!normalizedOwnerPhone && ownerSmsConsent
 
+    const industryConfig = {
+      ...(shop?.industry_config ?? {}),
+      ...(industry === 'auto_repair' ? { vehicleTypes } : {}),
+    }
+
+    const enrichmentPatch = industry === 'other' && businessDescription.trim()
+      ? { ...(shop?.enrichment ?? {}), businessDescription: businessDescription.trim() }
+      : shop?.enrichment ?? null
+
     const patch: Record<string, unknown> = {
       name: name.trim(),
       address: address.trim(),
@@ -78,12 +92,11 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       email: email.trim() || null,
       owner_phone: normalizedOwnerPhone || null,
       owner_phone_sms_consent: smsOptIn,
+      emergency_contact_name: ownerName.trim(),
       industry,
-      industry_config: shop?.industry_config ?? {},
+      industry_config: industryConfig,
       onboarding_step: 'auto_fill_choice',
-    }
-    if (!shop?.emergency_contact_name) {
-      patch.emergency_contact_name = ownerName.trim()
+      ...(enrichmentPatch ? { enrichment: enrichmentPatch } : {}),
     }
 
     const { error: saveErr } = await supabase.from('shops').update(patch).eq('owner_id', userId)
@@ -93,11 +106,6 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       return
     }
 
-    localStorage.setItem('shopdesk_onboarding_extras', JSON.stringify({
-      vehicleTypes,
-      ownerName: ownerName.trim(),
-    }))
-
     const shopUpdate: Record<string, unknown> = {
       name: name.trim(),
       address: address.trim(),
@@ -105,11 +113,10 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       email: email.trim() || null,
       owner_phone: normalizedOwnerPhone || null,
       owner_phone_sms_consent: smsOptIn,
+      emergency_contact_name: ownerName.trim(),
       industry,
-      industry_config: shop?.industry_config ?? {},
-    }
-    if (!shop?.emergency_contact_name) {
-      shopUpdate.emergency_contact_name = ownerName.trim()
+      industry_config: industryConfig,
+      ...(enrichmentPatch ? { enrichment: enrichmentPatch } : {}),
     }
     onShopUpdate(shopUpdate)
     setLoading(false)
@@ -196,10 +203,24 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
             )
           })}
         </div>
-        <p style={helperStyle}>This controls the AI&apos;s intake questions, urgency rules, and service suggestions. Auto repair remains the default template.</p>
+        <p style={helperStyle}>This controls the AI&apos;s intake questions, urgency rules, and service suggestions.</p>
         {errors.industry && <p style={errorStyle}>{errors.industry}</p>}
       </div>
 
+      {industry === 'other' && (
+        <div style={field}>
+          <label style={labelStyle}>Describe your business</label>
+          <textarea
+            value={businessDescription}
+            onChange={e => setBusinessDescription(e.target.value)}
+            className="step-input"
+            style={{ resize: 'vertical', lineHeight: 1.5 } as React.CSSProperties}
+            rows={3}
+            placeholder="e.g. Photography studio specializing in weddings and portraits"
+          />
+          <p style={helperStyle}>Your AI will use this to understand your business and answer callers accurately.</p>
+        </div>
+      )}
 
       {/* Owner / Manager Name */}
       <div style={field}>
