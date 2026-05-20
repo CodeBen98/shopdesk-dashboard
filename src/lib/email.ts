@@ -42,7 +42,7 @@ export async function sendProvisioningStarted({
 
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
         <p style="font-size: 12px; color: #9ca3af; line-height: 1.6;">
-          ShopDesk &mdash; AI receptionist for service businesses<br />
+          ShopDesk &mdash; Never miss another call<br />
           <a href="https://shopdesk.site" style="color: #9ca3af;">shopdesk.site</a>
         </p>
       </div>
@@ -107,7 +107,7 @@ export async function sendProvisioningComplete({
 
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
         <p style="font-size: 12px; color: #9ca3af; line-height: 1.6;">
-          ShopDesk &mdash; AI receptionist for service businesses<br />
+          ShopDesk &mdash; Never miss another call<br />
           <a href="https://shopdesk.site" style="color: #9ca3af;">shopdesk.site</a>
         </p>
       </div>
@@ -171,7 +171,7 @@ export async function sendCancellationNotice({
 
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
         <p style="font-size: 12px; color: #9ca3af; line-height: 1.6;">
-          ShopDesk &mdash; AI receptionist for service businesses<br />
+          ShopDesk &mdash; Never miss another call<br />
           <a href="https://shopdesk.site" style="color: #9ca3af;">shopdesk.site</a>
         </p>
       </div>
@@ -226,7 +226,7 @@ export async function sendDeletionConfirmation({
 
         <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 32px 0;" />
         <p style="font-size: 12px; color: #9ca3af; line-height: 1.6;">
-          ShopDesk &mdash; AI receptionist for service businesses<br />
+          ShopDesk &mdash; Never miss another call<br />
           <a href="https://shopdesk.site" style="color: #9ca3af;">shopdesk.site</a>
         </p>
       </div>

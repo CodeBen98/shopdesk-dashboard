@@ -135,7 +135,7 @@ export default function LoginPage() {
             {/* Proof points */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: 16, marginBottom: 48 }}>
               {[
-                '24/7 AI receptionist for your shop',
+                '24/7 AI receptionist for your business',
                 'Books appointments while you sleep',
                 'Set up in under 10 minutes',
               ].map(point => (
@@ -156,7 +156,7 @@ export default function LoginPage() {
 
             {/* Social proof */}
             <p style={{ fontSize: 13, color: 'var(--muted)' }}>
-              The AI receptionist for every service business
+              Never miss another call
             </p>
           </div>
         </div>
