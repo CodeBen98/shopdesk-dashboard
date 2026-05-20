@@ -14,7 +14,7 @@ function extractAreaCode(phone: string): string {
   const digits = phone.replace(/\D/g, '')
   // Strip leading country code (1 for US)
   const local = digits.startsWith('1') && digits.length === 11 ? digits.slice(1) : digits
-  return local.slice(0, 3) || '407' // default to Orlando
+  return local.slice(0, 3) || '407'
 }
 
 // Buy a new Twilio number matching the shop's area code, with geographic fallback
@@ -30,7 +30,6 @@ async function buyTwilioNumber(areaCode: string, shopPhone?: string): Promise<{ 
       return data.available_phone_numbers?.[0]?.phone_number ?? null
     }
 
-    // 1. Exact area code match (e.g. 407 for Orlando)
     let numberToBuy = await searchNumbers({ AreaCode: areaCode })
     if (numberToBuy) console.log(`Found exact area code match: ${areaCode}`)
 
