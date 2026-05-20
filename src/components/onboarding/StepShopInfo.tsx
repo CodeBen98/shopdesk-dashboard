@@ -85,6 +85,9 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       ? { ...(shop?.enrichment ?? {}), businessDescription: businessDescription.trim() }
       : shop?.enrichment ?? null
 
+    const now = new Date().toISOString()
+    const trialEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString()
+
     const patch: Record<string, unknown> = {
       name: name.trim(),
       address: address.trim(),
@@ -97,6 +100,12 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
       industry_config: industryConfig,
       onboarding_step: 'auto_fill_choice',
       ...(enrichmentPatch ? { enrichment: enrichmentPatch } : {}),
+      // Set trial dates once on first save; never overwrite if already set
+      ...(shop?.trial_started_at ? {} : {
+        trial_started_at: now,
+        trial_ends_at: trialEnd,
+        plan_tier: 'pro',
+      }),
     }
 
     const { error: saveErr } = await supabase.from('shops').update(patch).eq('owner_id', userId)
@@ -125,7 +134,15 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
 
   return (
     <div style={card}>
-      <button onClick={onBack} style={backBtn}>← Back</button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+        <span style={{
+          fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.08em',
+          color: 'var(--accent)', background: 'var(--accent-dim)',
+          border: '1px solid rgba(15,118,149,0.2)', borderRadius: 9999, padding: '4px 12px',
+        }}>
+          14-day free trial · no credit card
+        </span>
+      </div>
       <h2 style={title}>Tell us about your business</h2>
       <p style={subtitle}>Your AI uses this to introduce your business and choose the right call-handling playbook.</p>
 
@@ -137,7 +154,7 @@ export function StepShopInfo({ shop, userId, onNext, onBack, onShopUpdate }: Ste
           onChange={e => { setName(e.target.value); setErrors(p => ({ ...p, name: undefined })) }}
           className="step-input"
           style={errors.name ? { borderColor: 'var(--danger)', boxSizing: 'border-box' } : { boxSizing: 'border-box' }}
-          placeholder="e.g. Mike's Auto Repair, ClearFlow Plumbing"
+          placeholder="e.g. Rivera's HVAC, ClearFlow Plumbing, Paws & Groom"
         />
         {errors.name && <p style={errorStyle}>{errors.name}</p>}
       </div>
