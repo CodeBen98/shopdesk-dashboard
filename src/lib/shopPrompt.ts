@@ -84,6 +84,7 @@ type EnrichmentForPrompt = {
     differentiators?: string[]
   }
   owner_reviewed?: boolean
+  businessDescription?: string | null
 }
 
 function sanitizeList(items: string[] | undefined, perItemMax: number, cap: number): string[] {
@@ -168,6 +169,9 @@ export function buildSystemPrompt(shop: {
   const disallowedClaims = industryTemplate.disallowedClaims.map(rule => `- ${rule}`).join('\n')
   const identityAddon = buildIdentityAddon(shop.enrichment ?? undefined)
   const personalitySection = buildPersonalitySection(shop.enrichment ?? undefined)
+  const businessDescription = industry === 'other' && shop.enrichment?.businessDescription
+    ? sanitize(shop.enrichment.businessDescription, 500)
+    : null
   // Transfer is only offered when we have a valid owner phone to transfer to.
   // If emergency_contact can't be normalized, the agent falls back to the
   // callback flow (unchanged legacy behavior).
@@ -230,7 +234,7 @@ Services:
 ${serviceList || '  - General services and maintenance'}
 
 [Industry Playbook]
-Industry: ${industryTemplate.label}
+${businessDescription ? `Business type: ${businessDescription}` : `Industry: ${industryTemplate.label}`}
 ${industryTemplate.promptSection}
 Common questions to expect: ${industryTemplate.commonQuestions.join(', ') || 'hours, services, pricing, availability'}.
 Urgency triggers for this industry: ${urgencyTriggers || 'caller safety, urgent service needs, explicit human request'}.

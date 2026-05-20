@@ -28,6 +28,7 @@ const INDUSTRY_OPTIONS: { id: IndustryId; label: string }[] = [
   { id: 'pet_grooming', label: 'Pet grooming' },
   { id: 'cleaning',     label: 'Cleaning' },
   { id: 'real_estate',  label: 'Real estate' },
+  { id: 'other',        label: 'Other' },
 ]
 
 type ExistingShop = {
@@ -36,6 +37,7 @@ type ExistingShop = {
   industry?: string | null
   twilio_number?: string | null
   vapi_agent_id?: string | null
+  enrichment?: { businessDescription?: string | null } | null
 }
 
 export function IntakeForm({ userId, existingShop }: { userId: string; existingShop: ExistingShop | null }) {
@@ -46,7 +48,8 @@ export function IntakeForm({ userId, existingShop }: { userId: string; existingS
   const [phase, setPhase]       = useState<Phase>(initialPhase)
   const [name, setName]         = useState(existingShop?.name || '')
   const [phone, setPhone]       = useState(existingShop?.phone || '')
-  const [industry, setIndustry] = useState<IndustryId>((existingShop?.industry as IndustryId) || 'auto_repair')
+  const [industry, setIndustry] = useState<IndustryId>((existingShop?.industry as IndustryId) || 'other')
+  const [businessDescription, setBusinessDescription] = useState(existingShop?.enrichment?.businessDescription || '')
   const [shopNumber, setShopNumber] = useState<string | null>(existingShop?.twilio_number || null)
   const [error, setError]       = useState<string | null>(null)
   const [copied, setCopied]     = useState(false)
@@ -85,6 +88,9 @@ export function IntakeForm({ userId, existingShop }: { userId: string; existingS
         hours: DEFAULT_HOURS,
         ai_voice: 'jacqueline',
         onboarding_step: 'provision',
+        ...(industry === 'other' && businessDescription.trim()
+          ? { enrichment: { businessDescription: businessDescription.trim() } }
+          : {}),
       }).eq('owner_id', userId)
 
       if (saveErr) throw new Error(saveErr.message)
@@ -323,6 +329,26 @@ export function IntakeForm({ userId, existingShop }: { userId: string; existingS
             ))}
           </select>
         </div>
+
+        {industry === 'other' && (
+          <div>
+            <label style={labelStyle}>Describe your business</label>
+            <textarea
+              value={businessDescription}
+              onChange={e => setBusinessDescription(e.target.value)}
+              placeholder="e.g. Photography studio specializing in portraits and events"
+              rows={3}
+              style={{
+                ...inputStyle,
+                resize: 'vertical',
+                lineHeight: 1.5,
+              }}
+            />
+            <p style={{ fontSize: 12, color: 'var(--muted)', marginTop: 5 }}>
+              Your AI receptionist will use this to answer callers accurately.
+            </p>
+          </div>
+        )}
 
         {error && (
           <div style={{

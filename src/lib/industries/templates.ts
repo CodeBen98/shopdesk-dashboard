@@ -9,6 +9,7 @@ export type IndustryId =
   | 'pet_grooming'
   | 'cleaning'
   | 'real_estate'
+  | 'other'
 
 export type IndustryTemplate = {
   id: IndustryId
@@ -28,7 +29,7 @@ export type IndustryTemplate = {
   promptSection: string
 }
 
-export const DEFAULT_INDUSTRY: IndustryId = 'auto_repair'
+export const DEFAULT_INDUSTRY: IndustryId = 'other'
 
 export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
   auto_repair: {
@@ -211,11 +212,28 @@ export const INDUSTRY_TEMPLATES: Record<IndustryId, IndustryTemplate> = {
     disallowedClaims: ['Do not give legal, lending, or fair-housing advice. Escalate sensitive questions.'],
     promptSection: 'Capture caller intent, target property or area, timeline, and best callback details. Escalate legal, lending, or compliance questions.',
   },
+  other: {
+    id: 'other',
+    label: 'Service business',
+    shortDescription: 'Any service business not listed above.',
+    serviceExamples: [],
+    serviceSuggestions: [],
+    intakeFields: [
+      { key: 'name', label: 'Customer name', required: true },
+      { key: 'phone', label: 'Phone number', required: true },
+      { key: 'request', label: 'How can we help you?', required: true },
+      { key: 'preferred_time', label: 'Preferred time', required: false },
+    ],
+    urgencyTriggers: ['caller safety', 'urgent situation', 'explicit request for human'],
+    commonQuestions: ['hours', 'services offered', 'pricing', 'availability'],
+    disallowedClaims: ['Do not invent prices, availability, or service guarantees.'],
+    promptSection: 'Adapt to whatever this business does. Capture the caller\'s name, phone number, and what they need. Ask clarifying questions as needed. One question at a time.',
+  },
 }
 
 export function normalizeIndustry(value: string | null | undefined): IndustryId {
   if (value && value in INDUSTRY_TEMPLATES) return value as IndustryId
-  return DEFAULT_INDUSTRY
+  return 'other'
 }
 
 export function getIndustryTemplate(value: string | null | undefined): IndustryTemplate {

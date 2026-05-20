@@ -12,7 +12,7 @@ export default async function OnboardPage() {
 
   let { data: shop } = await supabase
     .from('shops')
-    .select('name, phone, industry, twilio_number, vapi_agent_id, onboarding_complete')
+    .select('name, phone, industry, twilio_number, vapi_agent_id, onboarding_complete, enrichment')
     .eq('owner_id', user.id)
     .single()
 
@@ -28,7 +28,7 @@ export default async function OnboardPage() {
         saturday:  { open: false, from: '09:00', to: '17:00' },
         sunday:    { open: false, from: '09:00', to: '17:00' },
       }})
-      .select('name, phone, industry, twilio_number, vapi_agent_id, onboarding_complete')
+      .select('name, phone, industry, twilio_number, vapi_agent_id, onboarding_complete, enrichment')
       .single()
     shop = newShop
   }
