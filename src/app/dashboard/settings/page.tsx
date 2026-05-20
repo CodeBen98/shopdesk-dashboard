@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
 import { CancelServiceButton } from '@/components/CancelServiceButton'
-import { getIndustryTemplate } from '@/lib/industries/templates'
+import { getIndustryTemplate, INDUSTRY_TEMPLATES, normalizeIndustry, type IndustryId } from '@/lib/industries/templates'
 import type { Shop, ShopHours, Service } from '@/types'
 
 type Tab = 'shop' | 'hours' | 'services' | 'ai' | 'phone' | 'integrations'
@@ -124,6 +124,7 @@ export default function SettingsPage() {
   })
 
   // Services
+  const [industry, setIndustry] = useState<IndustryId>('other')
   const [services, setServices] = useState<Service[]>([])
 
   // AI & Voice
@@ -164,6 +165,7 @@ export default function SettingsPage() {
         setOwnerPhone(data.owner_phone ?? '')
         setOwnerPhoneSmsConsent(data.owner_phone_sms_consent ?? false)
         setHours(data.hours ?? {})
+        setIndustry(normalizeIndustry(data.industry))
         setServices(data.services ?? [])
         setVoice(data.ai_voice ?? 'patricia')
         setEmergencyContact(data.emergency_contact ?? '')
@@ -533,38 +535,65 @@ export default function SettingsPage() {
               <p className="section-desc">Your AI mentions these when callers ask what you offer.</p>
             </div>
 
-            {/* Quick-add chips */}
-            <div style={{ marginBottom: 16 }}>
-              <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>
-                Quick Add
-              </p>
-              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
-                {getIndustryTemplate(shop?.industry).serviceSuggestions.map(s => {
-                  const added = services.some(sv => sv.name === s)
-                  return (
-                    <button
-                      key={s}
-                      onClick={() => !added && setServices(prev => [...prev, { name: s, price: '', description: '' }])}
-                      className={added ? 'quick-add-chip quick-add-chip--added' : 'quick-add-chip'}
-                      style={{
-                        padding: '5px 12px',
-                        borderRadius: 9999,
-                        border: `1px solid ${added ? 'var(--accent)' : 'var(--border)'}`,
-                        background: added ? 'var(--accent-dim)' : 'transparent',
-                        color: added ? 'var(--accent)' : 'var(--text-mid)',
-                        fontSize: 12,
-                        cursor: added ? 'default' : 'pointer',
-                        fontWeight: added ? 600 : 400,
-                        transition: 'border-color 0.15s, background 0.15s, color 0.15s',
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      {added ? '✓ ' : '+ '}{s}
-                    </button>
-                  )
-                })}
-              </div>
+            {/* Industry selector */}
+            <div style={{ marginBottom: 20 }}>
+              <label style={labelStyle}>Business Type</label>
+              <select
+                value={industry}
+                onChange={e => setIndustry(e.target.value as IndustryId)}
+                style={{
+                  ...inputStyle(focused === 'industry'),
+                  appearance: 'none',
+                  backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2 4l4 4 4-4' stroke='%23888' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E")`,
+                  backgroundRepeat: 'no-repeat',
+                  backgroundPosition: 'right 12px center',
+                  paddingRight: 32,
+                  cursor: 'pointer',
+                }}
+                onFocus={() => setFocused('industry')}
+                onBlur={() => setFocused(null)}
+              >
+                {Object.values(INDUSTRY_TEMPLATES).map(t => (
+                  <option key={t.id} value={t.id}>{t.label}</option>
+                ))}
+              </select>
             </div>
+
+            {/* Quick-add chips */}
+            {getIndustryTemplate(industry).serviceSuggestions.length > 0 && (
+              <div style={{ marginBottom: 16 }}>
+                <p style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.06em', color: 'var(--muted)', marginBottom: 8 }}>
+                  Quick Add
+                </p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+                  {getIndustryTemplate(industry).serviceSuggestions.map(s => {
+                    const added = services.some(sv => sv.name === s)
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => !added && setServices(prev => [...prev, { name: s, price: '', description: '' }])}
+                        className={added ? 'quick-add-chip quick-add-chip--added' : 'quick-add-chip'}
+                        style={{
+                          padding: '5px 12px',
+                          borderRadius: 9999,
+                          border: `1px solid ${added ? 'var(--accent)' : 'var(--border)'}`,
+                          background: added ? 'var(--accent-dim)' : 'transparent',
+                          color: added ? 'var(--accent)' : 'var(--text-mid)',
+                          fontSize: 12,
+                          cursor: added ? 'default' : 'pointer',
+                          fontWeight: added ? 600 : 400,
+                          transition: 'border-color 0.15s, background 0.15s, color 0.15s',
+                          fontFamily: 'inherit',
+                        }}
+                      >
+                        {added ? '✓ ' : '+ '}{s}
+                      </button>
+                    )
+                  })}
+                </div>
+              </div>
+            )}
+
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 8 }}>
               {services.map((svc, i) => (
@@ -685,7 +714,7 @@ export default function SettingsPage() {
             </button>
 
             <div style={{ marginTop: 20, display: 'flex', justifyContent: 'flex-end' }}>
-              <SaveButton onClick={() => save({ services }, true)} status={saveStatus} />
+              <SaveButton onClick={() => save({ industry, services }, true)} status={saveStatus} />
             </div>
           </div>
         )}

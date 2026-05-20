@@ -45,22 +45,12 @@ export default async function DashboardPage() {
     .eq('owner_id', user.id)
     .single()
 
-  let shop = existingShop
+  // Send new (or incomplete) accounts through the wizard.
+  // Exception: manually provisioned accounts that have a vapi_agent_id skip the wizard gate.
+  if (!existingShop?.onboarding_complete && !existingShop?.vapi_agent_id) redirect('/onboard')
+  if (!existingShop) redirect('/auth/login')
 
-  if (!shop) {
-    const { data: createdShop } = await supabase.from('shops').insert({ owner_id: user.id, name: '', hours: {
-      monday:    { open: true,  from: '09:00', to: '17:00' },
-      tuesday:   { open: true,  from: '09:00', to: '17:00' },
-      wednesday: { open: true,  from: '09:00', to: '17:00' },
-      thursday:  { open: true,  from: '09:00', to: '17:00' },
-      friday:    { open: true,  from: '09:00', to: '17:00' },
-      saturday:  { open: false, from: '09:00', to: '17:00' },
-      sunday:    { open: false, from: '09:00', to: '17:00' },
-    } }).select('*').single()
-    shop = createdShop
-  }
-
-  if (!shop) redirect('/auth/login')
+  const shop = existingShop
 
   const [callsResult, bookingsResult, missedResult, recentCallsResult, upcomingResult, lastCallResult] = await Promise.all([
     supabase.from('calls').select('id', { count: 'exact' }).eq('shop_id', shop.id),
