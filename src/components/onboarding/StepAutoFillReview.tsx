@@ -176,6 +176,11 @@ export function StepAutoFillReview({ shop, userId, onBack, onSkipTo, onShopUpdat
         We built this from what we found online. Check it, edit anything that&apos;s off, then continue. You can always change it later.
       </p>
 
+      {enrichment?.website_scraped === false && (
+        <div style={{ fontSize: 13, color: '#ca8a04', padding: '10px 14px', background: 'rgba(234,179,8,0.08)', border: '1px solid rgba(234,179,8,0.2)', borderRadius: 8, marginBottom: 16 }}>
+          <strong style={{ fontWeight: 700 }}>Website couldn&apos;t be read.</strong> Your site may be protected — the info below came from Google only. Review carefully and add your services manually.
+        </div>
+      )}
       {confidence && <ConfidenceBadge level={confidence} notes={enrichment?.confidence.notes} />}
 
       <Section label="Shop basics">

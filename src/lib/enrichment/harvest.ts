@@ -100,10 +100,39 @@ async function harvestPlaces(input: HarvestInput): Promise<PlaceRecord | null> {
   }
 }
 
-async function harvestWebsite(url: string): Promise<{ url: string; markdown: string } | null> {
-  if (!url) return null
-  // Jina AI Reader — https://jina.ai/reader. Free tier, no key required for
-  // low volume. Converts any URL to clean markdown and handles JS-heavy sites.
+async function harvestWebsiteViaFirecrawl(url: string): Promise<{ url: string; markdown: string } | null> {
+  const apiKey = process.env.FIRECRAWL_API_KEY
+  if (!apiKey) return null
+  const start = Date.now()
+  try {
+    const res = await fetchWithTimeout('https://api.firecrawl.dev/v1/scrape', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url, formats: ['markdown'], onlyMainContent: true }),
+    }, 25000)
+    const dur = Date.now() - start
+    if (!res.ok) {
+      console.error(`[enrichment.harvest] firecrawl ${res.status} (${dur}ms)`)
+      return null
+    }
+    const data = await res.json() as { success?: boolean; data?: { markdown?: string } }
+    const markdown = data.data?.markdown ?? ''
+    if (!data.success || markdown.length < 100) {
+      console.warn(`[enrichment.harvest] firecrawl sparse/empty (${dur}ms) len=${markdown.length}`)
+      return null
+    }
+    console.log(`[enrichment.harvest] firecrawl ok (${dur}ms) len=${markdown.length}`)
+    return { url, markdown: markdown.slice(0, 80_000) }
+  } catch (err) {
+    console.error('[enrichment.harvest] firecrawl error:', err)
+    return null
+  }
+}
+
+async function harvestWebsiteViaJina(url: string): Promise<{ url: string; markdown: string } | null> {
   const reader = `https://r.jina.ai/${url}`
   const start = Date.now()
   try {
@@ -115,18 +144,29 @@ async function harvestWebsite(url: string): Promise<{ url: string; markdown: str
     }, 20000)
     const dur = Date.now() - start
     if (!res.ok) {
-      console.error(`[enrichment.harvest] website ${res.status} (${dur}ms) url=${url}`)
+      console.error(`[enrichment.harvest] jina ${res.status} (${dur}ms) url=${url}`)
       return null
     }
     const markdown = await res.text()
-    console.log(`[enrichment.harvest] website ok (${dur}ms) len=${markdown.length}`)
-    // Cap size so we never blow up the LLM context. Most small-shop sites
-    // produce well under 50KB of markdown; cap protects the edge case.
+    console.log(`[enrichment.harvest] jina ok (${dur}ms) len=${markdown.length}`)
     return { url, markdown: markdown.slice(0, 80_000) }
   } catch (err) {
-    console.error('[enrichment.harvest] website error:', err)
+    console.error('[enrichment.harvest] jina error:', err)
     return null
   }
+}
+
+async function harvestWebsite(url: string): Promise<{ url: string; markdown: string } | null> {
+  if (!url) return null
+  // Firecrawl uses a real headless browser (Fire-Engine) and handles Cloudflare
+  // bot protection — the primary failure mode of Jina Reader. Falls back to Jina
+  // when FIRECRAWL_API_KEY is not set or Firecrawl itself fails.
+  const firecrawl = await harvestWebsiteViaFirecrawl(url)
+  if (firecrawl) return firecrawl
+  if (process.env.FIRECRAWL_API_KEY) {
+    console.warn('[enrichment.harvest] firecrawl failed, falling back to jina')
+  }
+  return harvestWebsiteViaJina(url)
 }
 
 async function harvestSerpApiOwnerReplies(placeId: string | undefined): Promise<SerpApiOwnerReply[] | null> {

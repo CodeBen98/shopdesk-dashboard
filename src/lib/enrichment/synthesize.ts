@@ -146,6 +146,20 @@ function buildUserMessage(raw: EnrichmentRaw, options?: { industry?: IndustryId 
   } else {
     parts.push('(none available — voice must come from website only)')
   }
+  // Explicit sparse-data gate — when all primary sources are missing, Claude
+  // must not fill gaps with plausible-sounding inventions. Rule 4 says so but
+  // this reinforcement prevents the model from "helping" with generic content.
+  const hasWebsiteContent = !!website?.markdown
+  const hasPlacesDescription = !!(places as Record<string, unknown> | undefined)?.editorialSummary
+  const hasOwnerReplies = !!(ownerReplies && ownerReplies.length > 0)
+  if (!hasWebsiteContent && !hasPlacesDescription && !hasOwnerReplies) {
+    parts.push('')
+    parts.push('## CRITICAL — source data is completely sparse')
+    parts.push('Website: not available. Google editorial summary: not available. Owner reply signals: none.')
+    parts.push('Per Rule 4: you MUST return empty arrays for services, voice signals, and identity fields.')
+    parts.push('Set confidence.overall to "low". Do NOT generate any plausible-sounding services, tone descriptions, or phrases — the owner will complete the profile manually after setup.')
+  }
+
   parts.push('')
   parts.push('Produce the structured synthesis now.')
   return parts.join('\n')

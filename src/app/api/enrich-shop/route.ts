@@ -128,6 +128,7 @@ export async function POST(request: Request) {
       synthesized_at: new Date().toISOString(),
       owner_reviewed: false,
       owner_reviewed_at: null,
+      website_scraped: Boolean(raw.website),
       ...(existingDescription ? { businessDescription: existingDescription } : {}),
     }
     const { error: enrichError } = await supabase

@@ -73,6 +73,7 @@ export type Enrichment = {
   synthesized_at: string
   owner_reviewed: boolean
   owner_reviewed_at: string | null
+  website_scraped?: boolean   // true = scrape succeeded; false = blocked/failed
 }
 
 export type ShopHours = {
