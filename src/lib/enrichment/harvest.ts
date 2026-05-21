@@ -5,6 +5,7 @@
 // See shopdesk/design-docs/2026-04-23-enrichment-engine.md.
 
 import type { EnrichmentRaw } from '@/types'
+import { harvestGBP, type RefreshedTokens } from './harvest-gbp'
 
 const PLACES_FIELD_MASK = [
   'places.id',
@@ -26,6 +27,17 @@ type HarvestInput = {
   shopName: string
   shopAddress?: string
   websiteUrl?: string
+  gbp?: {
+    accessToken: string | null
+    refreshToken: string
+    expiry: string | null
+    locationName?: string | null
+  }
+}
+
+export type HarvestResult = {
+  raw: EnrichmentRaw
+  gbpRefreshed: RefreshedTokens | null
 }
 
 type PlaceRecord = {
@@ -206,19 +218,30 @@ async function harvestSerpApiOwnerReplies(placeId: string | undefined): Promise<
   }
 }
 
-export async function harvestShop(input: HarvestInput): Promise<EnrichmentRaw> {
+export async function harvestShop(input: HarvestInput): Promise<HarvestResult> {
+  // GBP OAuth runs first — it's authoritative and free. If connected, we still
+  // run Places + scraping in parallel so the synthesis has multiple signals.
+  const gbpPromise = input.gbp
+    ? harvestGBP(input.gbp)
+    : Promise.resolve({ data: null, gbpRefreshed: null })
+
   const places = await harvestPlaces(input)
-  // Prefer the directly-provided URL; fall back to whatever Google Places discovered.
   const websiteUri = input.websiteUrl || (places?.websiteUri as string | undefined)
   const placeId = typeof places?.id === 'string' ? places.id : undefined
-  const [website, serpapi] = await Promise.all([
+
+  const [website, serpapi, gbpResult] = await Promise.all([
     websiteUri ? harvestWebsite(websiteUri) : Promise.resolve(null),
     harvestSerpApiOwnerReplies(placeId),
+    gbpPromise,
   ])
-  return {
+
+  const raw: EnrichmentRaw = {
     places: places ?? undefined,
     website: website ?? null,
     serpapi: serpapi ?? null,
+    gbp: gbpResult.data ?? null,
     harvested_at: new Date().toISOString(),
   }
+
+  return { raw, gbpRefreshed: 'refreshed' in gbpResult ? gbpResult.refreshed : null }
 }

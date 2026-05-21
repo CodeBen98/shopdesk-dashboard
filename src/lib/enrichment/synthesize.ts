@@ -121,10 +121,30 @@ function buildUserMessage(raw: EnrichmentRaw, options?: { industry?: IndustryId 
   const places = raw.places as Record<string, unknown> | undefined
   const website = raw.website
   const ownerReplies = Array.isArray(raw.serpapi) ? raw.serpapi : null
+  const gbp = raw.gbp ?? null
 
   const parts: string[] = []
   parts.push(`Harvested data for this business. Selected industry template: ${industry.label}.`)
   parts.push(`Industry handling guidance: ${industry.promptSection}`)
+
+  // GBP OAuth data is the highest-quality source — owner-written, owner-verified.
+  // Treat it as ground truth and prioritize it over scraped website content.
+  if (gbp) {
+    parts.push('')
+    parts.push('--- Google Business Profile (AUTHORITATIVE — owner-verified via OAuth) ---')
+    parts.push('This data comes directly from the owner\'s Google Business Profile. Prioritize it over website content for all conflicting fields.')
+    if (gbp.title) parts.push(`Business name: ${gbp.title}`)
+    if (gbp.phone) parts.push(`Phone: ${gbp.phone}`)
+    if (gbp.address) parts.push(`Address: ${gbp.address}`)
+    if (gbp.websiteUri) parts.push(`Website: ${gbp.websiteUri}`)
+    if (gbp.categories?.length) parts.push(`Categories: ${gbp.categories.join(', ')}`)
+    if (gbp.description) {
+      parts.push('')
+      parts.push('Owner-written business description:')
+      parts.push(gbp.description)
+    }
+  }
+
   parts.push('')
   parts.push('--- Google Places ---')
   parts.push(places ? JSON.stringify(places, null, 2) : '(not available)')
@@ -152,7 +172,8 @@ function buildUserMessage(raw: EnrichmentRaw, options?: { industry?: IndustryId 
   const hasWebsiteContent = !!website?.markdown
   const hasPlacesDescription = !!(places as Record<string, unknown> | undefined)?.editorialSummary
   const hasOwnerReplies = !!(ownerReplies && ownerReplies.length > 0)
-  if (!hasWebsiteContent && !hasPlacesDescription && !hasOwnerReplies) {
+  const hasGBP = !!(gbp?.description || gbp?.categories?.length)
+  if (!hasWebsiteContent && !hasPlacesDescription && !hasOwnerReplies && !hasGBP) {
     parts.push('')
     parts.push('## CRITICAL — source data is completely sparse')
     parts.push('Website: not available. Google editorial summary: not available. Owner reply signals: none.')

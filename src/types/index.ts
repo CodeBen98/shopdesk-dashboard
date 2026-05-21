@@ -39,13 +39,29 @@ export type Shop = {
   website_url: string | null
   knowledge_flags: Record<string, boolean> | null
   farewell_message: string | null
+  gbp_location_name: string | null
+  gbp_refresh_token: string | null
+  gbp_access_token: string | null
+  gbp_token_expiry: string | null
   created_at: string
+}
+
+export type GBPLocationData = {
+  locationName: string
+  title?: string
+  phone?: string
+  websiteUri?: string
+  description?: string
+  categories?: string[]
+  hours?: Record<string, { open: boolean; from: string; to: string }>
+  address?: string
 }
 
 export type EnrichmentRaw = {
   places?: unknown             // Google Places API v1 raw response
   website?: { url: string; markdown: string } | null
   serpapi?: unknown | null     // Reserved for v1.1 (owner replies, GBP services)
+  gbp?: GBPLocationData | null // Google Business Profile OAuth (authoritative)
   harvested_at: string
 }
 

@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
   const { data: shop, error: shopError } = await supabase
     .from('shops')
-    .select('id, name, address, industry, website_url, enrichment')
+    .select('id, name, address, industry, website_url, enrichment, gbp_location_name, gbp_access_token, gbp_refresh_token, gbp_token_expiry')
     .eq('owner_id', user.id)
     .single()
 
@@ -71,13 +71,37 @@ export async function POST(request: Request) {
   const { searchParams } = new URL(request.url)
   const skipSynthesis = searchParams.get('skip_synthesis') === '1'
 
+  const gbpShop = shop as {
+    gbp_location_name?: string | null
+    gbp_access_token?: string | null
+    gbp_refresh_token?: string | null
+    gbp_token_expiry?: string | null
+  }
+  const gbpInput = gbpShop.gbp_refresh_token
+    ? {
+        accessToken: gbpShop.gbp_access_token ?? null,
+        refreshToken: gbpShop.gbp_refresh_token,
+        expiry: gbpShop.gbp_token_expiry ?? null,
+        locationName: gbpShop.gbp_location_name ?? null,
+      }
+    : undefined
+
   const harvestStart = Date.now()
-  const raw = await harvestShop({
+  const { raw, gbpRefreshed } = await harvestShop({
     shopName: overrideName ?? shop.name,
     shopAddress: overrideAddress ?? shop.address,
     websiteUrl: (shop as { website_url?: string | null }).website_url ?? undefined,
+    gbp: gbpInput,
   })
   const harvestMs = Date.now() - harvestStart
+
+  // Persist refreshed GBP tokens so the next harvest doesn't need to re-authenticate.
+  if (gbpRefreshed) {
+    await supabase.from('shops').update({
+      gbp_access_token: gbpRefreshed.accessToken,
+      gbp_token_expiry: gbpRefreshed.expiry,
+    }).eq('id', shop.id)
+  }
 
   // Persist raw first so synthesis failures don't lose what we paid to fetch.
   const { error: rawError } = await supabase
@@ -93,6 +117,7 @@ export async function POST(request: Request) {
     places: Boolean(raw.places),
     website: Boolean(raw.website),
     serpapi: Boolean(raw.serpapi),
+    gbp: Boolean(raw.gbp),
   }
 
   if (skipSynthesis) {
