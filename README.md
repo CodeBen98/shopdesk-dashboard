@@ -4,7 +4,7 @@
 
 ### An AI phone receptionist for local businesses
 
-ShopDesk answers every call 24/7, answers questions about the business, and books appointments straight onto the owner's calendar, so small shops never miss a customer again.
+ShopDesk picks up every call 24/7, answers questions about the business, and books appointments straight onto the owner's calendar, so small businesses never miss a customer again.
 
 ![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB)
@@ -43,8 +43,8 @@ Auto shops, HVAC companies, plumbers and salons lose jobs every day to missed ca
 A shop owner signs up, and in a few minutes ShopDesk:
 
 1. **Learns the business** from its website or Google Business Profile (hours, services, prices, tone of voice).
-2. **Gives it a local phone number** and an AI receptionist trained on that profile.
-3. **Answers calls** like a front-desk employee: answers questions, captures the caller's details, books appointments, and transfers real emergencies to the owner.
+2. **Gives it a local phone number** and an AI receptionist set up from that profile.
+3. **Handles calls** like a front-desk employee: answers questions, captures the caller's details, books appointments, and transfers urgent calls to the owner.
 4. **Shows everything in a dashboard**: every call and its outcome, bookings, and a customer list.
 
 ## Architecture
@@ -69,7 +69,7 @@ flowchart LR
 
 ```mermaid
 flowchart LR
-    A[Sign up] --> B[Paste website or<br/>connect Google Business]
+    A[Sign up] --> B[Paste website or connect<br/>Google Business Profile]
     B --> C[Claude builds the<br/>business profile]
     C --> D[Owner reviews hours,<br/>services and voice]
     D --> E[Provision: local Twilio number<br/>+ Vapi assistant]
@@ -86,10 +86,10 @@ flowchart LR
 | A receptionist that sounds like their shop | System prompt generated from the profile, industry template and chosen voice |
 | Appointments land on their calendar | Booking tool calls to `shopdesk-booking` → Google Calendar |
 | Emergencies reach them right away | Transfer-call rules during business hours |
-| Call log, bookings and customers | Supabase tables populated from signed Vapi webhooks |
+| Call log, bookings and customers | Supabase tables filled by signed webhooks from Vapi and the booking service |
 | Works for their industry | Templates for 10+ verticals (intake questions, urgency triggers, "never claim" rules) |
 
-An **admin panel** handles provisioning, pausing, cancelling and deleting shops, with transactional emails sent through Resend.
+An **admin panel** handles provisioning, pausing, canceling and deleting shops, with transactional emails sent through Resend.
 
 ## Engineering highlights
 
@@ -97,7 +97,7 @@ An **admin panel** handles provisioning, pausing, cancelling and deleting shops,
 - **Prompt-injection hardening.** All owner-supplied text is length-limited and stripped of injection patterns before it reaches the voice agent's prompt (covered by tests).
 - **Structured AI output.** Business-profile synthesis uses Claude with a Zod schema, so malformed model output never reaches the database.
 - **Multi-tenant isolation.** Every call, booking and message is scoped to the shop that owns the assistant, with no global fallbacks.
-- **Quality gates.** TypeScript strict mode, ESLint, unit tests and a CI pipeline that builds the app on every push.
+- **Quality gates.** TypeScript strict mode, ESLint, unit tests and a CI pipeline that builds the app on every push to `main` and every pull request.
 
 ## Tech stack
 
@@ -158,7 +158,7 @@ Create the database by running `supabase/schema.sql`, then the files in `supabas
 | `npm run typecheck` | TypeScript |
 | `npm test` | Unit tests (Vitest) |
 
-GitHub Actions runs lint, typecheck, tests and a production build on every push and pull request.
+GitHub Actions runs lint, typecheck, tests and a production build on every push to `main` and every pull request.
 
 ---
 
