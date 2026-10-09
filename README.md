@@ -2,7 +2,7 @@
 
 # ShopDesk
 
-### An AI phone receptionist for local service businesses
+### An AI phone receptionist for local businesses
 
 ShopDesk answers every call 24/7, answers questions about the business, and books appointments straight onto the owner's calendar, so small shops never miss a customer again.
 
