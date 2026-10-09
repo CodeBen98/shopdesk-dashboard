@@ -18,7 +18,7 @@ Shop owner ──► ShopDesk Dashboard (this app, Next.js) ──────�
 1. **Onboarding wizard.** The owner pastes their website or connects their **Google Business Profile**. ShopDesk scrapes and summarises the business (hours, services, tone of voice) with Claude into a structured profile the owner reviews and edits.
 2. **Provisioning.** ShopDesk buys a local **Twilio** number (matching the shop's area code), creates a **Vapi** voice assistant with a system prompt generated from the shop profile and industry template, and wires up the booking tools.
 3. **Live calls.** The AI receptionist answers, captures caller details, books appointments through the booking service, and can transfer emergencies to the owner.
-4. **Dashboard.** Call log with summaries, bookings, customers and settings. Changes to the profile re-sync to the voice agent.
+4. **Dashboard.** Call log with outcomes, bookings, customers and settings. Saving profile changes re-provisions the voice agent so it stays in sync.
 
 ## Features
 
