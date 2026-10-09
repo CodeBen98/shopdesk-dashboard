@@ -62,7 +62,7 @@ export function WelcomeStep({ userId, onNext, onShopUpdate }: StepProps) {
           maxWidth: 380,
           margin: '0 auto',
         }}>
-          We're setting everything up. You'll be live and answering calls in about 8 minutes.
+          We&apos;re setting everything up. You&apos;ll be live and answering calls in about 8 minutes.
         </p>
       </div>
 

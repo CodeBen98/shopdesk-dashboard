@@ -212,13 +212,6 @@ const subtitleStyle: React.CSSProperties = {
   lineHeight: 1.6,
   marginBottom: 28,
 }
-const cardsRow: React.CSSProperties = {
-  display: 'flex',
-  gap: 12,
-  marginBottom: 24,
-  flexWrap: 'wrap',
-  alignItems: 'stretch',
-}
 const optionCard: React.CSSProperties = {
   flex: 1,
   borderRadius: 12,
