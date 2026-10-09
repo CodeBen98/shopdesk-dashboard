@@ -4,7 +4,8 @@ import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
 
-const DEMO_NUMBER = '(407) 555-0123'
+// Demo line callers can ring to hear the AI receptionist (set in the deployment environment).
+const DEMO_NUMBER = process.env.NEXT_PUBLIC_DEMO_NUMBER || '(407) 555-0123'
 
 export function StepTestCall({ shop, userId, onNext, onBack }: StepProps) {
   const displayNumber = shop?.twilio_number ?? DEMO_NUMBER
