@@ -1,103 +1,169 @@
-# ShopDesk Dashboard
+<div align="center">
 
-ShopDesk gives local service businesses (auto repair, HVAC, plumbing, salons and more) an **AI phone receptionist** that answers calls 24/7, answers questions about the business, and books appointments. This repo is the **owner-facing web app**: sign-up, guided onboarding, provisioning of the AI voice agent and phone number, and a dashboard for calls, bookings and customers.
+# ShopDesk
 
-The booking backend the voice agent calls during a live conversation lives in [`shopdesk-booking`](../shopdesk-booking).
+### An AI phone receptionist for local service businesses
 
-## How it works
+ShopDesk answers every call 24/7, answers questions about the business, and books appointments straight onto the owner's calendar, so small shops never miss a customer again.
 
+![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=nextdotjs&logoColor=white)
+![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB)
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS_4-06B6D4?logo=tailwindcss&logoColor=white)
+![Supabase](https://img.shields.io/badge/Supabase-3FCF8E?logo=supabase&logoColor=white)
+![Anthropic Claude](https://img.shields.io/badge/Claude-D97757?logo=anthropic&logoColor=white)
+![Twilio](https://img.shields.io/badge/Twilio-F22F46?logo=twilio&logoColor=white)
+![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
+
+**This repo: the owner dashboard** · Booking backend: [`shopdesk-booking`](https://github.com/CodeBen98/shopdesk-booking)
+
+</div>
+
+---
+
+## Contents
+
+- [The problem](#the-problem)
+- [What ShopDesk does](#what-shopdesk-does)
+- [Architecture](#architecture)
+- [Onboarding flow](#onboarding-flow)
+- [Features](#features)
+- [Engineering highlights](#engineering-highlights)
+- [Tech stack](#tech-stack)
+- [Project structure](#project-structure)
+- [Running locally](#running-locally)
+- [Testing and CI](#testing-and-ci)
+
+## The problem
+
+Auto shops, HVAC companies, plumbers and salons lose jobs every day to missed calls: the owner is under a car, on a roof, or with a client. Voicemail doesn't convert, and a human answering service is expensive.
+
+## What ShopDesk does
+
+A shop owner signs up, and in a few minutes ShopDesk:
+
+1. **Learns the business** from its website or Google Business Profile (hours, services, prices, tone of voice).
+2. **Gives it a local phone number** and an AI receptionist trained on that profile.
+3. **Answers calls** like a front-desk employee: answers questions, captures the caller's details, books appointments, and transfers real emergencies to the owner.
+4. **Shows everything in a dashboard**: every call and its outcome, bookings, and a customer list.
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Caller((Caller)) -->|phone call| Twilio[Twilio number]
+    Twilio --> Vapi[Vapi voice agent<br/>prompt built per shop]
+    Vapi -->|book tool call, signed| Booking[shopdesk-booking<br/>FastAPI]
+    Booking --> GCal[Google Calendar]
+    Booking --> SMS[SMS and email<br/>confirmations]
+    Booking --> DB[(Supabase<br/>Postgres + RLS)]
+    Vapi -->|call events, signed webhook| API[Dashboard API routes]
+    API --> DB
+    Owner((Shop owner)) --> Dash[ShopDesk Dashboard<br/>Next.js on Vercel]
+    Dash --> DB
+    Dash -->|provision| Vapi
+    Dash -->|buy local number| Twilio
 ```
-Caller ──► Twilio number ──► Vapi voice agent (AI receptionist)
-                                   │  prompt built from the shop's profile
-                                   ├──► shopdesk-booking (FastAPI) ──► Google Calendar, SMS, email
-                                   └──► /api/vapi-webhook ──► Supabase (calls, bookings, customers)
-                                                                 ▲
-Shop owner ──► ShopDesk Dashboard (this app, Next.js) ───────────┘
-```
 
-1. **Onboarding wizard.** The owner pastes their website or connects their **Google Business Profile**. ShopDesk scrapes and summarises the business (hours, services, tone of voice) with Claude into a structured profile the owner reviews and edits.
-2. **Provisioning.** ShopDesk buys a local **Twilio** number (matching the shop's area code), creates a **Vapi** voice assistant with a system prompt generated from the shop profile and industry template, and wires up the booking tools.
-3. **Live calls.** The AI receptionist answers, captures caller details, books appointments through the booking service, and can transfer emergencies to the owner.
-4. **Dashboard.** Call log with outcomes, bookings, customers and settings. Saving profile changes re-provisions the voice agent so it stays in sync.
+## Onboarding flow
+
+```mermaid
+flowchart LR
+    A[Sign up] --> B[Paste website or<br/>connect Google Business]
+    B --> C[Claude builds the<br/>business profile]
+    C --> D[Owner reviews hours,<br/>services and voice]
+    D --> E[Provision: local Twilio number<br/>+ Vapi assistant]
+    E --> F[Test call]
+    F --> G[Go live]
+```
 
 ## Features
 
-- Email/password auth with Supabase, plus password reset
-- Multi-step onboarding: website/GBP auto-fill, hours, services, voice selection, call forwarding, test call, go-live
-- Industry templates (10+ verticals) that adapt intake questions, urgency triggers and "never claim" rules
-- Prompt-injection sanitising of all owner-supplied text before it reaches the AI
-- Signed Vapi webhooks (HMAC, constant-time comparison)
-- Admin panel for provisioning, pausing, cancelling and deleting shops
-- Transactional emails with Resend
-- Row-level security on every table in Supabase
-- Strict security headers (CSP, HSTS, frame-ancestors, etc.)
+| For shop owners | Under the hood |
+|---|---|
+| Guided setup in a few minutes | Website and Google Business Profile harvesting + Claude synthesis into a Zod-validated profile |
+| A local number matching their area code | Twilio number search with geographic fallback |
+| A receptionist that sounds like their shop | System prompt generated from the profile, industry template and chosen voice |
+| Appointments land on their calendar | Booking tool calls to `shopdesk-booking` → Google Calendar |
+| Emergencies reach them right away | Transfer-call rules during business hours |
+| Call log, bookings and customers | Supabase tables populated from signed Vapi webhooks |
+| Works for their industry | Templates for 10+ verticals (intake questions, urgency triggers, "never claim" rules) |
+
+An **admin panel** handles provisioning, pausing, cancelling and deleting shops, with transactional emails sent through Resend.
+
+## Engineering highlights
+
+- **Security by default.** HMAC-verified webhooks with constant-time comparison; row-level security on every table; the service role is used only on the server; strict CSP, HSTS and frame headers; secrets only in environment variables.
+- **Prompt-injection hardening.** All owner-supplied text is length-limited and stripped of injection patterns before it reaches the voice agent's prompt (covered by tests).
+- **Structured AI output.** Business-profile synthesis uses Claude with a Zod schema, so malformed model output never reaches the database.
+- **Multi-tenant isolation.** Every call, booking and message is scoped to the shop that owns the assistant, with no global fallbacks.
+- **Quality gates.** TypeScript strict mode, ESLint, unit tests and a CI pipeline that builds the app on every push.
 
 ## Tech stack
 
-| Area | Tools |
+| Layer | Technology |
 |---|---|
-| Frontend / server | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
-| Data and auth | Supabase (Postgres, Auth, RLS); SQL migrations in `supabase/` |
-| Voice and telephony | Vapi (AI voice agent), Twilio (numbers, SMS) |
-| AI | Anthropic Claude for business-profile synthesis; structured output validated with Zod |
-| Integrations | Google Business Profile and Google Calendar (OAuth), Firecrawl, Google Places |
-| Quality | ESLint, TypeScript strict mode, Vitest, GitHub Actions CI |
+| Web app | Next.js 16 (App Router), React 19, TypeScript, Tailwind CSS 4 |
+| Data and auth | Supabase: Postgres, Auth, row-level security, SQL migrations |
+| Voice and telephony | Vapi (AI voice agent), Twilio (numbers and SMS) |
+| AI | Anthropic Claude (profile synthesis), Zod (structured output) |
+| Integrations | Google Business Profile and Google Calendar (OAuth), Firecrawl, Google Places, Resend |
+| Quality | ESLint, Vitest, GitHub Actions |
 | Hosting | Vercel |
 
 ## Project structure
 
 ```
 src/
-  app/
-    auth/              login, sign-up, password reset
-    onboard/           onboarding wizard entry
-    dashboard/         calls, bookings, customers, settings
-    admin/             internal admin panel
-    api/               provisioning, Vapi webhook, enrichment, Google OAuth, admin actions
-  components/          UI, including onboarding/ (one component per wizard step)
-  lib/
-    shopPrompt.ts      builds the AI receptionist's system prompt and booking tools
-    enrichment/        website and Google Business Profile harvesting + Claude synthesis
-    industries/        per-industry templates
-    supabase/          browser, server and admin clients
-  lib/__tests__/       unit tests
+├── app/
+│   ├── auth/            login, sign-up, password reset
+│   ├── onboard/         onboarding wizard
+│   ├── dashboard/       calls, bookings, customers, settings
+│   ├── admin/           internal admin panel
+│   └── api/             provisioning, Vapi webhook, enrichment, Google OAuth, admin actions
+├── components/
+│   └── onboarding/      one component per wizard step
+└── lib/
+    ├── shopPrompt.ts    builds the receptionist's system prompt and booking tools
+    ├── enrichment/      website and Google Business Profile harvesting + Claude synthesis
+    ├── industries/      per-industry templates
+    ├── supabase/        browser, server and admin clients
+    └── __tests__/       unit tests
 supabase/
-  schema.sql           tables and row-level security policies
-  migrations/          incremental migrations
+├── schema.sql           tables and row-level security policies
+└── migrations/          incremental migrations
 ```
 
 ## Running locally
 
-**Requirements:** Node.js 20+ and a Supabase project (the free tier works).
+**Requirements:** Node.js 20+ and a Supabase project (the free tier is enough).
 
 ```bash
-git clone <this repo>
+git clone https://github.com/CodeBen98/shopdesk-dashboard.git
 cd shopdesk-dashboard
 npm ci
-cp .env.local.example .env.local   # then fill in your own keys
-npm run dev                         # http://localhost:3000
+cp .env.local.example .env.local    # add your own keys
+npm run dev                          # → http://localhost:3000
 ```
 
-Set up the database by running `supabase/schema.sql` and then the files in `supabase/migrations/` in your Supabase project. Voice, telephony and enrichment features need their own API keys (see `.env.local.example`); the app builds and the auth and dashboard pages run without them.
+Create the database by running `supabase/schema.sql`, then the files in `supabase/migrations/`, in your Supabase project. Voice, telephony and enrichment need their own API keys (listed in `.env.local.example`). Without them, the app still builds and the auth and dashboard pages run.
 
-## Scripts
+## Testing and CI
 
-| Command | What it does |
+| Command | Purpose |
 |---|---|
-| `npm run dev` | Start the dev server |
+| `npm run dev` | Development server |
 | `npm run build` | Production build |
 | `npm run lint` | ESLint |
-| `npm run typecheck` | TypeScript check |
+| `npm run typecheck` | TypeScript |
 | `npm test` | Unit tests (Vitest) |
 
-CI runs lint, typecheck, tests and a production build on every push and pull request.
+GitHub Actions runs lint, typecheck, tests and a production build on every push and pull request.
 
-## Security notes
+---
 
-- Secrets live only in environment variables (Vercel and Render in production); `.gitignore` blocks every `.env*` file except the example.
-- Webhooks from Vapi are verified with an HMAC signature before any processing.
-- All tables use row-level security, so owners can only read their own shop's data; privileged operations use the service role on the server only.
+<div align="center">
 
-## Author
+Built by **Slarve Benoit** · [@CodeBen98](https://github.com/CodeBen98)
 
-Built by **Slarve Benoit** ([@CodeBen98](https://github.com/CodeBen98)).
+</div>
