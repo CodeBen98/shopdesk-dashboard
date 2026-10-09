@@ -15,6 +15,8 @@ ShopDesk picks up every call 24/7, answers questions about the business, and boo
 ![Twilio](https://img.shields.io/badge/Twilio-F22F46?logo=twilio&logoColor=white)
 ![Vercel](https://img.shields.io/badge/Vercel-000000?logo=vercel&logoColor=white)
 
+**[Live app → app.shopdesk.site](https://app.shopdesk.site)** · [Website → shopdesk.site](https://shopdesk.site)
+
 **This repo: the owner dashboard** · Booking backend: [`shopdesk-booking`](https://github.com/CodeBen98/shopdesk-booking)
 
 </div>
