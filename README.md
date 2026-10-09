@@ -6,6 +6,7 @@
 
 ShopDesk picks up every call 24/7, answers questions about the business, and books appointments straight onto the owner's calendar, so small businesses never miss a customer again.
 
+[![CI](https://github.com/CodeBen98/shopdesk-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/CodeBen98/shopdesk-dashboard/actions/workflows/ci.yml)
 ![Next.js](https://img.shields.io/badge/Next.js_16-000000?logo=nextdotjs&logoColor=white)
 ![React](https://img.shields.io/badge/React_19-20232A?logo=react&logoColor=61DAFB)
 ![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
