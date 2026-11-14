@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS, normalizeToE164 } from '@/lib/shopPrompt'
 import { sendProvisioningStarted, sendProvisioningComplete } from '@/lib/email'
 
@@ -127,7 +128,10 @@ export async function POST(request: Request) {
     // Rate limit: block re-provisioning within 2 minutes using an atomic update.
     // We only proceed if provision_attempted_at is null or older than 2 minutes.
     const twoMinAgo = new Date(Date.now() - 120_000).toISOString()
-    const { data: claimed } = await supabase
+    // Protected columns (provision_attempted_at, vapi_agent_id, twilio_number) are
+    // written with the admin client; a database trigger blocks owners from changing them.
+    const admin = createAdminClient()
+    const { data: claimed } = await admin
       .from('shops')
       .update({ provision_attempted_at: new Date().toISOString() })
       .eq('owner_id', user.id)
@@ -265,7 +269,7 @@ export async function POST(request: Request) {
     }
 
     // Save to DB
-    await supabase.from('shops').update({
+    await admin.from('shops').update({
       vapi_agent_id: agentId,
       twilio_number: assignedNumber,
       onboarding_step: 'forwarding',
