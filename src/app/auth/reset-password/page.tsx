@@ -22,7 +22,10 @@ function ResetPasswordForm() {
     hasExchanged.current = true
     
     const code = searchParams.get('code')
-    if (!code) {
+    // token_hash links work in any browser (the PKCE ?code= link only works in the
+    // browser that requested it) and are what admin-generated recovery links use.
+    const tokenHash = searchParams.get('token_hash')
+    if (!code && !tokenHash) {
       queueMicrotask(() => {
         setError('Invalid or expired reset link. Please request a new one.')
         setExchanging(false)
@@ -30,7 +33,10 @@ function ResetPasswordForm() {
       return
     }
     const supabase = createClient()
-    supabase.auth.exchangeCodeForSession(code).then(({ error: authError }) => {
+    const verify = tokenHash
+      ? supabase.auth.verifyOtp({ token_hash: tokenHash, type: 'recovery' })
+      : supabase.auth.exchangeCodeForSession(code!)
+    verify.then(({ error: authError }) => {
       queueMicrotask(() => {
         if (authError) setError('This reset link has expired. Please request a new one.')
         setExchanging(false)
