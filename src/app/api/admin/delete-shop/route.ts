@@ -30,6 +30,28 @@ async function releaseTwilioNumber(phoneNumber: string) {
   console.log('Released Twilio number:', phoneNumber)
 }
 
+async function deleteVapiPhoneNumber(phoneNumber: string) {
+  const listRes = await fetch('https://api.vapi.ai/phone-number?limit=1000', {
+    headers: { Authorization: `Bearer ${VAPI_API_KEY}` },
+  })
+  if (!listRes.ok) throw new Error(`Vapi phone-number list failed: ${listRes.status}`)
+  const data = await listRes.json()
+  const list: { id: string; number?: string }[] = Array.isArray(data) ? data : data.results ?? []
+  const match = list.find((n) => n.number === phoneNumber)
+  if (!match) {
+    console.warn('No Vapi phone-number record for', phoneNumber, '-- may already be removed')
+    return
+  }
+  const res = await fetch(`https://api.vapi.ai/phone-number/${match.id}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${VAPI_API_KEY}` },
+  })
+  if (!res.ok && res.status !== 404) {
+    throw new Error(`Vapi phone-number delete failed: ${res.status}`)
+  }
+  console.log('Deleted Vapi phone-number record:', phoneNumber)
+}
+
 async function deleteVapiAssistant(agentId: string) {
   const res = await fetch(`https://api.vapi.ai/assistant/${agentId}`, {
     method: 'DELETE',
@@ -77,7 +99,11 @@ export async function POST(request: Request) {
 
     const errors: string[] = []
 
-    // 3. Release Twilio number
+    // 3. Remove the number from Vapi, then release it on Twilio
+    if (shop.twilio_number) {
+      try { await deleteVapiPhoneNumber(shop.twilio_number) }
+      catch (e) { errors.push(`Vapi number: ${e instanceof Error ? e.message : e}`) }
+    }
     if (shop.twilio_number) {
       try { await releaseTwilioNumber(shop.twilio_number) }
       catch (e) { errors.push(`Twilio: ${e instanceof Error ? e.message : e}`) }
