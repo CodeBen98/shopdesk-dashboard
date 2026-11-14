@@ -4,9 +4,9 @@ import { createClient } from '@/lib/supabase/server'
 const CARTESIA_API_KEY = process.env.CARTESIA_API_KEY!
 
 const VOICE_IDS: Record<string, string> = {
-  cindy: '1242fb95-7ddd-44ac-8a05-9e8a22a6137d',
+  cindy: 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4',
   jacqueline: '9626c31c-bec5-4cca-baa8-f8ba9e84c8bc',
-  james: '42b39f37-515f-4eee-8546-73e841679c1d',
+  james: 'aa2cafe9-97ba-4052-ac3c-875000f95212',
   marcus: '9301949d-b7cd-40d9-a246-5a4430992d6b',
 }
 
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
       'Content-Type': 'application/json',
     },
     body: JSON.stringify({
-      model_id: 'sonic-2',
+      model_id: 'sonic-3.6',
       voice: { mode: 'id', id: VOICE_IDS[voice] },
       transcript: PREVIEW_TEXT[voice],
       output_format: { container: 'mp3', encoding: 'mp3', sample_rate: 44100 },

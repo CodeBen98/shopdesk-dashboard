@@ -9,12 +9,12 @@ export const voiceNames: Record<string, string> = {
 }
 
 export const voiceMap: Record<string, { provider: string; voiceId: string; model: string }> = {
-  cindy:      { provider: 'cartesia', voiceId: '1242fb95-7ddd-44ac-8a05-9e8a22a6137d', model: 'sonic-2' },
-  jacqueline: { provider: 'cartesia', voiceId: '9626c31c-bec5-4cca-baa8-f8ba9e84c8bc', model: 'sonic-2' },
-  patricia:   { provider: 'cartesia', voiceId: 'e5a6cd18-d552-4192-9533-82a08cac8f23', model: 'sonic-2' },
-  james:      { provider: 'cartesia', voiceId: '42b39f37-515f-4eee-8546-73e841679c1d', model: 'sonic-2' },
-  sofia:      { provider: 'cartesia', voiceId: 'f6ce3444-478b-4ce4-982e-bcb72dffe7aa', model: 'sonic-2' },
-  marcus:     { provider: 'cartesia', voiceId: '9301949d-b7cd-40d9-a246-5a4430992d6b', model: 'sonic-2' },
+  cindy:      { provider: 'cartesia', voiceId: 'db6b0ed5-d5d3-463d-ae85-518a07d3c2b4', model: 'sonic-3.6' },
+  jacqueline: { provider: 'cartesia', voiceId: '9626c31c-bec5-4cca-baa8-f8ba9e84c8bc', model: 'sonic-3.6' },
+  patricia:   { provider: 'cartesia', voiceId: 'e5a6cd18-d552-4192-9533-82a08cac8f23', model: 'sonic-3.6' },
+  james:      { provider: 'cartesia', voiceId: 'aa2cafe9-97ba-4052-ac3c-875000f95212', model: 'sonic-3.6' },
+  sofia:      { provider: 'cartesia', voiceId: 'f6ce3444-478b-4ce4-982e-bcb72dffe7aa', model: 'sonic-3.6' },
+  marcus:     { provider: 'cartesia', voiceId: '9301949d-b7cd-40d9-a246-5a4430992d6b', model: 'sonic-3.6' },
 }
 
 function formatTimeForPrompt(t: string): string {
