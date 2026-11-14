@@ -1,5 +1,8 @@
 'use client'
 
+import { useRouter } from 'next/navigation'
+import { createClient } from '@/lib/supabase/client'
+
 interface ProgressBarProps {
   currentStep: number
   totalSteps: number
@@ -8,6 +11,13 @@ interface ProgressBarProps {
 
 export function ProgressBar({ currentStep, totalSteps, stepName }: ProgressBarProps) {
   const percent = (currentStep / totalSteps) * 100
+  const router = useRouter()
+
+  async function handleSignOut() {
+    await createClient().auth.signOut()
+    router.push('/auth/login')
+    router.refresh()
+  }
 
   return (
     <>
@@ -49,6 +59,19 @@ export function ProgressBar({ currentStep, totalSteps, stepName }: ProgressBarPr
         .progress-mobile-bar {
           display: none;
         }
+        .progress-signout {
+          flex-shrink: 0;
+          background: none;
+          border: none;
+          padding: 4px 0;
+          font: inherit;
+          font-size: 13px;
+          color: var(--muted);
+          cursor: pointer;
+          text-decoration: underline;
+          text-underline-offset: 3px;
+        }
+        .progress-signout:hover { color: var(--text); }
         @media (max-width: 768px) {
           .progress-bar-root {
             height: 52px;
@@ -165,6 +188,9 @@ export function ProgressBar({ currentStep, totalSteps, stepName }: ProgressBarPr
         <span className="progress-step-text">
           Step {currentStep} of {totalSteps}{stepName ? `: ${stepName}` : ''}
         </span>
+        <button type="button" className="progress-signout" onClick={handleSignOut}>
+          Sign out
+        </button>
       </div>
       {/* Spacer so content doesn't go under fixed bar */}
       <div style={{ height: 64 }} />
