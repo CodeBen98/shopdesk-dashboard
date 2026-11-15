@@ -13,29 +13,30 @@ export function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-// All times displayed in Eastern time (shop timezone)
-const TZ = 'America/New_York'
+// Times are shown in the shop's own time zone. Pass shop.timezone; the default
+// covers rows created before shops had a timezone column.
+const DEFAULT_TZ = 'America/New_York'
 
-export function formatDate(date: string | Date | null): string {
+export function formatDate(date: string | Date | null, timeZone: string = DEFAULT_TZ): string {
   if (!date) return '—'
   return new Intl.DateTimeFormat('en-US', {
-    month: 'short', day: 'numeric', year: 'numeric', timeZone: TZ,
+    month: 'short', day: 'numeric', year: 'numeric', timeZone,
   }).format(new Date(date))
 }
 
-export function formatTime(date: string | Date | null): string {
+export function formatTime(date: string | Date | null, timeZone: string = DEFAULT_TZ): string {
   if (!date) return '—'
   return new Intl.DateTimeFormat('en-US', {
-    hour: 'numeric', minute: '2-digit', hour12: true, timeZone: TZ,
+    hour: 'numeric', minute: '2-digit', hour12: true, timeZone,
   }).format(new Date(date))
 }
 
-export function formatDateTime(date: string | Date | null): string {
+export function formatDateTime(date: string | Date | null, timeZone: string = DEFAULT_TZ): string {
   if (!date) return '—'
   return new Intl.DateTimeFormat('en-US', {
     month: 'short', day: 'numeric',
     hour: 'numeric', minute: '2-digit', hour12: true,
-    timeZone: TZ,
+    timeZone,
   }).format(new Date(date))
 }
 

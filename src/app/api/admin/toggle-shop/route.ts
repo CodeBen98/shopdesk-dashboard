@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS } from '@/lib/shopPrompt'
+import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS, withRecordingDisclosure } from '@/lib/shopPrompt'
 import { isAdmin } from '@/lib/admin'
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
 const BOOKING_WEBHOOK_URL = process.env.BOOKING_WEBHOOK_URL || 'https://shopdesk-booking-production.up.railway.app/book'
@@ -89,6 +89,7 @@ export async function POST(request: Request) {
       enrichment: shop.enrichment,
       knowledge_flags: shop.knowledge_flags as Record<string, boolean> | null,
       farewell_message: shop.farewell_message as string | null,
+      timezone: shop.timezone,
     })
 
     const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
@@ -107,7 +108,7 @@ export async function POST(request: Request) {
         voiceId: voice.voiceId,
         model: voice.model,
       },
-      firstMessage: `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`,
+      firstMessage: withRecordingDisclosure(`Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`),
     })
 
     await admin.from('shops').update({ status: 'live' }).eq('id', shopId)

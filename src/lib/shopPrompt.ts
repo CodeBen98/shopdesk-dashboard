@@ -1,4 +1,5 @@
 import { getIndustryTemplate, normalizeIndustry, type IndustryId } from '@/lib/industries/templates'
+import { shopTimezone, SHOP_TIMEZONES } from './timezones'
 export const voiceNames: Record<string, string> = {
   cindy:      'Cindy',
   jacqueline: 'Jacqueline',
@@ -151,6 +152,7 @@ export function buildSystemPrompt(shop: {
   enrichment?: EnrichmentForPrompt | null
   knowledge_flags?: Record<string, boolean> | null
   farewell_message?: string | null
+  timezone?: string | null
 }, extras?: { vehicleTypes?: string[]; ownerName?: string }): string {
   const flags = shop.knowledge_flags ?? {}
   const kEnabled = (key: string) => flags[key] !== false
@@ -162,8 +164,10 @@ export function buildSystemPrompt(shop: {
     `  - ${sanitize(s.name, 80)}${s.price ? ` ($${sanitize(s.price, 20)})` : ''}${s.description ? ` — ${sanitize(s.description, 150)}` : ''}`
   ).join('\n')
   const hoursText = formatHours(shop.hours)
-  const now = new Date()
-  const dateStr = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', timeZone: 'America/New_York' })
+  // Vapi fills this in at the start of every call (LiquidJS), so the date is never stale
+  // and is in the shop's own time zone.
+  const timeZone = shopTimezone(shop.timezone)
+  const dateStr = `{{"now" | date: "%A, %B %-d, %Y, %-I:%M %p", "${timeZone}"}} (${timeZoneLabel(timeZone)})`
   const ownerName = sanitize(extras?.ownerName || shop.emergency_contact_name || 'the shop owner', 80)
   const industry = normalizeIndustry(shop.industry)
   const industryTemplate = getIndustryTemplate(industry)
@@ -217,7 +221,7 @@ You are ${receptionistName}, the virtual receptionist at ${shopName}.
 You know this shop inside and out. You are warm, helpful, and professional.
 ${ownerName !== 'the shop owner' ? `The owner/manager is ${ownerName}. See the [Escalation] section below for how to handle callers who want to speak to ${ownerName}.` : ''}
 Never say you are an AI. If asked, say you are the virtual receptionist for ${shopName}.
-Today's date is ${dateStr}. Use this to calculate exact dates when customers say "tomorrow", "Thursday", "next week", etc.${identityAddon}
+Right now it is ${dateStr}. Use this to calculate exact dates when customers say "tomorrow", "Thursday", "next week", etc.${identityAddon}
 ${personalitySection}
 [Style]
 - Warm, genuine, direct. Real person energy.
@@ -342,4 +346,20 @@ export const BOOKING_TOOLS = (
   }
 
   return baseTools
+}
+
+function timeZoneLabel(tz: string): string {
+  return SHOP_TIMEZONES.find((z) => z.id === tz)?.label.split(' (')[0] + ' time'
+}
+
+/**
+ * California (and several other states) require telling callers a call is recorded.
+ * Insert a short disclosure after the greeting's first sentence, unless it already has one.
+ */
+export function withRecordingDisclosure(greeting: string): string {
+  const text = greeting.trim()
+  if (/record/i.test(text)) return text
+  const disclosure = 'This call may be recorded.'
+  const m = text.match(/^([^]+?[.!])\s+([^]*)$/)
+  return m ? `${m[1]} ${disclosure} ${m[2]}` : `${text} ${disclosure}`
 }

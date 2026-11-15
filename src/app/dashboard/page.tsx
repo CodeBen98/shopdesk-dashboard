@@ -338,7 +338,7 @@ export default async function DashboardPage() {
                 <tbody>
                   {recentCalls.map((call: Call) => (
                     <tr key={call.id} style={{ borderBottom: '1px solid var(--border)' }}>
-                      <td style={{ padding: '12px 12px 12px 0', fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{formatDateTime(call.started_at)}</td>
+                      <td style={{ padding: '12px 12px 12px 0', fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>{formatDateTime(call.started_at, shop.timezone ?? undefined)}</td>
                       <td style={{ padding: '12px 12px 12px 0', fontSize: 13, color: 'var(--text)' }}>{call.caller_name || call.caller_phone || 'Unknown'}</td>
                       <td style={{ padding: '12px 12px 12px 0', fontSize: 13, color: 'var(--muted)' }}>{formatDuration(call.duration_seconds)}</td>
                       <td style={{ padding: '12px 12px 12px 0' }}><OutcomeBadge outcome={call.outcome ?? 'info_only'} /></td>
@@ -373,7 +373,7 @@ export default async function DashboardPage() {
                         {booking.service || 'Service not specified'}
                       </div>
                       <div style={{ fontSize: 12, color: 'var(--accent)', fontWeight: 500 }}>
-                        {formatDateTime(booking.appointment_at)}
+                        {formatDateTime(booking.appointment_at, shop.timezone ?? undefined)}
                       </div>
                     </div>
                   ))}

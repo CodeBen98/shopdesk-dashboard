@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
+import { SHOP_TIMEZONES, shopTimezone } from '@/lib/timezones'
 import { createClient } from '@/lib/supabase/client'
 import { useToast } from '@/components/Toast'
 import { CancelServiceButton } from '@/components/CancelServiceButton'
@@ -111,6 +112,7 @@ export default function SettingsPage() {
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
   const [email, setEmail] = useState('')
+  const [timezone, setTimezone] = useState<string>(shopTimezone(null))
 
   // Hours
   const [hours, setHours] = useState<ShopHours>({
@@ -168,6 +170,7 @@ export default function SettingsPage() {
         setShop(data)
         setName(data.name ?? '')
         setAddress(data.address ?? '')
+        setTimezone(shopTimezone(data.timezone))
         setPhone(data.phone ?? '')
         setEmail(data.email ?? '')
         setOwnerPhone(data.owner_phone ?? '')
@@ -410,6 +413,21 @@ export default function SettingsPage() {
               </div>
             </div>
 
+            {/* Time zone */}
+            <div>
+              <label style={labelStyle}>Time Zone</label>
+              <select
+                value={timezone}
+                onChange={e => setTimezone(e.target.value)}
+                onFocus={() => setFocused('timezone')}
+                onBlur={() => setFocused(null)}
+                style={inputStyle(focused === 'timezone')}
+              >
+                {SHOP_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
+              </select>
+              <p style={{ fontSize: 12, color: 'var(--muted)', margin: '6px 0 0' }}>Appointments are booked and shown in this time zone.</p>
+            </div>
+
             {/* Owner Mobile + SMS consent */}
             <div>
               <label style={labelStyle}>Your Mobile Number (optional)</label>
@@ -441,7 +459,7 @@ export default function SettingsPage() {
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 8 }}>
-              <SaveButton onClick={() => save({ name, address, phone, email, owner_phone: ownerPhone, owner_phone_sms_consent: !!ownerPhone.trim() && ownerPhoneSmsConsent }, true)} status={saveStatus} />
+              <SaveButton onClick={() => save({ name, address, phone, email, timezone, owner_phone: ownerPhone, owner_phone_sms_consent: !!ownerPhone.trim() && ownerPhoneSmsConsent }, true)} status={saveStatus} />
             </div>
           </div>
         )}

@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS, normalizeToE164 } from '@/lib/shopPrompt'
+import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS, normalizeToE164, withRecordingDisclosure } from '@/lib/shopPrompt'
 import { isAdmin } from '@/lib/admin'
 
 const VAPI_API_KEY        = process.env.VAPI_API_KEY!
@@ -125,6 +125,7 @@ export async function POST(request: Request) {
       ai_voice: shop.ai_voice || 'jacqueline',
       industry: shop.industry,
       enrichment: shop.enrichment,
+      timezone: shop.timezone,
     }, {})
 
     const receptionistName = voiceNames[shop.ai_voice ?? 'jacqueline'] ?? 'Jacqueline'
@@ -149,7 +150,7 @@ export async function POST(request: Request) {
         ),
       },
       voice: { provider: voice.provider, voiceId: voice.voiceId, model: voice.model },
-      firstMessage,
+      firstMessage: withRecordingDisclosure(firstMessage),
     }
 
     let agentId: string

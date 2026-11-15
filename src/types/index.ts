@@ -18,6 +18,7 @@ export type Shop = {
   google_calendar_id: string | null
   google_refresh_token: string | null
   ai_voice: string
+  timezone: string
   status: 'onboarding' | 'live' | 'paused' | 'pause_requested' | 'cancel_requested' | 'cancelling' | 'cancelled' | 'deleted'
   cancel_reason: string | null
   cancel_requested_at: string | null

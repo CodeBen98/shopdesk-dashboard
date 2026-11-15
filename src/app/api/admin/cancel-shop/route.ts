@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS } from '@/lib/shopPrompt'
+import { buildSystemPrompt, voiceNames, voiceMap, BOOKING_TOOLS, withRecordingDisclosure } from '@/lib/shopPrompt'
 import { sendCancellationNotice } from '@/lib/email'
 import { isAdmin } from '@/lib/admin'
 const VAPI_API_KEY = process.env.VAPI_API_KEY!
@@ -106,6 +106,7 @@ export async function DELETE(request: Request) {
         emergency_contact: shop.emergency_contact,
         emergency_contact_name: shop.emergency_contact_name,
         ai_voice: shop.ai_voice,
+        timezone: shop.timezone,
       })
       const voice = voiceMap[shop.ai_voice] ?? voiceMap.patricia
       const receptionistName = voiceNames[shop.ai_voice] ?? 'Sarah'
@@ -117,7 +118,7 @@ export async function DELETE(request: Request) {
           tools: BOOKING_TOOLS(BOOKING_WEBHOOK_URL, shop.id),
         },
         voice: { provider: voice.provider, voiceId: voice.voiceId, model: voice.model },
-        firstMessage: `Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`,
+        firstMessage: withRecordingDisclosure(`Thank you for calling ${shop.name}. This is ${receptionistName}, how can I help you today?`),
       })
     }
 

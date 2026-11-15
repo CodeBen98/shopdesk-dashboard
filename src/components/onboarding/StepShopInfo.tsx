@@ -1,8 +1,9 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { StepProps } from './OnboardingWizard'
+import { SHOP_TIMEZONES, detectTimezone, isShopTimezone } from '@/lib/timezones'
 
 export function StepShopInfo({ shop, userId, onNext, onShopUpdate }: StepProps) {
   const [name, setName] = useState(shop?.name ?? '')
@@ -16,6 +17,12 @@ export function StepShopInfo({ shop, userId, onNext, onShopUpdate }: StepProps) 
   const [ownerPhone, setOwnerPhone] = useState(shop?.owner_phone ?? '')
   const [ownerSmsConsent, setOwnerSmsConsent] = useState(shop?.owner_phone_sms_consent ?? false)
   const [email, setEmail] = useState(shop?.email ?? '')
+  const [timezone, setTimezone] = useState<string>(isShopTimezone(shop?.timezone) ? shop!.timezone : 'America/New_York')
+
+  // Pre-fill from the browser after mount (avoids a server/client mismatch).
+  useEffect(() => {
+    if (!isShopTimezone(shop?.timezone)) setTimezone(detectTimezone())
+  }, [shop?.timezone])
 
   const [errors, setErrors] = useState<{
     name?: string
@@ -68,6 +75,7 @@ export function StepShopInfo({ shop, userId, onNext, onShopUpdate }: StepProps) 
       owner_phone_sms_consent: smsOptIn,
       emergency_contact_name: ownerName.trim(),
       website_url: websiteUrl.trim() || null,
+      timezone,
       industry: 'other',
       onboarding_step: 'auto_fill_choice',
       ...(enrichmentPatch ? { enrichment: enrichmentPatch } : {}),
@@ -94,6 +102,7 @@ export function StepShopInfo({ shop, userId, onNext, onShopUpdate }: StepProps) 
       owner_phone_sms_consent: smsOptIn,
       emergency_contact_name: ownerName.trim(),
       website_url: websiteUrl.trim() || null,
+      timezone,
       industry: 'other',
       ...(enrichmentPatch ? { enrichment: enrichmentPatch as import('@/types').Enrichment } : {}),
     })
@@ -160,6 +169,20 @@ export function StepShopInfo({ shop, userId, onNext, onShopUpdate }: StepProps) 
           data-1p-ignore
         />
         {errors.address && <p style={errorStyle}>{errors.address}</p>}
+      </div>
+
+      {/* Time zone */}
+      <div style={field}>
+        <label style={labelStyle}>Time Zone *</label>
+        <select
+          value={timezone}
+          onChange={e => setTimezone(e.target.value)}
+          className="step-input"
+          style={{ boxSizing: 'border-box' }}
+        >
+          {SHOP_TIMEZONES.map(z => <option key={z.id} value={z.id}>{z.label}</option>)}
+        </select>
+        <p style={helperStyle}>Appointments are booked and shown in this time zone.</p>
       </div>
 
       {/* Website */}

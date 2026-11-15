@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { formatDateTime } from '@/lib/utils'
+import { shopTimezone } from '@/lib/timezones'
 import { createClient } from '@/lib/supabase/client'
 import { SkeletonRow } from '@/components/Skeleton'
 import { useToast } from '@/components/Toast'
@@ -30,23 +31,22 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-function nyDateKey(date: Date): string {
-  return new Intl.DateTimeFormat('en-CA', { timeZone: 'America/New_York' }).format(date)
+function shopDateKey(date: Date, timeZone: string): string {
+  return new Intl.DateTimeFormat('en-CA', { timeZone }).format(date)
 }
 
-function isTodayNY(dateStr: string): boolean {
-  return nyDateKey(new Date()) === nyDateKey(new Date(dateStr))
+function isTodayInShop(dateStr: string, timeZone: string): boolean {
+  return shopDateKey(new Date(), timeZone) === shopDateKey(new Date(dateStr), timeZone)
 }
 
-function isTodayOrPast(dateStr: string): boolean {
-  const todayNy = nyDateKey(new Date())
-  const apptNy = nyDateKey(new Date(dateStr))
-  return apptNy <= todayNy
+function isTodayOrPast(dateStr: string, timeZone: string): boolean {
+  return shopDateKey(new Date(dateStr), timeZone) <= shopDateKey(new Date(), timeZone)
 }
 
 export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([])
   const [loading, setLoading] = useState(true)
+  const [timeZone, setTimeZone] = useState<string>(shopTimezone(null))
   const [tab, setTab] = useState<Tab>('upcoming')
   const [expandedId, setExpandedId] = useState<string | null>(null)
   const [pendingCancelId, setPendingCancelId] = useState<string | null>(null)
@@ -62,8 +62,9 @@ export default function BookingsPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data: shop } = await supabase
-        .from('shops').select('id').eq('owner_id', user.id).single()
+        .from('shops').select('id, timezone').eq('owner_id', user.id).single()
       if (shop) {
+        setTimeZone(shopTimezone(shop.timezone))
         const { data } = await supabase
           .from('bookings')
           .select('*')
@@ -174,8 +175,8 @@ export default function BookingsPage() {
               </thead>
               <tbody>
                 {filtered.map((booking: Booking) => {
-                  const isToday = isTodayNY(booking.appointment_at)
-                  const todayOrPast = isTodayOrPast(booking.appointment_at)
+                  const isToday = isTodayInShop(booking.appointment_at, timeZone)
+                  const todayOrPast = isTodayOrPast(booking.appointment_at, timeZone)
                   const isExpanded = expandedId === booking.id
                   const isPendingCancel = pendingCancelId === booking.id
                   const isDone = booking.status === 'completed' || booking.status === 'cancelled'
@@ -195,7 +196,7 @@ export default function BookingsPage() {
                         onMouseLeave={e => { if (!isExpanded) (e.currentTarget as HTMLTableRowElement).style.background = 'transparent' }}
                       >
                         <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                          <span>{formatDateTime(booking.appointment_at)}</span>
+                          <span>{formatDateTime(booking.appointment_at, timeZone)}</span>
                           {isToday && (
                             <span style={{
                               marginLeft: 8,

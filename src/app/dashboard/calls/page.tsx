@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react'
 import { useSearchParams } from 'next/navigation'
 import { formatDateTime, formatDuration } from '@/lib/utils'
+import { shopTimezone } from '@/lib/timezones'
 import { createClient } from '@/lib/supabase/client'
 import { SkeletonRow } from '@/components/Skeleton'
 import type { Call } from '@/types'
@@ -83,6 +84,7 @@ function CallsContent() {
   const searchParams = useSearchParams()
   const [calls, setCalls] = useState<Call[]>([])
   const [loading, setLoading] = useState(true)
+  const [timeZone, setTimeZone] = useState<string>(shopTimezone(null))
   const [outcomeFilter, setOutcomeFilter] = useState<OutcomeFilter>('all')
   const [dateFilter, setDateFilter] = useState<DateFilter>('month')
   const [expandedId, setExpandedId] = useState<string | null>(null)
@@ -99,8 +101,9 @@ function CallsContent() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) return
       const { data: shop } = await supabase
-        .from('shops').select('id').eq('owner_id', user.id).single()
+        .from('shops').select('id, timezone').eq('owner_id', user.id).single()
       if (shop) {
+        setTimeZone(shopTimezone(shop.timezone))
         const { data } = await supabase
           .from('calls')
           .select('*')
@@ -272,7 +275,7 @@ function CallsContent() {
                       onMouseLeave={e => { if (expandedId !== call.id) (e.currentTarget as HTMLTableRowElement).style.background = 'transparent' }}
                     >
                       <td style={{ padding: '13px 16px', fontSize: 13, color: 'var(--muted)', whiteSpace: 'nowrap' }}>
-                        {formatDateTime(call.started_at)}
+                        {formatDateTime(call.started_at, timeZone)}
                       </td>
                       <td style={{ padding: '13px 16px' }}>
                         {call.caller_name ? (
