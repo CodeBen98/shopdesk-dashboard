@@ -9,9 +9,8 @@ type PlanTier = 'starter' | 'pro' | 'growth'
 const PLANS: {
   tier: PlanTier
   name: string
-  foundingPrice: number
-  regularPrice: number
-  minutes: string
+  price: number
+  calls: string
   overage: string
   features: string[]
   popular?: boolean
@@ -19,26 +18,24 @@ const PLANS: {
   {
     tier: 'starter',
     name: 'Starter',
-    foundingPrice: 79,
-    regularPrice: 99,
-    minutes: '150 min/month',
-    overage: '$0.50/min overage',
+    price: 99,
+    calls: '150 calls/month',
+    overage: '$0.99 per additional call',
     features: [
       'AI answers every unanswered call 24/7',
       'Google Calendar booking',
       'Call log + transcripts + recordings',
       'SMS confirmation to every caller',
-      '4 AI voice options',
+      '6 AI voice options',
       'Email alerts on every booking',
     ],
   },
   {
     tier: 'pro',
     name: 'Pro',
-    foundingPrice: 159,
-    regularPrice: 199,
-    minutes: '400 min/month',
-    overage: '$0.45/min overage',
+    price: 229,
+    calls: '400 calls/month',
+    overage: '$0.99 per additional call',
     popular: true,
     features: [
       'Everything in Starter',
@@ -50,10 +47,9 @@ const PLANS: {
   {
     tier: 'growth',
     name: 'Growth',
-    foundingPrice: 319,
-    regularPrice: 399,
-    minutes: '1,000 min/month',
-    overage: '$0.40/min overage',
+    price: 499,
+    calls: '1,000 calls/month',
+    overage: '$0.99 per additional call',
     features: [
       'Everything in Pro',
       'Multi-location up to 3 shops',
@@ -74,16 +70,12 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
     setLoading(true)
 
     const supabase = createClient()
-    const now = new Date()
-    const trialEnds = new Date(now.getTime() + 14 * 24 * 60 * 60 * 1000)
 
+    // Trial dates are set once at signup (the database keeps them), so only the plan is saved here.
     const { error: saveErr } = await supabase
       .from('shops')
       .update({
         plan_tier: tier,
-        is_founding_member: true,
-        trial_started_at: now.toISOString(),
-        trial_ends_at: trialEnds.toISOString(),
         onboarding_step: 'welcome',
       })
       .eq('owner_id', userId)
@@ -94,12 +86,7 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
       return
     }
 
-    onShopUpdate({
-      plan_tier: tier,
-      is_founding_member: true,
-      trial_started_at: now.toISOString(),
-      trial_ends_at: trialEnds.toISOString(),
-    })
+    onShopUpdate({ plan_tier: tier })
     setLoading(false)
     onNext()
   }
@@ -110,17 +97,6 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
         .plan-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 24px; }
         @media (max-width: 860px) { .plan-grid { grid-template-columns: 1fr; max-width: 480px; margin-left: auto; margin-right: auto; } }
       `}</style>
-      {/* Founding member banner */}
-      <div style={banner}>
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" style={{ flexShrink: 0 }}>
-            <rect x="3" y="7" width="10" height="8" rx="1.5" stroke="#f59e0b" strokeWidth="1.4"/>
-            <path d="M5 7V5a3 3 0 016 0v2" stroke="#f59e0b" strokeWidth="1.4" strokeLinecap="round"/>
-          </svg>
-        <span style={bannerText}>
-          <strong>Founding Member Pricing, Limited Spots.</strong> Lock in these rates forever. Prices increase when early access ends.
-        </span>
-      </div>
-
       <div style={{ textAlign: 'center', marginBottom: 32 }}>
         <h1 style={heading}>Choose your plan</h1>
         <p style={subheading}>Start your 14-day free trial today. No credit card required.</p>
@@ -153,11 +129,10 @@ export function PlanSelectionStep({ userId, onNext, onShopUpdate }: StepProps) {
               <div style={planName}>{plan.name}</div>
 
               <div style={priceRow}>
-                <span style={foundingPrice}>${plan.foundingPrice}<span style={perMo}>/mo</span></span>
-                <span style={regularPrice}>${plan.regularPrice}/mo</span>
+                <span style={priceStyle}>${plan.price}<span style={perMo}>/mo</span></span>
               </div>
 
-              <div style={callsLabel}>{plan.minutes}</div>
+              <div style={callsLabel}>{plan.calls}</div>
               <div style={overageLabel}>{plan.overage}</div>
 
               <div style={divider} />
@@ -204,22 +179,7 @@ const outerWrap: React.CSSProperties = {
   animation: 'card-enter 0.35s ease',
 }
 
-const banner: React.CSSProperties = {
-  display: 'flex',
-  alignItems: 'center',
-  gap: 10,
-  background: 'rgba(245,158,11,0.12)',
-  border: '1px solid rgba(245,158,11,0.35)',
-  borderRadius: 10,
-  padding: '12px 18px',
-  marginBottom: 32,
-}
 
-const bannerText: React.CSSProperties = {
-  fontSize: 14,
-  color: '#f59e0b',
-  lineHeight: 1.5,
-}
 
 const heading: React.CSSProperties = {
   fontFamily: 'var(--font-space)',
@@ -277,7 +237,7 @@ const priceRow: React.CSSProperties = {
   marginBottom: 4,
 }
 
-const foundingPrice: React.CSSProperties = {
+const priceStyle: React.CSSProperties = {
   fontSize: 32,
   fontWeight: 800,
   color: '#0F7695',
@@ -290,11 +250,6 @@ const perMo: React.CSSProperties = {
   color: '#0F7695',
 }
 
-const regularPrice: React.CSSProperties = {
-  fontSize: 14,
-  color: 'var(--muted)',
-  textDecoration: 'line-through',
-}
 
 const callsLabel: React.CSSProperties = {
   fontSize: 13,
