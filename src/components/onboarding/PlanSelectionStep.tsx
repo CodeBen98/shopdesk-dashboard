@@ -40,7 +40,7 @@ const PLANS: {
     features: [
       'Everything in Starter',
       'Priority support',
-      'Advanced call analytics',
+      'Advanced call analytics (coming soon)',
       'Dedicated onboarding assistance',
     ],
   },
@@ -52,9 +52,9 @@ const PLANS: {
     overage: '$0.99 per additional call',
     features: [
       'Everything in Pro',
-      'Multi-location up to 3 shops',
+      'Multi-location up to 3 shops (coming soon)',
       'Dedicated onboarding call',
-      'Custom AI voice',
+      'Custom AI voice (coming soon)',
     ],
   },
 ]
